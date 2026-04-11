@@ -1,5 +1,12 @@
-/.idea
-/.vs
-/.vscode
+# local docs / packages
 /海空战对抗宏观评估 Agent 项目规划书.md
 state-transition 6v6 + eval agent 2.0.zip
+
+# build outputs
+build/
+x64/
+
+# IDE folders
+.idea/
+.vs/
+.vscode/
