@@ -1,0 +1,10 @@
+^D:\SKY\PROJECTS\STATE-TRANSITION 6V6 + EVAL AGENT\BUILD\ENCOUNTER-RUNNER-HEADLESS\CMAKEFILES\F6F9AE17AF3F4EC6E64730BBDE8079E7\GENERATE.STAMP.RULE
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" "-SD:/sky/Projects/state-transition 6v6 + eval agent" "-BD:/sky/Projects/state-transition 6v6 + eval agent/build/encounter-runner-headless" --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file "D:/sky/Projects/state-transition 6v6 + eval agent/build/encounter-runner-headless/SeaAirMacroEvalAgent.sln"
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

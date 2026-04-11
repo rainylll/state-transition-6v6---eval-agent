@@ -1,0 +1,11 @@
+red:
+  fighters: [2, 6]
+  ships: [1, 2]
+blue:
+  fighters: [2, 6]
+  ships: [1, 2]
+split:
+  train: 0.7
+  val: 0.15
+  test: 0.15
+

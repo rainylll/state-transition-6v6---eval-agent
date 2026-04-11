@@ -1,0 +1,185 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="FlyTac">
+      <UniqueIdentifier>{a3d97b12-cb7a-40fe-9629-1fde544b8175}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="TacView">
+      <UniqueIdentifier>{7c5f5246-b2f4-4c7d-b18d-28bf72a372e9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Tools">
+      <UniqueIdentifier>{b4a93c95-61bb-45cc-a4b3-24ff0b71a9ff}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CombatSim">
+      <UniqueIdentifier>{0c82d5d3-4dea-4ab9-8095-e01c75d8959c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Sensor">
+      <UniqueIdentifier>{7d616984-dc4b-4f7f-a01b-478ce608cda2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="chuan_pid">
+      <UniqueIdentifier>{ef1e0753-4835-49d9-b507-82bfdf7565b9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Control">
+      <UniqueIdentifier>{adf8a9a8-12c8-400e-b210-d2f8b67776ab}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\Source\FlyTac\aircraft.cpp">
+      <Filter>FlyTac</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\FlyTac\missile.cpp">
+      <Filter>FlyTac</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\TacView\TacViewFile_T.cpp">
+      <Filter>TacView</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\TacView\TacViewOutput.cpp">
+      <Filter>TacView</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\TacView\TacViewServer_T.cpp">
+      <Filter>TacView</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\Tools\coordinate.cpp">
+      <Filter>Tools</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\Tools\JoySticks.cpp">
+      <Filter>Tools</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\Tools\tool_function.cpp">
+      <Filter>Tools</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\demo\AirCombat_demo.cpp" />
+    <ClCompile Include="..\Source\CombatSimulation\UnitDefine.cpp">
+      <Filter>CombatSim</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\Tools\interface.cpp">
+      <Filter>Tools</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\Sensor\missile_radar.cpp">
+      <Filter>Sensor</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\Sensor\radar.cpp">
+      <Filter>Sensor</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\Tools\extern.cpp">
+      <Filter>Tools</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\TacView\TacViewDefine.cpp">
+      <Filter>TacView</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\Tools\joystick_gamepad.cpp">
+      <Filter>Tools</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\CombatSimulation\ExtendConstants.cpp">
+      <Filter>CombatSim</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\Tools\WaypointControl.cpp">
+      <Filter>Tools</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\Tools\sea_skimming.cpp">
+      <Filter>Tools</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\Tools\ZHANSHU.cpp">
+      <Filter>Tools</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\Tools\RedCommander.cpp">
+      <Filter>Tools</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\demo\AirCombat_demo(1).cpp" />
+    <ClCompile Include="..\Source\Tools\BlueCommander.cpp">
+      <Filter>Tools</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\chuan_pid\chuan_gen_zhong.cpp">
+      <Filter>chuan_pid</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\chuan_pid\chuan_pid.cpp">
+      <Filter>chuan_pid</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\Control\flyPID.cpp">
+      <Filter>Control</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\Source\FlyTac\aircraft.h">
+      <Filter>FlyTac</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\FlyTac\missile.h">
+      <Filter>FlyTac</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\TacView\TacViewDefine.h">
+      <Filter>TacView</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\TacView\TacViewFile_T.h">
+      <Filter>TacView</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\TacView\TacViewOutput.h">
+      <Filter>TacView</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\TacView\TacViewServer_T.h">
+      <Filter>TacView</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\Tools\coordinate.h">
+      <Filter>Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\Tools\JoySticks.h">
+      <Filter>Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\Tools\tool_function.h">
+      <Filter>Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\CombatSimulation\UnitDefine.h">
+      <Filter>CombatSim</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\Tools\interface.h">
+      <Filter>Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\CombatSimulation\ExtendConstants.h">
+      <Filter>CombatSim</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\Sensor\missile_radar.h">
+      <Filter>Sensor</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\Sensor\radar.h">
+      <Filter>Sensor</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\Tools\extern.h">
+      <Filter>Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\Tools\uavDMInterface.h">
+      <Filter>Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\TacView\wgua.h">
+      <Filter>TacView</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\Tools\datalink.h">
+      <Filter>Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\Tools\joystick_gamepad.h">
+      <Filter>Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\Tools\WaypointControl.h">
+      <Filter>Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\Tools\sea_skimming.h">
+      <Filter>Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\Tools\ZHANSHU.h">
+      <Filter>Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\Tools\RedCommander.h">
+      <Filter>Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\Tools\BlueCommander.h">
+      <Filter>Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\chuan_pid\chuan_gen_zhong.h">
+      <Filter>chuan_pid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\chuan_pid\chuan_pid.h">
+      <Filter>chuan_pid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\Control\flyPID.h">
+      <Filter>Control</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

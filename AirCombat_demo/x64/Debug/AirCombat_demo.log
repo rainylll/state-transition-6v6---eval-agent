@@ -1,0 +1,77 @@
+﻿  BlueCommander.cpp
+D:\NEU\state-transition\state-transition 6v6(1)\state-transition 6v6\Source\Tools\coordinate.h(1,1): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+  (编译源文件“../Source/Tools/BlueCommander.cpp”)
+  
+D:\NEU\state-transition\state-transition 6v6(1)\state-transition 6v6\Source\Tools\tool_function.h(1,1): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+  (编译源文件“../Source/Tools/BlueCommander.cpp”)
+  
+  D:\Windows Kits\10\Include\10.0.22621.0\um\dinput.h: DIRECTINPUT_VERSION undefined. Defaulting to version 0x0800
+D:\NEU\state-transition\state-transition 6v6(1)\state-transition 6v6\Source\CombatSimulation\UnitDefine.h(259,52): warning C4244: “初始化”: 从“double”转换到“int”，可能丢失数据
+  (编译源文件“../Source/Tools/BlueCommander.cpp”)
+  
+D:\NEU\state-transition\state-transition 6v6(1)\state-transition 6v6\Source\TacView\TacViewOutput.h(1,1): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+  (编译源文件“../Source/Tools/BlueCommander.cpp”)
+  
+D:\NEU\state-transition\state-transition 6v6(1)\state-transition 6v6\Source\TacView\TacViewDefine.h(39,10): warning C4005: “max_object”: 宏重定义
+  (编译源文件“../Source/Tools/BlueCommander.cpp”)
+      D:\NEU\state-transition\state-transition 6v6(1)\state-transition 6v6\Source\CombatSimulation\UnitDefine.h(46,9):
+      参见“max_object”的前一个定义
+  
+  RedCommander.cpp
+D:\NEU\state-transition\state-transition 6v6(1)\state-transition 6v6\Source\Tools\coordinate.h(1,1): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+  (编译源文件“../Source/Tools/RedCommander.cpp”)
+  
+D:\NEU\state-transition\state-transition 6v6(1)\state-transition 6v6\Source\Tools\tool_function.h(1,1): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+  (编译源文件“../Source/Tools/RedCommander.cpp”)
+  
+  D:\Windows Kits\10\Include\10.0.22621.0\um\dinput.h: DIRECTINPUT_VERSION undefined. Defaulting to version 0x0800
+D:\NEU\state-transition\state-transition 6v6(1)\state-transition 6v6\Source\CombatSimulation\UnitDefine.h(259,52): warning C4244: “初始化”: 从“double”转换到“int”，可能丢失数据
+  (编译源文件“../Source/Tools/RedCommander.cpp”)
+  
+D:\NEU\state-transition\state-transition 6v6(1)\state-transition 6v6\Source\TacView\TacViewOutput.h(1,1): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+  (编译源文件“../Source/Tools/RedCommander.cpp”)
+  
+D:\NEU\state-transition\state-transition 6v6(1)\state-transition 6v6\Source\TacView\TacViewDefine.h(39,10): warning C4005: “max_object”: 宏重定义
+  (编译源文件“../Source/Tools/RedCommander.cpp”)
+      D:\NEU\state-transition\state-transition 6v6(1)\state-transition 6v6\Source\CombatSimulation\UnitDefine.h(46,9):
+      参见“max_object”的前一个定义
+  
+  interface.cpp
+D:\NEU\state-transition\state-transition 6v6(1)\state-transition 6v6\Source\Tools\coordinate.h(1,1): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+  (编译源文件“../Source/Tools/interface.cpp”)
+  
+D:\NEU\state-transition\state-transition 6v6(1)\state-transition 6v6\Source\Tools\tool_function.h(1,1): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+  (编译源文件“../Source/Tools/interface.cpp”)
+  
+  D:\Windows Kits\10\Include\10.0.22621.0\um\dinput.h: DIRECTINPUT_VERSION undefined. Defaulting to version 0x0800
+D:\NEU\state-transition\state-transition 6v6(1)\state-transition 6v6\Source\CombatSimulation\UnitDefine.h(259,52): warning C4244: “初始化”: 从“double”转换到“int”，可能丢失数据
+  (编译源文件“../Source/Tools/interface.cpp”)
+  
+D:\NEU\state-transition\state-transition 6v6(1)\state-transition 6v6\Source\TacView\TacViewOutput.h(1,1): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+  (编译源文件“../Source/Tools/interface.cpp”)
+  
+D:\NEU\state-transition\state-transition 6v6(1)\state-transition 6v6\Source\TacView\TacViewDefine.h(39,10): warning C4005: “max_object”: 宏重定义
+  (编译源文件“../Source/Tools/interface.cpp”)
+      D:\NEU\state-transition\state-transition 6v6(1)\state-transition 6v6\Source\CombatSimulation\UnitDefine.h(46,9):
+      参见“max_object”的前一个定义
+  
+D:\NEU\state-transition\state-transition 6v6(1)\state-transition 6v6\Source\Tools\interface.cpp(227,22): warning C4244: “初始化”: 从“double”转换到“int”，可能丢失数据
+D:\NEU\state-transition\state-transition 6v6(1)\state-transition 6v6\Source\Tools\interface.cpp(244,54): warning C4244: “=”: 从“double”转换到“int”，可能丢失数据
+D:\NEU\state-transition\state-transition 6v6(1)\state-transition 6v6\Source\Tools\interface.cpp(246,65): warning C4244: “=”: 从“double”转换到“int”，可能丢失数据
+D:\NEU\state-transition\state-transition 6v6(1)\state-transition 6v6\Source\Tools\interface.cpp(464,53): warning C4244: “=”: 从“double”转换到“float”，可能丢失数据
+D:\NEU\state-transition\state-transition 6v6(1)\state-transition 6v6\Source\Tools\interface.cpp(666,49): warning C4244: “=”: 从“double”转换到“int”，可能丢失数据
+D:\NEU\state-transition\state-transition 6v6(1)\state-transition 6v6\Source\Tools\interface.cpp(667,44): warning C4244: “=”: 从“double”转换到“int”，可能丢失数据
+D:\NEU\state-transition\state-transition 6v6(1)\state-transition 6v6\Source\Tools\interface.cpp(668,44): warning C4244: “=”: 从“double”转换到“int”，可能丢失数据
+D:\NEU\state-transition\state-transition 6v6(1)\state-transition 6v6\Source\Tools\interface.cpp(676,60): warning C4244: “=”: 从“double”转换到“int”，可能丢失数据
+D:\NEU\state-transition\state-transition 6v6(1)\state-transition 6v6\Source\Tools\interface.cpp(677,55): warning C4244: “=”: 从“double”转换到“int”，可能丢失数据
+D:\NEU\state-transition\state-transition 6v6(1)\state-transition 6v6\Source\Tools\interface.cpp(678,55): warning C4244: “=”: 从“double”转换到“int”，可能丢失数据
+D:\NEU\state-transition\state-transition 6v6(1)\state-transition 6v6\Source\Tools\interface.cpp(762,52): warning C4244: “=”: 从“double”转换到“int”，可能丢失数据
+D:\NEU\state-transition\state-transition 6v6(1)\state-transition 6v6\Source\Tools\interface.cpp(763,47): warning C4244: “=”: 从“double”转换到“int”，可能丢失数据
+D:\NEU\state-transition\state-transition 6v6(1)\state-transition 6v6\Source\Tools\interface.cpp(764,47): warning C4244: “=”: 从“double”转换到“int”，可能丢失数据
+D:\NEU\state-transition\state-transition 6v6(1)\state-transition 6v6\Source\Tools\interface.cpp(843,52): warning C4244: “=”: 从“double”转换到“int”，可能丢失数据
+D:\NEU\state-transition\state-transition 6v6(1)\state-transition 6v6\Source\Tools\interface.cpp(844,47): warning C4244: “=”: 从“double”转换到“int”，可能丢失数据
+D:\NEU\state-transition\state-transition 6v6(1)\state-transition 6v6\Source\Tools\interface.cpp(845,47): warning C4244: “=”: 从“double”转换到“int”，可能丢失数据
+D:\NEU\state-transition\state-transition 6v6(1)\state-transition 6v6\Source\Tools\interface.cpp(1317,35): warning C4244: “=”: 从“ULONGLONG”转换到“DWORD”，可能丢失数据
+D:\NEU\state-transition\state-transition 6v6(1)\state-transition 6v6\Source\Tools\interface.cpp(2524,19): warning C4244: “参数”: 从“time_t”转换到“unsigned int”，可能丢失数据
+  正在生成代码...
+  AirCombat_demo.vcxproj -> D:\NEU\state-transition\state-transition 6v6(1)\state-transition 6v6\x64\Debug\AirCombat_demo.exe

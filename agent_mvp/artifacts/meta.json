@@ -1,0 +1,13 @@
+{
+  "seed": 7,
+  "epochs": 2,
+  "batch_size": 64,
+  "lr": 0.001,
+  "processed_summary": {
+    "episodes": 300,
+    "train": 210,
+    "val": 45,
+    "test": 45,
+    "seed": 11
+  }
+}

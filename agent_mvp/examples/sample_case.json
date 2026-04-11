@@ -1,0 +1,53 @@
+{
+  "red_units": [
+    {
+      "type": "fighter",
+      "speed": 320.0,
+      "sensor": 0.82,
+      "weapon": 0.75,
+      "defense": 0.55,
+      "hp": 0.85,
+      "ecm": 0.51
+    },
+    {
+      "type": "fighter",
+      "speed": 300.0,
+      "sensor": 0.77,
+      "weapon": 0.70,
+      "defense": 0.50,
+      "hp": 0.82,
+      "ecm": 0.45
+    },
+    {
+      "type": "ship",
+      "speed": 34.0,
+      "sensor": 0.90,
+      "weapon": 0.86,
+      "defense": 0.88,
+      "hp": 1.05,
+      "ecm": 0.40
+    }
+  ],
+  "blue_units": [
+    {
+      "type": "fighter",
+      "speed": 295.0,
+      "sensor": 0.72,
+      "weapon": 0.65,
+      "defense": 0.48,
+      "hp": 0.80,
+      "ecm": 0.43
+    },
+    {
+      "type": "ship",
+      "speed": 30.0,
+      "sensor": 0.83,
+      "weapon": 0.79,
+      "defense": 0.80,
+      "hp": 0.98,
+      "ecm": 0.38
+    }
+  ],
+  "tactic": [0.7, 0.8, 0.6, 0.55, 0.4]
+}
+

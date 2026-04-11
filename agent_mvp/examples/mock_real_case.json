@@ -1,0 +1,122 @@
+{
+  "battle_id": "demo-001",
+  "timestamp": 1733558400,
+  "red": {
+    "aircraft": [
+      {
+        "id": "R-A-01",
+        "type_name": "J-16",
+        "lon": 123.502,
+        "lat": 31.111,
+        "alt_m": 9200.0,
+        "vx_mps": 180.0,
+        "vy_mps": 110.0,
+        "speed_mps": 212.0,
+        "radar_range_km": 155.0,
+        "a2a_missiles": 6,
+        "gun_rounds": 320,
+        "jammer_level": 0.62,
+        "chaff_count": 8,
+        "fuel_ratio": 0.76,
+        "integrity": 0.95,
+        "awacs_link_quality": 0.8
+      },
+      {
+        "id": "R-A-02",
+        "type_name": "J-10C",
+        "lon": 123.420,
+        "lat": 31.030,
+        "alt_m": 8700.0,
+        "speed_mps": 198.0,
+        "radar_range_km": 120.0,
+        "a2a_missiles": 4,
+        "gun_rounds": 260,
+        "jammer_level": 0.52,
+        "chaff_count": 6,
+        "fuel_ratio": 0.72,
+        "integrity": 0.92,
+        "awacs_link_quality": 0.7
+      }
+    ],
+    "ships": [
+      {
+        "id": "R-S-01",
+        "type_name": "052D",
+        "lon": 123.020,
+        "lat": 30.810,
+        "speed_knots": 22.0,
+        "heading_deg": 130.0,
+        "radar_range_km": 260.0,
+        "sam_count": 48,
+        "ashm_count": 8,
+        "ciws_level": 0.74,
+        "ecm_level": 0.68,
+        "displacement_ton": 7200,
+        "integrity": 0.97,
+        "ew_support": 0.8
+      }
+    ]
+  },
+  "blue": {
+    "aircraft": [
+      {
+        "id": "B-A-01",
+        "type_name": "F/A-18E",
+        "lon": 124.030,
+        "lat": 31.740,
+        "alt_m": 8500.0,
+        "speed_mps": 205.0,
+        "radar_range_km": 140.0,
+        "a2a_missiles": 5,
+        "gun_rounds": 300,
+        "jammer_level": 0.55,
+        "chaff_count": 7,
+        "fuel_ratio": 0.74,
+        "integrity": 0.94,
+        "awacs_link_quality": 0.75
+      }
+    ],
+    "ships": [
+      {
+        "id": "B-S-01",
+        "type_name": "ArleighBurke",
+        "lon": 124.220,
+        "lat": 31.520,
+        "speed_knots": 20.0,
+        "heading_deg": 290.0,
+        "radar_range_km": 240.0,
+        "sam_count": 56,
+        "ashm_count": 6,
+        "ciws_level": 0.70,
+        "ecm_level": 0.63,
+        "displacement_ton": 9200,
+        "integrity": 0.96,
+        "ew_support": 0.78
+      },
+      {
+        "id": "B-S-02",
+        "type_name": "FFG",
+        "lon": 124.380,
+        "lat": 31.410,
+        "speed_knots": 18.0,
+        "heading_deg": 275.0,
+        "radar_range_km": 180.0,
+        "sam_count": 24,
+        "ashm_count": 4,
+        "ciws_level": 0.52,
+        "ecm_level": 0.50,
+        "displacement_ton": 4200,
+        "integrity": 0.93,
+        "ew_support": 0.62
+      }
+    ]
+  },
+  "tactic_cmd": {
+    "launch_delay_s": 90,
+    "formation_compactness": 0.68,
+    "target_focus_ratio": 0.72,
+    "attack_bearing_deg": 55,
+    "support_level": 0.66
+  }
+}
+

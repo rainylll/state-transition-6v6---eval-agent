@@ -1,0 +1,20 @@
+{
+  "seed": 7,
+  "epochs": 20,
+  "batch_size": 64,
+  "lr": 0.001,
+  "processed_summary": {
+    "episodes_total": 100,
+    "episodes_valid": 100,
+    "episodes_invalid": 0,
+    "expand_4v2": false,
+    "evaluate_slices": false,
+    "slicer_strategy": "distance_threat",
+    "train": 70,
+    "val": 15,
+    "test": 15,
+    "seed": 7,
+    "train_ratio": 0.7,
+    "val_ratio": 0.15
+  }
+}
