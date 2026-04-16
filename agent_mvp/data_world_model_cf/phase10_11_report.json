@@ -1,0 +1,187 @@
+{
+  "model_name": "phase10_11_blue_terminal_filter_fix",
+  "checkpoint_path": "D:\\sky\\Projects\\state-transition 6v6 + eval agent\\agent_mvp\\data_world_model_cf\\phase10_11_blue_terminal_filter_fix\\model.pt",
+  "commands": {
+    "train": "C:/Users/98466/.conda/envs/rainyll/python.exe agent_mvp/python/train_world_model.py --data-dir agent_mvp/data_world_model_cf/ab_train_visible_only --out-dir agent_mvp/data_world_model_cf/phase10_11_blue_terminal_filter_fix --epochs 0 --stage2-epochs 1 --stage2-lr 0.00015 --init-model-path agent_mvp/data_world_model_cf/phase10_8_firstkill_fix/model.pt --stage2-firstkill-focus --stage2-firstkill-positive-repeat 6 --stage2-firstkill-hard-negative-repeat 3 --stage2-blue-terminal-conflict-repeat 4 --device cuda --seed 7",
+    "strict_eval_10_11": "C:/Users/98466/.conda/envs/rainyll/python.exe agent_mvp/python/eval_world_model.py --data-dir agent_mvp/data_world_model_cf/heldout_pack --model-path agent_mvp/data_world_model_cf/phase10_11_blue_terminal_filter_fix/model.pt --out-path agent_mvp/data_world_model_cf/phase10_11_blue_terminal_filter_fix_strict_eval.json --splits heldout_cf --device cuda",
+    "strict_eval_10_8_rerun": "C:/Users/98466/.conda/envs/rainyll/python.exe agent_mvp/python/eval_world_model.py --data-dir agent_mvp/data_world_model_cf/heldout_pack --model-path agent_mvp/data_world_model_cf/phase10_8_firstkill_fix/model.pt --out-path agent_mvp/data_world_model_cf/phase10_8_firstkill_fix_strict_eval_rerun_1011.json --splits heldout_cf --device cuda",
+    "counterfactual_eval_10_11": "C:/Users/98466/.conda/envs/rainyll/python.exe agent_mvp/python/counterfactual_eval_world_model.py --data-dir agent_mvp/data_world_model_cf/heldout_pack --model-path agent_mvp/data_world_model_cf/phase10_11_blue_terminal_filter_fix/model.pt --out-path agent_mvp/data_world_model_cf/phase10_11_blue_terminal_filter_fix_counterfactual_eval.json --splits heldout_cf --horizons 20,terminal --state-step 0 --min-groups 8 --min-pairs 100 --device cuda"
+  },
+  "stage2_summary": {},
+  "strict_compare_10_8_vs_10_11": {
+    "event_first_kill_accuracy": {
+      "10.8": 0.7,
+      "10.11": 0.66875
+    },
+    "red_first_kill_accuracy": {
+      "10.8": 0.6875,
+      "10.11": 0.6875
+    },
+    "blue_first_kill_accuracy": {
+      "10.8": 0.7125,
+      "10.11": 0.65
+    },
+    "blue_first_kill_precision": {
+      "10.8": 0.23333333333333334,
+      "10.11": 0.2
+    },
+    "blue_first_kill_pred_positive_rate": {
+      "10.8": 0.375,
+      "10.11": 0.4375
+    },
+    "blue_first_kill_false_positive_rate": {
+      "10.8": 0.3150684931506849,
+      "10.11": 0.3835616438356164
+    },
+    "blue_first_kill_terminal_false_positive_rate": {
+      "10.8": 0.696969696969697,
+      "10.11": 0.8484848484848485
+    },
+    "critical_event_accuracy": {
+      "10.8": 0.7650000086054206,
+      "10.11": 0.7525000080466271
+    },
+    "termination_flag_accuracy": {
+      "10.8": 0.9625,
+      "10.11": 0.9625
+    },
+    "termination_flag_high_conf_hit_rate": {
+      "10.8": 1.0,
+      "10.11": 1.0
+    },
+    "reward_red_mae": {
+      "10.8": 3.1467823445796967,
+      "10.11": 3.117917901277542
+    },
+    "reward_total_mae": {
+      "10.8": 3.074378564953804,
+      "10.11": 3.0885115772485734
+    },
+    "terminal_win_accuracy": {
+      "10.8": 0.5375,
+      "10.11": 0.5375
+    },
+    "trajectory_alive_accuracy": {
+      "10.8": 0.9083333333333332,
+      "10.11": 0.9083333333333332
+    },
+    "terminal_red_outcome_confusion_rate": {
+      "10.8": 0.8,
+      "10.11": 0.8666666666666667
+    },
+    "terminal_blue_objective_confusion_rate": {
+      "10.8": 0.6,
+      "10.11": 0.8
+    }
+  },
+  "counterfactual_compare_10_8_vs_10_11": {
+    "event_blue_first_kill_prob": {
+      "10.8": {
+        "num_pairs": 160,
+        "num_signal_pairs": 20,
+        "delta_mae": 0.1252025414013133,
+        "mean_true_abs_delta": 0.125,
+        "mean_pred_abs_delta": 0.000248352041171529,
+        "sign_accuracy_on_signal_pairs": 0.4
+      },
+      "10.11": {
+        "num_pairs": 160,
+        "num_signal_pairs": 20,
+        "delta_mae": 0.12518644433571352,
+        "mean_true_abs_delta": 0.125,
+        "mean_pred_abs_delta": 0.000230526440873291,
+        "sign_accuracy_on_signal_pairs": 0.5
+      }
+    },
+    "termination_flag": {
+      "10.8": {
+        "num_pairs": 160,
+        "num_signal_pairs": 12,
+        "delta_mae": 0.07500086683007226,
+        "mean_true_abs_delta": 0.075,
+        "mean_pred_abs_delta": 1.0337230776258366e-06,
+        "sign_accuracy_on_signal_pairs": 0.4166666666666667
+      },
+      "10.11": {
+        "num_pairs": 160,
+        "num_signal_pairs": 12,
+        "delta_mae": 0.07500243037907808,
+        "mean_true_abs_delta": 0.075,
+        "mean_pred_abs_delta": 3.0696388932938135e-06,
+        "sign_accuracy_on_signal_pairs": 0.4166666666666667
+      }
+    },
+    "reward_red": {
+      "10.8": {
+        "num_pairs": 160,
+        "num_signal_pairs": 59,
+        "delta_mae": 0.45898618185892703,
+        "mean_true_abs_delta": 0.4585757934488356,
+        "mean_pred_abs_delta": 0.0012095913290977478,
+        "sign_accuracy_on_signal_pairs": 0.6101694915254238
+      },
+      "10.11": {
+        "num_pairs": 160,
+        "num_signal_pairs": 59,
+        "delta_mae": 0.4590264164842665,
+        "mean_true_abs_delta": 0.4585757934488356,
+        "mean_pred_abs_delta": 0.0012350015342235566,
+        "sign_accuracy_on_signal_pairs": 0.6101694915254238
+      }
+    },
+    "terminal_red_win_prob": {
+      "10.8": {
+        "num_pairs": 160,
+        "num_signal_pairs": 88,
+        "delta_mae": 0.5500929433852434,
+        "mean_true_abs_delta": 0.55,
+        "mean_pred_abs_delta": 0.0008214801549911499,
+        "sign_accuracy_on_signal_pairs": 0.6704545454545454
+      },
+      "10.11": {
+        "num_pairs": 160,
+        "num_signal_pairs": 88,
+        "delta_mae": 0.5500909566879273,
+        "mean_true_abs_delta": 0.55,
+        "mean_pred_abs_delta": 0.0008132189512252807,
+        "sign_accuracy_on_signal_pairs": 0.6704545454545454
+      }
+    }
+  },
+  "stage2_sampling_summary": {
+    "base_count": 160,
+    "expanded_count": 480,
+    "first_kill_positive_count": 40,
+    "first_kill_hard_negative_count": 40,
+    "positive_repeat": 6,
+    "hard_negative_repeat": 3,
+    "red_first_kill_positive_count": 28,
+    "blue_first_kill_positive_count": 12,
+    "red_first_kill_hard_negative_count": 40,
+    "blue_first_kill_hard_negative_count": 0,
+    "blue_terminal_conflict_count": 40,
+    "blue_eligible_count": 80,
+    "blue_ineligible_filtered_count": 40,
+    "red_positive_repeat": 6,
+    "blue_positive_repeat": 6,
+    "red_hard_negative_repeat": 3,
+    "blue_hard_negative_repeat": 3,
+    "blue_terminal_conflict_repeat": 4,
+    "mode": "first_kill_focus"
+  },
+  "stage2_loss_config": {
+    "consistency_weight": 0.2,
+    "event_weight": 1.2,
+    "reward_weight": 0.8,
+    "event_group_weights": {
+      "contact_warning_group": 1.0,
+      "tactical_transition_group": 1.4,
+      "critical_first_kill_group": 3.8,
+      "critical_objective_group": 3.4,
+      "critical_termination_group": 4.5
+    },
+    "termination_extra_weight": 4.0,
+    "event_count_weight": 0.6,
+    "critical_hard_positive_weight": 1.8
+  }
+}

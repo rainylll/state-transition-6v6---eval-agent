@@ -66,8 +66,11 @@ SUMMARY_METRIC_KEYS = (
     "blue_first_kill_high_conf_hit_rate",
     "blue_first_kill_pred_positive_rate",
     "blue_first_kill_false_positive_rate",
+    "blue_first_kill_terminal_false_positive_rate",
     "blue_first_kill_eligible_subset_accuracy",
     "blue_first_kill_eligible_subset_precision",
+    "terminal_red_outcome_confusion_rate",
+    "terminal_blue_objective_confusion_rate",
     "event_objective_accuracy",
     "event_termination_accuracy",
     "critical_event_accuracy",
@@ -247,9 +250,10 @@ def annotate_first_kill_eligibility(records: List[Dict[str, Any]]) -> List[Dict[
         meta = dict(record.get("meta", {}) if isinstance(record.get("meta", {}), dict) else {})
         episode_id = str(meta.get("episode_id") or record.get("episode_id") or record.get("task_id") or "")
         t_index = int(meta.get("t_index", 0))
+        horizon = str(record.get("horizon"))
+        target_event = record.get("target_event", {}) if isinstance(record.get("target_event", {}), dict) else {}
         future_info = terminal_maps.get(episode_id, {}).get(t_index)
         if future_info is None:
-            target_event = record.get("target_event", {}) if isinstance(record.get("target_event", {}), dict) else {}
             future_red_first_kill = bool(target_event.get("red_first_kill_flag", False))
             future_blue_first_kill = bool(target_event.get("blue_first_kill_flag", False))
             future_any_first_kill = future_red_first_kill or future_blue_first_kill
@@ -260,11 +264,36 @@ def annotate_first_kill_eligibility(records: List[Dict[str, Any]]) -> List[Dict[
 
         any_first_kill_in_episode = bool(episode_any_first_kill.get(episode_id, future_any_first_kill))
         prior_kill_seen = bool(any_first_kill_in_episode and not future_any_first_kill)
+        red_first_kill_true = bool(target_event.get("red_first_kill_flag", False))
+        blue_first_kill_true = bool(target_event.get("blue_first_kill_flag", False))
+        red_objective_true = bool(target_event.get("red_objective_complete_flag", False))
+        blue_objective_true = bool(target_event.get("blue_objective_complete_flag", False))
+        terminal_red_outcome_conflict = bool(
+            horizon == "terminal" and (not blue_first_kill_true) and red_first_kill_true
+        )
+        terminal_blue_objective_conflict = bool(
+            horizon == "terminal" and (not blue_first_kill_true) and blue_objective_true
+        )
+        terminal_no_first_kill_remaining_conflict = bool(
+            horizon == "terminal" and (not blue_first_kill_true) and (not future_any_first_kill)
+        )
+        blue_first_kill_terminal_conflict = bool(
+            terminal_red_outcome_conflict
+            or terminal_blue_objective_conflict
+            or terminal_no_first_kill_remaining_conflict
+        )
         meta["prior_kill_seen"] = prior_kill_seen
         meta["red_first_kill_eligible"] = bool(future_any_first_kill)
         meta["blue_first_kill_eligible"] = bool(future_any_first_kill)
         meta["future_red_first_kill_possible"] = bool(future_red_first_kill)
         meta["future_blue_first_kill_possible"] = bool(future_blue_first_kill)
+        meta["terminal_red_outcome_conflict"] = terminal_red_outcome_conflict
+        meta["terminal_blue_objective_without_blue_first_kill_conflict"] = terminal_blue_objective_conflict
+        meta["terminal_no_first_kill_remaining_conflict"] = terminal_no_first_kill_remaining_conflict
+        meta["blue_first_kill_terminal_conflict"] = blue_first_kill_terminal_conflict
+        meta["blue_first_kill_terminal_eligible"] = bool(
+            horizon != "terminal" or blue_first_kill_true or (not blue_first_kill_terminal_conflict)
+        )
         record["meta"] = meta
 
     return records
@@ -750,6 +779,13 @@ def _record_side_first_kill_eligible(record: Dict[str, Any], side: str) -> bool:
     return bool(meta.get(f"{side}_first_kill_eligible", default_value))
 
 
+def _record_blue_terminal_conflict(record: Dict[str, Any]) -> bool:
+    meta = record.get("meta", {})
+    if not isinstance(meta, dict):
+        return False
+    return bool(meta.get("blue_first_kill_terminal_conflict", False))
+
+
 def build_first_kill_stage2_records(
     records: Sequence[Dict[str, Any]],
     positive_repeat: int,
@@ -758,6 +794,7 @@ def build_first_kill_stage2_records(
     blue_positive_repeat: int = None,
     red_hard_negative_repeat: int = None,
     blue_hard_negative_repeat: int = None,
+    blue_terminal_conflict_repeat: int = 1,
 ) -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
     output: List[Dict[str, Any]] = []
     positive_count = 0
@@ -766,6 +803,7 @@ def build_first_kill_stage2_records(
     blue_positive_count = 0
     red_hard_negative_count = 0
     blue_hard_negative_count = 0
+    blue_terminal_conflict_count = 0
     blue_eligible_count = 0
     blue_ineligible_filtered_count = 0
     base_count = len(records)
@@ -797,6 +835,7 @@ def build_first_kill_stage2_records(
             red_hard_negative = _record_side_first_kill_hard_negative(record, "red")
             raw_blue_hard_negative = _record_side_first_kill_hard_negative(record, "blue")
             blue_hard_negative = blue_eligible and raw_blue_hard_negative
+            blue_terminal_conflict = _record_blue_terminal_conflict(record)
             if red_hard_negative:
                 repeats = max(repeats, red_hard_negative_repeat)
                 red_hard_negative_count += 1
@@ -805,6 +844,9 @@ def build_first_kill_stage2_records(
                 blue_hard_negative_count += 1
             elif raw_blue_hard_negative and not blue_eligible:
                 blue_ineligible_filtered_count += 1
+            if blue_terminal_conflict:
+                repeats = max(repeats, int(blue_terminal_conflict_repeat))
+                blue_terminal_conflict_count += 1
             if red_hard_negative or blue_hard_negative:
                 hard_negative_count += 1
         for _ in range(max(repeats, 1)):
@@ -820,12 +862,14 @@ def build_first_kill_stage2_records(
         "blue_first_kill_positive_count": blue_positive_count,
         "red_first_kill_hard_negative_count": red_hard_negative_count,
         "blue_first_kill_hard_negative_count": blue_hard_negative_count,
+        "blue_terminal_conflict_count": blue_terminal_conflict_count,
         "blue_eligible_count": blue_eligible_count,
         "blue_ineligible_filtered_count": blue_ineligible_filtered_count,
         "red_positive_repeat": red_positive_repeat,
         "blue_positive_repeat": blue_positive_repeat,
         "red_hard_negative_repeat": red_hard_negative_repeat,
         "blue_hard_negative_repeat": blue_hard_negative_repeat,
+        "blue_terminal_conflict_repeat": int(blue_terminal_conflict_repeat),
     }
 
 
@@ -1231,6 +1275,11 @@ def _build_prediction_records_for_batch(
         meta = raw_record.get("meta", {})
         sampling_meta = meta.get("sampling_meta", {}) if isinstance(meta.get("sampling_meta", {}), dict) else {}
         blue_first_kill_eligible = bool(meta.get("blue_first_kill_eligible", not bool(meta.get("prior_kill_seen", False))))
+        blue_first_kill_terminal_conflict = bool(meta.get("blue_first_kill_terminal_conflict", False))
+        terminal_red_outcome_conflict = bool(meta.get("terminal_red_outcome_conflict", False))
+        terminal_blue_objective_conflict = bool(
+            meta.get("terminal_blue_objective_without_blue_first_kill_conflict", False)
+        )
         tactic_combo_key = sampling_meta.get("tactic_combo_key")
         if tactic_combo_key is None:
             red_cond = raw_record.get("red_tactic_condition", {})
@@ -1300,12 +1349,43 @@ def _build_prediction_records_for_batch(
                 "blue_first_kill_high_conf_hit_rate": blue_first_kill_high_conf_hit_rate,
                 "blue_first_kill_pred_positive_rate": _pred_positive_value(blue_first_kill_prob),
                 "blue_first_kill_false_positive_rate": _false_positive_value(blue_first_kill_prob, blue_first_kill_target),
+                "blue_first_kill_terminal_false_positive_rate": (
+                    1.0
+                    if (
+                        str(raw_record.get("horizon")) == "terminal"
+                        and blue_first_kill_target < 0.5
+                        and blue_first_kill_prob >= 0.5
+                    )
+                    else (
+                        0.0
+                        if str(raw_record.get("horizon")) == "terminal" and blue_first_kill_target < 0.5
+                        else None
+                    )
+                ),
                 "blue_first_kill_eligible": blue_first_kill_eligible,
                 "blue_first_kill_eligible_subset_accuracy": (
                     blue_first_kill_accuracy if blue_first_kill_eligible else None
                 ),
                 "blue_first_kill_eligible_subset_precision": (
                     blue_first_kill_precision if blue_first_kill_eligible else None
+                ),
+                "terminal_red_outcome_confusion_rate": (
+                    1.0
+                    if (
+                        terminal_red_outcome_conflict
+                        and blue_first_kill_target < 0.5
+                        and blue_first_kill_prob >= 0.5
+                    )
+                    else (0.0 if terminal_red_outcome_conflict else None)
+                ),
+                "terminal_blue_objective_confusion_rate": (
+                    1.0
+                    if (
+                        terminal_blue_objective_conflict
+                        and blue_first_kill_target < 0.5
+                        and blue_first_kill_prob >= 0.5
+                    )
+                    else (0.0 if terminal_blue_objective_conflict else None)
                 ),
                 "event_objective_accuracy": event_objective_accuracy,
                 "event_termination_accuracy": event_termination_accuracy,
@@ -1797,6 +1877,7 @@ def main() -> None:
     parser.add_argument("--stage2-blue-firstkill-positive-repeat", type=int, default=None)
     parser.add_argument("--stage2-red-firstkill-hard-negative-repeat", type=int, default=None)
     parser.add_argument("--stage2-blue-firstkill-hard-negative-repeat", type=int, default=None)
+    parser.add_argument("--stage2-blue-terminal-conflict-repeat", type=int, default=1)
     parser.add_argument(
         "--loss-config-path",
         type=Path,
@@ -1909,6 +1990,7 @@ def main() -> None:
                 blue_positive_repeat=args.stage2_blue_firstkill_positive_repeat,
                 red_hard_negative_repeat=args.stage2_red_firstkill_hard_negative_repeat,
                 blue_hard_negative_repeat=args.stage2_blue_firstkill_hard_negative_repeat,
+                blue_terminal_conflict_repeat=args.stage2_blue_terminal_conflict_repeat,
             )
             stage2_sampling_summary["mode"] = "first_kill_focus"
         stage2_ds = WorldModelDataset(stage2_records, reward_norm_stats=reward_norm_stats)
@@ -2047,6 +2129,7 @@ def main() -> None:
             "stage2_blue_firstkill_positive_repeat": args.stage2_blue_firstkill_positive_repeat,
             "stage2_red_firstkill_hard_negative_repeat": args.stage2_red_firstkill_hard_negative_repeat,
             "stage2_blue_firstkill_hard_negative_repeat": args.stage2_blue_firstkill_hard_negative_repeat,
+            "stage2_blue_terminal_conflict_repeat": args.stage2_blue_terminal_conflict_repeat,
             "loss_config_path": str(args.loss_config_path) if args.loss_config_path else None,
             "stage2_loss_config_path": str(args.stage2_loss_config_path) if args.stage2_loss_config_path else None,
             "effective_loss_config": train_loss_config,
