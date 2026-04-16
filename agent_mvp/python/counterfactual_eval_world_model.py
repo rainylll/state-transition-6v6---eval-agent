@@ -51,6 +51,16 @@ COUNTERFACTUAL_METRICS = {
         "true_key": "true_event_blue_kill_count",
         "signal_threshold": 0.5,
     },
+    "event_red_first_kill_prob": {
+        "pred_key": "pred_event_red_first_kill_prob",
+        "true_key": "true_event_red_first_kill",
+        "signal_threshold": 0.5,
+    },
+    "event_blue_first_kill_prob": {
+        "pred_key": "pred_event_blue_first_kill_prob",
+        "true_key": "true_event_blue_first_kill",
+        "signal_threshold": 0.5,
+    },
     "termination_flag": {
         "pred_key": "pred_event_termination_prob",
         "true_key": "true_event_termination",
@@ -208,6 +218,20 @@ def _group_counterfactual_candidates(
     }
 
 
+def _coverage_status(num_groups: int, num_pairs: int, min_groups: int, min_pairs: int) -> Dict[str, Any]:
+    groups_ok = int(num_groups) >= int(min_groups)
+    pairs_ok = int(num_pairs) >= int(min_pairs)
+    valid = bool(groups_ok and pairs_ok)
+    return {
+        "valid": valid,
+        "coverage_insufficient": not valid,
+        "groups_ok": groups_ok,
+        "pairs_ok": pairs_ok,
+        "min_groups": int(min_groups),
+        "min_pairs": int(min_pairs),
+    }
+
+
 def _build_group_examples(groups: Dict[Tuple[str, str, int], List[Dict[str, Any]]], max_examples: int) -> List[Dict[str, Any]]:
     examples: List[Dict[str, Any]] = []
     ordered_groups = sorted(groups.items(), key=lambda item: (-len(item[1]), item[0][1], item[0][2]))
@@ -258,6 +282,13 @@ def main() -> None:
     )
     parser.add_argument("--state-step", type=int, default=0, help="Only compare records from this initial state_step.")
     parser.add_argument("--max-examples", type=int, default=6)
+    parser.add_argument("--min-groups", type=int, default=5)
+    parser.add_argument("--min-pairs", type=int, default=20)
+    parser.add_argument(
+        "--allow-insufficient-coverage",
+        action="store_true",
+        help="If set, do not fail process exit code when coverage is below min-groups/min-pairs.",
+    )
     args = parser.parse_args()
 
     if args.device == "cuda" and not torch.cuda.is_available():
@@ -308,6 +339,23 @@ def main() -> None:
         "loaded_splits": loaded_splits,
         "horizons": horizons,
         "state_step": args.state_step,
+        "grouping_definition": {
+            "same_initial_key": "canonical_state_signature(state_t)",
+            "group_key_fields": ["state_signature", "horizon", "state_step"],
+            "different_tactic_key": "tactic_combo_key",
+        },
+        "evaluation_semantics": {
+            "reward_space": {
+                "pred_reward_red": "denormalized_raw_reward",
+                "true_reward_red": "denormalized_raw_reward",
+                "pred_reward_blue": "denormalized_raw_reward",
+                "true_reward_blue": "denormalized_raw_reward",
+            },
+            "termination": {
+                "termination_flag": "effective_combat_termination_flag",
+                "effective_definition": "terminal horizon with non-decisive reasons (safety_limit/none/timeout/time_limit) mapped to 0",
+            },
+        },
         "num_records": len(records),
         "num_prediction_records": len(prediction_records),
         "num_counterfactual_groups": len(groups),
@@ -315,20 +363,34 @@ def main() -> None:
         "metrics": metrics_summary,
         "focus_metrics": {
             "event_red_fire_count": metrics_summary.get("event_red_fire_count", {}),
+            "event_red_first_kill_prob": metrics_summary.get("event_red_first_kill_prob", {}),
+            "event_blue_first_kill_prob": metrics_summary.get("event_blue_first_kill_prob", {}),
             "termination_flag": metrics_summary.get("termination_flag", {}),
             "reward_red": metrics_summary.get("reward_red", {}),
+            "terminal_red_win_prob": metrics_summary.get("terminal_red_win_prob", {}),
         },
         "group_examples": _build_group_examples(groups, args.max_examples),
     }
+    payload.update(
+        _coverage_status(
+            num_groups=payload["num_counterfactual_groups"],
+            num_pairs=payload["num_counterfactual_pairs"],
+            min_groups=args.min_groups,
+            min_pairs=args.min_pairs,
+        )
+    )
     write_json(args.out_path, payload)
 
     print(
         "Counterfactual evaluation | "
         f"groups={payload['num_counterfactual_groups']} | "
-        f"pairs={payload['num_counterfactual_pairs']}"
+        f"pairs={payload['num_counterfactual_pairs']} | "
+        f"valid={payload['valid']}"
     )
     for metric_name in (
         "event_red_fire_count",
+        "event_red_first_kill_prob",
+        "event_blue_first_kill_prob",
         "termination_flag",
         "reward_red",
         "terminal_red_win_prob",
@@ -340,6 +402,14 @@ def main() -> None:
             f"signal_pairs={metric['num_signal_pairs']} | "
             f"sign_acc={metric['sign_accuracy_on_signal_pairs']}"
         )
+
+    if payload["coverage_insufficient"]:
+        print(
+            "Coverage insufficient for held-out counterfactual validity | "
+            f"min_groups={payload['min_groups']} min_pairs={payload['min_pairs']}"
+        )
+        if not args.allow_insufficient_coverage:
+            raise SystemExit(2)
 
 
 if __name__ == "__main__":

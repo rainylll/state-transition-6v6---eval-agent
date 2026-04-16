@@ -38,7 +38,19 @@ def _print_split_summary(name: str, metrics: Dict[str, Any]) -> None:
         f"critical_event_acc={_v('critical_event_accuracy'):.4f} | "
         f"termination_acc={_v('termination_flag_accuracy'):.4f} | "
         f"termination_hi_conf_hit={_v('termination_flag_high_conf_hit_rate'):.4f} | "
+        f"red_fk_acc={_v('red_first_kill_accuracy'):.4f} | "
+        f"blue_fk_acc={_v('blue_first_kill_accuracy'):.4f} | "
         f"first_kill_acc={_v('first_kill_accuracy'):.4f} | "
+        f"red_fk_recall={_v('red_first_kill_positive_recall'):.4f} | "
+        f"blue_fk_recall={_v('blue_first_kill_positive_recall'):.4f} | "
+        f"red_fk_prec={_v('red_first_kill_precision'):.4f} | "
+        f"blue_fk_prec={_v('blue_first_kill_precision'):.4f} | "
+        f"red_fk_hi_conf={_v('red_first_kill_high_conf_hit_rate'):.4f} | "
+        f"blue_fk_hi_conf={_v('blue_first_kill_high_conf_hit_rate'):.4f} | "
+        f"blue_fk_pred_pos={_v('blue_first_kill_pred_positive_rate'):.4f} | "
+        f"blue_fk_fp={_v('blue_first_kill_false_positive_rate'):.4f} | "
+        f"blue_fk_elig_acc={_v('blue_first_kill_eligible_subset_accuracy'):.4f} | "
+        f"blue_fk_elig_prec={_v('blue_first_kill_eligible_subset_precision'):.4f} | "
         f"objective_complete_acc={_v('objective_complete_accuracy'):.4f} | "
         f"reward_mae={_v('reward_total_mae'):.4f} | "
         f"reward_red_delta_scale={_v('reward_red_delta_scale'):.4f} | "
@@ -87,6 +99,20 @@ def main() -> None:
         reward_norm_stats=reward_norm_stats,
         split_names=split_names,
     )
+    metrics["_evaluation_semantics"] = {
+        "reward_space": {
+            "reward_red_mae": "denormalized_raw_reward",
+            "reward_blue_mae": "denormalized_raw_reward",
+            "reward_total_mae": "denormalized_raw_reward",
+            "reward_red_delta_scale": "denormalized_raw_reward",
+            "reward_blue_delta_scale": "denormalized_raw_reward",
+        },
+        "termination": {
+            "termination_flag_accuracy": "effective_combat_termination_flag",
+            "termination_flag_high_conf_hit_rate": "effective_combat_termination_flag_with_prob>=0.7",
+            "effective_definition": "terminal horizon with non-decisive reasons (safety_limit/none/timeout/time_limit) mapped to 0",
+        },
+    }
     write_json(args.out_path, metrics)
 
     print("World-model strict evaluation:")

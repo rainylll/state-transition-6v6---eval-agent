@@ -6,6 +6,7 @@ from typing import Dict, List, Optional, Tuple
 import torch
 
 from data_io import write_json
+from same_initial_signature import canonical_state_rows
 from predicted_trajectory_to_acmi import (
     load_seed_record,
     rollout_predicted_trajectory,
@@ -45,23 +46,7 @@ def _extract_tactic_id(condition: Dict) -> Optional[int]:
 
 
 def _state_signature(state: Dict) -> List[Tuple[str, str, float, float, float, float, float, int, int]]:
-    signature: List[Tuple[str, str, float, float, float, float, float, int, int]] = []
-    for side in ("red", "blue"):
-        for unit in state.get(f"{side}_units", []):
-            signature.append(
-                (
-                    side,
-                    str(unit.get("unit_id", "")),
-                    round(_to_float(unit.get("lon", 0.0)), 6),
-                    round(_to_float(unit.get("lat", 0.0)), 6),
-                    round(_to_float(unit.get("alt_m", 0.0)), 3),
-                    round(_to_float(unit.get("speed_mps", 0.0)), 3),
-                    round(_to_float(unit.get("heading_deg", 0.0)), 3),
-                    _to_int(unit.get("missile_count", 0), 0),
-                    _to_int(unit.get("alive", 0), 0),
-                )
-            )
-    return sorted(signature)
+    return canonical_state_rows(state)
 
 
 def _resolve_seed_side_condition(seed_record: Dict, side: str) -> Dict:

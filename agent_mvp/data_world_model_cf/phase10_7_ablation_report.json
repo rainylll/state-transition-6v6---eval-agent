@@ -1,0 +1,294 @@
+{
+  "timestamp": "2026-04-16T17:09:14.6166759+08:00",
+  "phase": "10.7",
+  "title": "Critical-head only ablation with termination semantics frozen",
+  "objective": "Recover critical_event_accuracy while preserving Phase10.6 termination semantics and held-out counterfactual validity.",
+  "frozen_constraints": {
+    "termination_semantics": "unchanged (effective termination mapping kept)",
+    "heldout_pack": "agent_mvp/data_world_model_cf/heldout_pack",
+    "gate_rules": "unchanged",
+    "reward_normalization": "unchanged",
+    "backbone": "unchanged",
+    "visualization_layer": "unchanged"
+  },
+  "baseline_E0": {
+    "name": "Phase10.6 final artifacts (reused, no retrain in this phase)",
+    "checkpoint": "agent_mvp/data_world_model_cf/phase10_6_ft_nocf/model.pt",
+    "strict_eval_report": "agent_mvp/data_world_model_cf/phase10_6_final_strict_eval.json",
+    "counterfactual_eval_report": "agent_mvp/data_world_model_cf/phase10_6_final_counterfactual_eval.json"
+  },
+  "shared_eval_protocol": {
+    "strict": {
+      "splits": "heldout_cf",
+      "horizons": [
+        "20",
+        "terminal"
+      ]
+    },
+    "counterfactual": {
+      "splits": "heldout_cf",
+      "horizons": [
+        "20",
+        "terminal"
+      ],
+      "state_step": 0,
+      "min_groups": 8,
+      "min_pairs": 100
+    }
+  },
+  "experiments": [
+    {
+      "id": "E1",
+      "change": "Only set critical_hard_positive_weight=1.0 in stage2.",
+      "stage2_loss_config": "agent_mvp/data_world_model_cf/phase10_7_ablation/configs/E1_stage2_loss.json",
+      "commands": {
+        "prepare_checkpoint": "New-Item -ItemType Directory -Force -Path agent_mvp/data_world_model_cf/phase10_7_ablation/E1; Copy-Item -Force agent_mvp/data_world_model_cf/phase10_6_ft_nocf/model.pt agent_mvp/data_world_model_cf/phase10_7_ablation/E1/model.pt",
+        "train": "C:/Users/98466/.conda/envs/rainyll/python.exe agent_mvp/python/train_world_model.py --data-dir agent_mvp/data_world_model_cf/ab_train_visible_only --out-dir agent_mvp/data_world_model_cf/phase10_7_ablation/E1 --epochs 0 --stage2-epochs 1 --stage2-lr 0.00015 --stage2-loss-config-path agent_mvp/data_world_model_cf/phase10_7_ablation/configs/E1_stage2_loss.json",
+        "strict_eval": "C:/Users/98466/.conda/envs/rainyll/python.exe agent_mvp/python/eval_world_model.py --checkpoint agent_mvp/data_world_model_cf/phase10_7_ablation/E1/model.pt --data-dir agent_mvp/data_world_model_cf/heldout_pack --splits heldout_cf --horizons 20,terminal --report-out agent_mvp/data_world_model_cf/phase10_7_ablation/E1_strict_eval.json",
+        "counterfactual_eval": "C:/Users/98466/.conda/envs/rainyll/python.exe agent_mvp/python/counterfactual_eval_world_model.py --checkpoint agent_mvp/data_world_model_cf/phase10_7_ablation/E1/model.pt --counterfactual-data-dir agent_mvp/data_world_model_cf/heldout_pack --splits heldout_cf --horizons 20,terminal --state-step 0 --min-groups 8 --min-pairs 100 --report-out agent_mvp/data_world_model_cf/phase10_7_ablation/E1_counterfactual_eval.json"
+      },
+      "artifacts": {
+        "checkpoint": "agent_mvp/data_world_model_cf/phase10_7_ablation/E1/model.pt",
+        "meta": "agent_mvp/data_world_model_cf/phase10_7_ablation/E1/meta.json",
+        "train_history": "agent_mvp/data_world_model_cf/phase10_7_ablation/E1/train_history.json",
+        "strict_eval": "agent_mvp/data_world_model_cf/phase10_7_ablation/E1_strict_eval.json",
+        "counterfactual_eval": "agent_mvp/data_world_model_cf/phase10_7_ablation/E1_counterfactual_eval.json"
+      }
+    },
+    {
+      "id": "E2",
+      "change": "Increase critical_first_kill/objective/termination group weights in stage2.",
+      "stage2_loss_config": "agent_mvp/data_world_model_cf/phase10_7_ablation/configs/E2_stage2_loss.json",
+      "commands": {
+        "prepare_checkpoint": "New-Item -ItemType Directory -Force -Path agent_mvp/data_world_model_cf/phase10_7_ablation/E2; Copy-Item -Force agent_mvp/data_world_model_cf/phase10_6_ft_nocf/model.pt agent_mvp/data_world_model_cf/phase10_7_ablation/E2/model.pt",
+        "train": "C:/Users/98466/.conda/envs/rainyll/python.exe agent_mvp/python/train_world_model.py --data-dir agent_mvp/data_world_model_cf/ab_train_visible_only --out-dir agent_mvp/data_world_model_cf/phase10_7_ablation/E2 --epochs 0 --stage2-epochs 1 --stage2-lr 0.00015 --stage2-loss-config-path agent_mvp/data_world_model_cf/phase10_7_ablation/configs/E2_stage2_loss.json",
+        "strict_eval": "C:/Users/98466/.conda/envs/rainyll/python.exe agent_mvp/python/eval_world_model.py --checkpoint agent_mvp/data_world_model_cf/phase10_7_ablation/E2/model.pt --data-dir agent_mvp/data_world_model_cf/heldout_pack --splits heldout_cf --horizons 20,terminal --report-out agent_mvp/data_world_model_cf/phase10_7_ablation/E2_strict_eval.json",
+        "counterfactual_eval": "C:/Users/98466/.conda/envs/rainyll/python.exe agent_mvp/python/counterfactual_eval_world_model.py --checkpoint agent_mvp/data_world_model_cf/phase10_7_ablation/E2/model.pt --counterfactual-data-dir agent_mvp/data_world_model_cf/heldout_pack --splits heldout_cf --horizons 20,terminal --state-step 0 --min-groups 8 --min-pairs 100 --report-out agent_mvp/data_world_model_cf/phase10_7_ablation/E2_counterfactual_eval.json"
+      },
+      "artifacts": {
+        "checkpoint": "agent_mvp/data_world_model_cf/phase10_7_ablation/E2/model.pt",
+        "meta": "agent_mvp/data_world_model_cf/phase10_7_ablation/E2/meta.json",
+        "train_history": "agent_mvp/data_world_model_cf/phase10_7_ablation/E2/train_history.json",
+        "strict_eval": "agent_mvp/data_world_model_cf/phase10_7_ablation/E2_strict_eval.json",
+        "counterfactual_eval": "agent_mvp/data_world_model_cf/phase10_7_ablation/E2_counterfactual_eval.json"
+      }
+    },
+    {
+      "id": "E3",
+      "change": "Combine hard-positive upweight and stronger critical group weights in stage2.",
+      "stage2_loss_config": "agent_mvp/data_world_model_cf/phase10_7_ablation/configs/E3_stage2_loss.json",
+      "commands": {
+        "prepare_checkpoint": "New-Item -ItemType Directory -Force -Path agent_mvp/data_world_model_cf/phase10_7_ablation/E3; Copy-Item -Force agent_mvp/data_world_model_cf/phase10_6_ft_nocf/model.pt agent_mvp/data_world_model_cf/phase10_7_ablation/E3/model.pt",
+        "train": "C:/Users/98466/.conda/envs/rainyll/python.exe agent_mvp/python/train_world_model.py --data-dir agent_mvp/data_world_model_cf/ab_train_visible_only --out-dir agent_mvp/data_world_model_cf/phase10_7_ablation/E3 --epochs 0 --stage2-epochs 1 --stage2-lr 0.00015 --stage2-loss-config-path agent_mvp/data_world_model_cf/phase10_7_ablation/configs/E3_stage2_loss.json",
+        "strict_eval": "C:/Users/98466/.conda/envs/rainyll/python.exe agent_mvp/python/eval_world_model.py --checkpoint agent_mvp/data_world_model_cf/phase10_7_ablation/E3/model.pt --data-dir agent_mvp/data_world_model_cf/heldout_pack --splits heldout_cf --horizons 20,terminal --report-out agent_mvp/data_world_model_cf/phase10_7_ablation/E3_strict_eval.json",
+        "counterfactual_eval": "C:/Users/98466/.conda/envs/rainyll/python.exe agent_mvp/python/counterfactual_eval_world_model.py --checkpoint agent_mvp/data_world_model_cf/phase10_7_ablation/E3/model.pt --counterfactual-data-dir agent_mvp/data_world_model_cf/heldout_pack --splits heldout_cf --horizons 20,terminal --state-step 0 --min-groups 8 --min-pairs 100 --report-out agent_mvp/data_world_model_cf/phase10_7_ablation/E3_counterfactual_eval.json"
+      },
+      "artifacts": {
+        "checkpoint": "agent_mvp/data_world_model_cf/phase10_7_ablation/E3/model.pt",
+        "meta": "agent_mvp/data_world_model_cf/phase10_7_ablation/E3/meta.json",
+        "train_history": "agent_mvp/data_world_model_cf/phase10_7_ablation/E3/train_history.json",
+        "strict_eval": "agent_mvp/data_world_model_cf/phase10_7_ablation/E3_strict_eval.json",
+        "counterfactual_eval": "agent_mvp/data_world_model_cf/phase10_7_ablation/E3_counterfactual_eval.json"
+      }
+    }
+  ],
+  "metrics": {
+    "E0": {
+      "strict": {
+        "critical_event_accuracy": 0.7525000080466271,
+        "event_first_fire_accuracy": 0.85625,
+        "event_fire_count_mae": 0.8076997295138426,
+        "termination_flag_accuracy": 0.9625,
+        "termination_flag_high_conf_hit_rate": 1.0,
+        "reward_red_mae": 2.9904629051685334,
+        "reward_total_mae": 2.990074399113655,
+        "terminal_win_accuracy": 0.55,
+        "trajectory_alive_accuracy": 0.9083333333333332
+      },
+      "counterfactual": {
+        "num_counterfactual_pairs": 160,
+        "event_red_fire_count": {
+          "delta_mae": 1.0253425266360865,
+          "sign_accuracy_on_signal_pairs": 0.5573770491803278,
+          "num_signal_pairs": 61
+        },
+        "termination_flag": {
+          "delta_mae": 0.07500017833523884,
+          "sign_accuracy_on_signal_pairs": 0.25,
+          "num_signal_pairs": 12
+        },
+        "reward_red": {
+          "delta_mae": 0.4589945667423308,
+          "sign_accuracy_on_signal_pairs": 0.6101694915254238,
+          "num_signal_pairs": 59
+        },
+        "terminal_red_win_prob": {
+          "delta_mae": 0.5500992350280285,
+          "sign_accuracy_on_signal_pairs": 0.6818181818181818,
+          "num_signal_pairs": 88
+        }
+      }
+    },
+    "E1": {
+      "strict": {
+        "critical_event_accuracy": 0.740000007674098,
+        "event_first_fire_accuracy": 0.85625,
+        "event_fire_count_mae": 0.6856260871049017,
+        "termination_flag_accuracy": 0.9625,
+        "termination_flag_high_conf_hit_rate": 1.0,
+        "reward_red_mae": 9.644122737646104,
+        "reward_total_mae": 10.146266655623913,
+        "terminal_win_accuracy": 0.5875,
+        "trajectory_alive_accuracy": 0.9041666666666665
+      },
+      "counterfactual": {
+        "num_counterfactual_pairs": 160,
+        "event_red_fire_count": {
+          "delta_mae": 1.0325572045519948,
+          "sign_accuracy_on_signal_pairs": 0.6065573770491803,
+          "num_signal_pairs": 61
+        },
+        "termination_flag": {
+          "delta_mae": 0.07630136436455359,
+          "sign_accuracy_on_signal_pairs": 0.5,
+          "num_signal_pairs": 12
+        },
+        "reward_red": {
+          "delta_mae": 0.47047809408977626,
+          "sign_accuracy_on_signal_pairs": 0.4915254237288136,
+          "num_signal_pairs": 59
+        },
+        "terminal_red_win_prob": {
+          "delta_mae": 0.5362385295331478,
+          "sign_accuracy_on_signal_pairs": 0.6590909090909091,
+          "num_signal_pairs": 88
+        }
+      }
+    },
+    "E2": {
+      "strict": {
+        "critical_event_accuracy": 0.740000007674098,
+        "event_first_fire_accuracy": 0.85625,
+        "event_fire_count_mae": 0.6912306321784853,
+        "termination_flag_accuracy": 0.9625,
+        "termination_flag_high_conf_hit_rate": 1.0,
+        "reward_red_mae": 8.832579752802848,
+        "reward_total_mae": 9.433280320465565,
+        "terminal_win_accuracy": 0.5625,
+        "trajectory_alive_accuracy": 0.9041666666666665
+      },
+      "counterfactual": {
+        "num_counterfactual_pairs": 160,
+        "event_red_fire_count": {
+          "delta_mae": 1.0289245227351784,
+          "sign_accuracy_on_signal_pairs": 0.639344262295082,
+          "num_signal_pairs": 61
+        },
+        "termination_flag": {
+          "delta_mae": 0.07590630227932707,
+          "sign_accuracy_on_signal_pairs": 0.5,
+          "num_signal_pairs": 12
+        },
+        "reward_red": {
+          "delta_mae": 0.467961108032614,
+          "sign_accuracy_on_signal_pairs": 0.5423728813559322,
+          "num_signal_pairs": 59
+        },
+        "terminal_red_win_prob": {
+          "delta_mae": 0.528011635504663,
+          "sign_accuracy_on_signal_pairs": 0.6818181818181818,
+          "num_signal_pairs": 88
+        }
+      }
+    },
+    "E3": {
+      "strict": {
+        "critical_event_accuracy": 0.740000007674098,
+        "event_first_fire_accuracy": 0.85625,
+        "event_fire_count_mae": 0.692950401105918,
+        "termination_flag_accuracy": 0.9625,
+        "termination_flag_high_conf_hit_rate": 1.0,
+        "reward_red_mae": 8.995266875624656,
+        "reward_total_mae": 9.497573420405388,
+        "terminal_win_accuracy": 0.525,
+        "trajectory_alive_accuracy": 0.9041666666666665
+      },
+      "counterfactual": {
+        "num_counterfactual_pairs": 160,
+        "event_red_fire_count": {
+          "delta_mae": 1.0287584851495921,
+          "sign_accuracy_on_signal_pairs": 0.5901639344262295,
+          "num_signal_pairs": 61
+        },
+        "termination_flag": {
+          "delta_mae": 0.07587392387831642,
+          "sign_accuracy_on_signal_pairs": 0.5,
+          "num_signal_pairs": 12
+        },
+        "reward_red": {
+          "delta_mae": 0.4651653801091015,
+          "sign_accuracy_on_signal_pairs": 0.4745762711864407,
+          "num_signal_pairs": 59
+        },
+        "terminal_red_win_prob": {
+          "delta_mae": 0.5419239728711546,
+          "sign_accuracy_on_signal_pairs": 0.6704545454545454,
+          "num_signal_pairs": 88
+        }
+      }
+    }
+  },
+  "deltas_vs_E0": {
+    "E1": {
+      "critical_event_accuracy_gain": -0.01250000037252903,
+      "event_fire_count_mae_improvement": 0.12207364240894094,
+      "termination_flag_accuracy_gain": 0.0,
+      "termination_high_conf_gain": 0.0,
+      "reward_red_mae_improvement": -6.65365983247757,
+      "reward_total_mae_improvement": -7.156192256510259,
+      "terminal_win_accuracy_gain": 0.03749999999999998,
+      "cf_termination_signal_pairs_delta": 0,
+      "cf_termination_sign_acc_gain": 0.25,
+      "cf_reward_red_sign_acc_gain": -0.11864406779661019,
+      "cf_terminal_win_sign_acc_gain": -0.022727272727272707
+    },
+    "E2": {
+      "critical_event_accuracy_gain": -0.01250000037252903,
+      "event_fire_count_mae_improvement": 0.11646909733535736,
+      "termination_flag_accuracy_gain": 0.0,
+      "termination_high_conf_gain": 0.0,
+      "reward_red_mae_improvement": -5.842116847634314,
+      "reward_total_mae_improvement": -6.4432059213519095,
+      "terminal_win_accuracy_gain": 0.012499999999999956,
+      "cf_termination_signal_pairs_delta": 0,
+      "cf_termination_sign_acc_gain": 0.25,
+      "cf_reward_red_sign_acc_gain": -0.06779661016949157,
+      "cf_terminal_win_sign_acc_gain": 0.0
+    },
+    "E3": {
+      "critical_event_accuracy_gain": -0.01250000037252903,
+      "event_fire_count_mae_improvement": 0.11474932840792459,
+      "termination_flag_accuracy_gain": 0.0,
+      "termination_high_conf_gain": 0.0,
+      "reward_red_mae_improvement": -6.004803970456123,
+      "reward_total_mae_improvement": -6.507499021291733,
+      "terminal_win_accuracy_gain": -0.025000000000000022,
+      "cf_termination_signal_pairs_delta": 0,
+      "cf_termination_sign_acc_gain": 0.25,
+      "cf_reward_red_sign_acc_gain": -0.13559322033898308,
+      "cf_terminal_win_sign_acc_gain": -0.011363636363636465
+    }
+  },
+  "decision": {
+    "critical_event_recovered": false,
+    "termination_signal_pairs_nonzero_preserved": true,
+    "best_candidate_under_tradeoff": "E2",
+    "go_no_go": "NO-GO for replacing E0",
+    "rationale": [
+      "All E1/E2/E3 keep termination semantics behavior stable in strict eval and preserve non-zero termination signal_pairs (12).",
+      "None of E1/E2/E3 recovers critical_event_accuracy to E0; all remain at 0.74 (< 0.7525).",
+      "All E1/E2/E3 significantly regress reward_red_mae and reward_total_mae in strict eval.",
+      "E2 has the least damage among ablations and best event_red_fire_count sign accuracy in counterfactual eval, but still fails the main objective."
+    ]
+  }
+}

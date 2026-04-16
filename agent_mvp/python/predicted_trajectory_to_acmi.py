@@ -298,7 +298,7 @@ def _build_reward_events(
             TrajectoryEvent(
                 event_type="Message",
                 text=(
-                    "Reward spike "
+                    "Reward spike(norm) "
                     f"red={red_step:.2f} blue={blue_step:.2f}; "
                     f"cum red={reward_cumulative.get('red', 0.0):.2f} blue={reward_cumulative.get('blue', 0.0):.2f}"
                 ),
@@ -311,7 +311,7 @@ def _build_reward_events(
             TrajectoryEvent(
                 event_type="Message",
                 text=(
-                    "Reward trend "
+                    "Reward trend(norm) "
                     f"cum red={reward_cumulative.get('red', 0.0):.2f} "
                     f"blue={reward_cumulative.get('blue', 0.0):.2f} adv={advantage:.2f}"
                 ),
@@ -550,6 +550,7 @@ def build_predicted_episode(
     sampling_meta = dict(meta)
     sampling_meta["prediction_mode"] = "world_model_rollout"
     sampling_meta["num_predicted_steps"] = max(len(states) - 1, 0)
+    sampling_meta["reward_space"] = "model_output_space_normalized"
 
     return TrajectoryEpisode(
         task_id=task_id,

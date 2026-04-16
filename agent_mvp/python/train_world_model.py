@@ -1,6 +1,4 @@
 import argparse
-import hashlib
-import json
 import math
 import random
 from collections import Counter, defaultdict
@@ -14,6 +12,7 @@ import torch.nn.functional as F
 from torch.utils.data import DataLoader
 
 from data_io import read_json, read_jsonl, write_json
+from same_initial_signature import canonical_signature_from_record
 from world_model import WorldModelNet
 from world_model_dataset import (
     EVENT_COUNT_KEYS,
@@ -22,6 +21,7 @@ from world_model_dataset import (
     WorldModelDataset,
     build_reward_target_tensor,
     collate_world_model,
+    derive_effective_termination_flag,
     denormalize_reward_tensor,
     normalize_reward_stats,
 )
@@ -56,6 +56,18 @@ SUMMARY_METRIC_KEYS = (
     "event_warning_accuracy",
     "event_retarget_accuracy",
     "event_first_kill_accuracy",
+    "red_first_kill_accuracy",
+    "blue_first_kill_accuracy",
+    "red_first_kill_positive_recall",
+    "blue_first_kill_positive_recall",
+    "red_first_kill_precision",
+    "blue_first_kill_precision",
+    "red_first_kill_high_conf_hit_rate",
+    "blue_first_kill_high_conf_hit_rate",
+    "blue_first_kill_pred_positive_rate",
+    "blue_first_kill_false_positive_rate",
+    "blue_first_kill_eligible_subset_accuracy",
+    "blue_first_kill_eligible_subset_precision",
     "event_objective_accuracy",
     "event_termination_accuracy",
     "critical_event_accuracy",
@@ -88,6 +100,10 @@ COUNTERFACTUAL_METRIC_SPECS = {
     "trajectory_red_alive_ratio": {"weight": 1.5, "signal_threshold": 0.05},
     "trajectory_red_mean_missile": {"weight": 1.0, "signal_threshold": 0.05},
     "event_red_fire_count": {"weight": 1.5, "signal_threshold": 0.10},
+    "event_red_first_kill_prob": {"weight": 1.0, "signal_threshold": 0.50},
+    "event_blue_first_kill_prob": {"weight": 1.0, "signal_threshold": 0.50},
+    "event_red_objective_complete_prob": {"weight": 1.0, "signal_threshold": 0.50},
+    "event_blue_objective_complete_prob": {"weight": 1.0, "signal_threshold": 0.50},
     "termination_flag": {"weight": 2.5, "signal_threshold": 0.20},
     "reward_red": {"weight": 1.5, "signal_threshold": 0.20},
 }
@@ -108,22 +124,26 @@ EVENT_GROUPS = {
         "red_retarget_flag",
         "blue_retarget_flag",
     ),
-    "critical_outcome_group": (
+    "critical_first_kill_group": (
         "red_first_kill_flag",
         "blue_first_kill_flag",
+    ),
+    "critical_objective_group": (
         "red_objective_complete_flag",
         "blue_objective_complete_flag",
+    ),
+    "critical_termination_group": (
         "termination_flag",
     ),
 }
 
 
 RARE_EVENT_POS_WEIGHTS = {
-    "termination_flag": 8.0,
-    "red_first_kill_flag": 6.0,
-    "blue_first_kill_flag": 6.0,
-    "red_objective_complete_flag": 6.0,
-    "blue_objective_complete_flag": 6.0,
+    "termination_flag": 10.0,
+    "red_first_kill_flag": 8.0,
+    "blue_first_kill_flag": 8.0,
+    "red_objective_complete_flag": 7.0,
+    "blue_objective_complete_flag": 7.0,
     "red_first_fire_flag": 3.0,
     "blue_first_fire_flag": 3.0,
 }
@@ -136,10 +156,13 @@ DEFAULT_LOSS_CONFIG = {
     "event_group_weights": {
         "contact_warning_group": 1.0,
         "tactical_transition_group": 1.2,
-        "critical_outcome_group": 2.0,
+        "critical_first_kill_group": 2.4,
+        "critical_objective_group": 2.2,
+        "critical_termination_group": 3.0,
     },
     "termination_extra_weight": 2.5,
     "event_count_weight": 0.4,
+    "critical_hard_positive_weight": 1.0,
 }
 
 
@@ -150,10 +173,13 @@ STAGE2_LOSS_CONFIG = {
     "event_group_weights": {
         "contact_warning_group": 1.0,
         "tactical_transition_group": 1.4,
-        "critical_outcome_group": 3.0,
+        "critical_first_kill_group": 3.8,
+        "critical_objective_group": 3.4,
+        "critical_termination_group": 4.5,
     },
     "termination_extra_weight": 4.0,
     "event_count_weight": 0.6,
+    "critical_hard_positive_weight": 1.8,
 }
 
 
@@ -187,7 +213,61 @@ def load_split_records(data_dir: Path, split_name: str) -> List[Dict]:
     path = data_dir / "processed" / f"{split_name}.jsonl"
     if not path.exists():
         return []
-    return read_jsonl(path)
+    records = read_jsonl(path)
+    return annotate_first_kill_eligibility(records)
+
+
+def annotate_first_kill_eligibility(records: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    if not records:
+        return records
+
+    terminal_maps: DefaultDict[str, Dict[int, Dict[str, bool]]] = defaultdict(dict)
+    episode_any_first_kill: Dict[str, bool] = defaultdict(bool)
+
+    for record in records:
+        meta = record.get("meta", {}) if isinstance(record.get("meta", {}), dict) else {}
+        episode_id = str(meta.get("episode_id") or record.get("episode_id") or record.get("task_id") or "")
+        if not episode_id:
+            continue
+        if str(record.get("horizon")) != "terminal":
+            continue
+        t_index = int(meta.get("t_index", 0))
+        target_event = record.get("target_event", {}) if isinstance(record.get("target_event", {}), dict) else {}
+        future_red_first_kill = bool(target_event.get("red_first_kill_flag", False))
+        future_blue_first_kill = bool(target_event.get("blue_first_kill_flag", False))
+        future_any_first_kill = future_red_first_kill or future_blue_first_kill
+        terminal_maps[episode_id][t_index] = {
+            "future_any_first_kill": future_any_first_kill,
+            "future_red_first_kill": future_red_first_kill,
+            "future_blue_first_kill": future_blue_first_kill,
+        }
+        episode_any_first_kill[episode_id] = bool(episode_any_first_kill[episode_id] or future_any_first_kill)
+
+    for record in records:
+        meta = dict(record.get("meta", {}) if isinstance(record.get("meta", {}), dict) else {})
+        episode_id = str(meta.get("episode_id") or record.get("episode_id") or record.get("task_id") or "")
+        t_index = int(meta.get("t_index", 0))
+        future_info = terminal_maps.get(episode_id, {}).get(t_index)
+        if future_info is None:
+            target_event = record.get("target_event", {}) if isinstance(record.get("target_event", {}), dict) else {}
+            future_red_first_kill = bool(target_event.get("red_first_kill_flag", False))
+            future_blue_first_kill = bool(target_event.get("blue_first_kill_flag", False))
+            future_any_first_kill = future_red_first_kill or future_blue_first_kill
+        else:
+            future_red_first_kill = future_info["future_red_first_kill"]
+            future_blue_first_kill = future_info["future_blue_first_kill"]
+            future_any_first_kill = future_info["future_any_first_kill"]
+
+        any_first_kill_in_episode = bool(episode_any_first_kill.get(episode_id, future_any_first_kill))
+        prior_kill_seen = bool(any_first_kill_in_episode and not future_any_first_kill)
+        meta["prior_kill_seen"] = prior_kill_seen
+        meta["red_first_kill_eligible"] = bool(future_any_first_kill)
+        meta["blue_first_kill_eligible"] = bool(future_any_first_kill)
+        meta["future_red_first_kill_possible"] = bool(future_red_first_kill)
+        meta["future_blue_first_kill_possible"] = bool(future_blue_first_kill)
+        record["meta"] = meta
+
+    return records
 
 
 def compute_reward_norm_stats(records: Sequence[Dict[str, Any]]) -> Dict[str, Dict[str, float]]:
@@ -236,6 +316,7 @@ def _build_loss_config(overrides: Dict[str, Any] = None) -> Dict[str, Any]:
         "event_group_weights": dict(DEFAULT_LOSS_CONFIG["event_group_weights"]),
         "termination_extra_weight": float(DEFAULT_LOSS_CONFIG["termination_extra_weight"]),
         "event_count_weight": float(DEFAULT_LOSS_CONFIG["event_count_weight"]),
+        "critical_hard_positive_weight": float(DEFAULT_LOSS_CONFIG["critical_hard_positive_weight"]),
     }
     if isinstance(overrides, dict):
         for key, value in overrides.items():
@@ -281,19 +362,40 @@ def _compute_event_grouped_loss(
     termination_loss = bce_raw[:, termination_idx].mean()
     group_losses["termination_flag"] = termination_loss
 
+    critical_indices = _event_flag_indices(
+        (
+            "red_first_kill_flag",
+            "blue_first_kill_flag",
+            "red_objective_complete_flag",
+            "blue_objective_complete_flag",
+            "termination_flag",
+        )
+    )
+    if critical_indices:
+        critical_logits = event_flag_logits[:, critical_indices]
+        critical_targets = event_flags[:, critical_indices]
+        critical_probs = torch.sigmoid(critical_logits)
+        critical_bce = bce_raw[:, critical_indices]
+        hard_positive_mask = (critical_targets >= 0.5).float()
+        hard_positive_factor = ((1.0 - critical_probs) ** 2) * hard_positive_mask
+        hard_positive_denom = hard_positive_mask.sum().clamp(min=1.0)
+        critical_hard_positive_loss = (critical_bce * hard_positive_factor).sum() / hard_positive_denom
+    else:
+        critical_hard_positive_loss = torch.zeros((), device=device)
+    group_losses["critical_hard_positive"] = critical_hard_positive_loss
+
     if weight_total <= 0.0:
         event_flag_loss = bce_raw.mean()
     else:
         event_flag_loss = weighted_sum / weight_total
     event_flag_loss = event_flag_loss + float(loss_config["termination_extra_weight"]) * termination_loss
+    event_flag_loss = event_flag_loss + float(loss_config["critical_hard_positive_weight"]) * critical_hard_positive_loss
 
     return event_flag_loss, group_losses
 
 
 def _state_signature_from_record(record: Dict[str, Any]) -> str:
-    return hashlib.sha1(
-        json.dumps(record.get("state_t", {}), sort_keys=True, separators=(",", ":")).encode("utf-8")
-    ).hexdigest()
+    return canonical_signature_from_record(record)
 
 
 def _safe_mean_raw(values: Sequence[float]) -> float:
@@ -314,14 +416,22 @@ def _extract_counterfactual_targets(record: Dict[str, Any]) -> Dict[str, float]:
         [float(unit.get("missile_count", 0.0)) / MISSILE_SCALE for unit in red_units]
     )
     red_fire_count = float(target_event.get("red_fire_count_delta", 0.0)) / EVENT_FIRE_COUNT_SCALE
-    termination_flag = 1.0 if bool(target_event.get("termination_flag", False)) else 0.0
+    termination_flag = float(derive_effective_termination_flag(record))
     reward_red = float(target_reward.get("red", 0.0)) / REWARD_SCALE
+    red_first_kill = 1.0 if bool(target_event.get("red_first_kill_flag", False)) else 0.0
+    blue_first_kill = 1.0 if bool(target_event.get("blue_first_kill_flag", False)) else 0.0
+    red_objective = 1.0 if bool(target_event.get("red_objective_complete_flag", False)) else 0.0
+    blue_objective = 1.0 if bool(target_event.get("blue_objective_complete_flag", False)) else 0.0
 
     return {
         "terminal_red_win_prob": float(outcome.get("red_win", 0.0)),
         "trajectory_red_alive_ratio": red_alive_ratio,
         "trajectory_red_mean_missile": red_mean_missile,
         "event_red_fire_count": red_fire_count,
+        "event_red_first_kill_prob": red_first_kill,
+        "event_blue_first_kill_prob": blue_first_kill,
+        "event_red_objective_complete_prob": red_objective,
+        "event_blue_objective_complete_prob": blue_objective,
         "termination_flag": termination_flag,
         "reward_red": reward_red,
     }
@@ -432,11 +542,19 @@ def _records_to_batch(
 def _extract_counterfactual_predictions(outputs: Dict[str, torch.Tensor], batch: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
     red_fire_index = EVENT_COUNT_KEYS.index("red_fire_count_delta")
     termination_index = EVENT_FLAG_KEYS.index("termination_flag")
+    red_first_kill_index = EVENT_FLAG_KEYS.index("red_first_kill_flag")
+    blue_first_kill_index = EVENT_FLAG_KEYS.index("blue_first_kill_flag")
+    red_objective_index = EVENT_FLAG_KEYS.index("red_objective_complete_flag")
+    blue_objective_index = EVENT_FLAG_KEYS.index("blue_objective_complete_flag")
     return {
         "terminal_red_win_prob": torch.sigmoid(outputs["red_win_logit"]),
         "trajectory_red_alive_ratio": _masked_mean_scalar(torch.sigmoid(outputs["red_alive_logit"]), batch["red_mask"]),
         "trajectory_red_mean_missile": _masked_mean_scalar(outputs["red_traj_reg"][..., 0], batch["red_mask"]),
         "event_red_fire_count": torch.clamp(outputs["event_count_pred"][:, red_fire_index], min=0.0) / EVENT_FIRE_COUNT_SCALE,
+        "event_red_first_kill_prob": torch.sigmoid(outputs["event_flag_logits"][:, red_first_kill_index]),
+        "event_blue_first_kill_prob": torch.sigmoid(outputs["event_flag_logits"][:, blue_first_kill_index]),
+        "event_red_objective_complete_prob": torch.sigmoid(outputs["event_flag_logits"][:, red_objective_index]),
+        "event_blue_objective_complete_prob": torch.sigmoid(outputs["event_flag_logits"][:, blue_objective_index]),
         "termination_flag": torch.sigmoid(outputs["event_flag_logits"][:, termination_index]),
         "reward_red": outputs["reward_pred"][:, 0] / REWARD_SCALE,
     }
@@ -521,6 +639,39 @@ def _binary_accuracy(pred_probs: torch.Tensor, targets: torch.Tensor, indices: S
     return float((pred == target).float().mean().item())
 
 
+def _binary_single_accuracy(pred_prob: float, target_value: float, threshold: float = 0.5) -> float:
+    pred_value = 1.0 if pred_prob >= threshold else 0.0
+    return 1.0 if pred_value == (1.0 if target_value >= 0.5 else 0.0) else 0.0
+
+
+def _positive_recall_value(pred_prob: float, target_value: float, threshold: float = 0.5) -> Any:
+    if target_value < 0.5:
+        return None
+    return 1.0 if pred_prob >= threshold else 0.0
+
+
+def _precision_value(pred_prob: float, target_value: float, threshold: float = 0.5) -> Any:
+    if pred_prob < threshold:
+        return None
+    return 1.0 if target_value >= 0.5 else 0.0
+
+
+def _high_conf_hit_value(pred_prob: float, target_value: float, high_conf_threshold: float = 0.7) -> Any:
+    if target_value < 0.5:
+        return None
+    return 1.0 if pred_prob >= high_conf_threshold else 0.0
+
+
+def _pred_positive_value(pred_prob: float, threshold: float = 0.5) -> float:
+    return 1.0 if pred_prob >= threshold else 0.0
+
+
+def _false_positive_value(pred_prob: float, target_value: float, threshold: float = 0.5) -> Any:
+    if target_value >= 0.5:
+        return None
+    return 1.0 if pred_prob >= threshold else 0.0
+
+
 def _normalize_split_value(value: Any) -> str:
     if value is None:
         return "unknown"
@@ -537,6 +688,145 @@ def _extract_bucket_value(record: Dict[str, Any], bucket_key: str) -> str:
     if value is None:
         return "unknown"
     return _normalize_split_value(value)
+
+
+def _record_first_kill_flags(record: Dict[str, Any]) -> Tuple[bool, bool]:
+    target_event = record.get("target_event", {})
+    if not isinstance(target_event, dict):
+        target_event = {}
+    return (
+        bool(target_event.get("red_first_kill_flag", False)),
+        bool(target_event.get("blue_first_kill_flag", False)),
+    )
+
+
+def _record_first_kill_hard_negative(record: Dict[str, Any]) -> bool:
+    target_event = record.get("target_event", {})
+    if not isinstance(target_event, dict):
+        target_event = {}
+    red_first_kill, blue_first_kill = _record_first_kill_flags(record)
+    if red_first_kill or blue_first_kill:
+        return False
+    return bool(
+        float(target_event.get("red_kill_delta", 0.0)) > 0.0
+        or float(target_event.get("blue_kill_delta", 0.0)) > 0.0
+        or bool(target_event.get("termination_flag", False))
+        or bool(target_event.get("red_objective_complete_flag", False))
+        or bool(target_event.get("blue_objective_complete_flag", False))
+    )
+
+
+def _record_side_first_kill_hard_negative(record: Dict[str, Any], side: str) -> bool:
+    target_event = record.get("target_event", {})
+    if not isinstance(target_event, dict):
+        target_event = {}
+    red_first_kill, blue_first_kill = _record_first_kill_flags(record)
+    if side == "red":
+        if red_first_kill:
+            return False
+        return bool(
+            float(target_event.get("red_kill_delta", 0.0)) > 0.0
+            or bool(target_event.get("termination_flag", False))
+            or bool(target_event.get("red_objective_complete_flag", False))
+            or blue_first_kill
+        )
+    if side == "blue":
+        if blue_first_kill:
+            return False
+        return bool(
+            float(target_event.get("blue_kill_delta", 0.0)) > 0.0
+            or bool(target_event.get("termination_flag", False))
+            or bool(target_event.get("blue_objective_complete_flag", False))
+            or red_first_kill
+        )
+    raise ValueError(f"Unsupported side: {side}")
+
+
+def _record_side_first_kill_eligible(record: Dict[str, Any], side: str) -> bool:
+    meta = record.get("meta", {})
+    if not isinstance(meta, dict):
+        meta = {}
+    default_value = not bool(meta.get("prior_kill_seen", False))
+    return bool(meta.get(f"{side}_first_kill_eligible", default_value))
+
+
+def build_first_kill_stage2_records(
+    records: Sequence[Dict[str, Any]],
+    positive_repeat: int,
+    hard_negative_repeat: int,
+    red_positive_repeat: int = None,
+    blue_positive_repeat: int = None,
+    red_hard_negative_repeat: int = None,
+    blue_hard_negative_repeat: int = None,
+) -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
+    output: List[Dict[str, Any]] = []
+    positive_count = 0
+    hard_negative_count = 0
+    red_positive_count = 0
+    blue_positive_count = 0
+    red_hard_negative_count = 0
+    blue_hard_negative_count = 0
+    blue_eligible_count = 0
+    blue_ineligible_filtered_count = 0
+    base_count = len(records)
+    red_positive_repeat = int(red_positive_repeat if red_positive_repeat is not None else positive_repeat)
+    blue_positive_repeat = int(blue_positive_repeat if blue_positive_repeat is not None else positive_repeat)
+    red_hard_negative_repeat = int(
+        red_hard_negative_repeat if red_hard_negative_repeat is not None else hard_negative_repeat
+    )
+    blue_hard_negative_repeat = int(
+        blue_hard_negative_repeat if blue_hard_negative_repeat is not None else hard_negative_repeat
+    )
+    for record in records:
+        repeats = 1
+        red_first_kill, blue_first_kill = _record_first_kill_flags(record)
+        blue_eligible = _record_side_first_kill_eligible(record, "blue")
+        if blue_eligible:
+            blue_eligible_count += 1
+        if red_first_kill or blue_first_kill:
+            if red_first_kill:
+                repeats = max(repeats, red_positive_repeat)
+                red_positive_count += 1
+            if blue_first_kill and blue_eligible:
+                repeats = max(repeats, blue_positive_repeat)
+                blue_positive_count += 1
+            elif blue_first_kill and not blue_eligible:
+                blue_ineligible_filtered_count += 1
+            positive_count += 1
+        else:
+            red_hard_negative = _record_side_first_kill_hard_negative(record, "red")
+            raw_blue_hard_negative = _record_side_first_kill_hard_negative(record, "blue")
+            blue_hard_negative = blue_eligible and raw_blue_hard_negative
+            if red_hard_negative:
+                repeats = max(repeats, red_hard_negative_repeat)
+                red_hard_negative_count += 1
+            if blue_hard_negative:
+                repeats = max(repeats, blue_hard_negative_repeat)
+                blue_hard_negative_count += 1
+            elif raw_blue_hard_negative and not blue_eligible:
+                blue_ineligible_filtered_count += 1
+            if red_hard_negative or blue_hard_negative:
+                hard_negative_count += 1
+        for _ in range(max(repeats, 1)):
+            output.append(record)
+    return output, {
+        "base_count": base_count,
+        "expanded_count": len(output),
+        "first_kill_positive_count": positive_count,
+        "first_kill_hard_negative_count": hard_negative_count,
+        "positive_repeat": int(positive_repeat),
+        "hard_negative_repeat": int(hard_negative_repeat),
+        "red_first_kill_positive_count": red_positive_count,
+        "blue_first_kill_positive_count": blue_positive_count,
+        "red_first_kill_hard_negative_count": red_hard_negative_count,
+        "blue_first_kill_hard_negative_count": blue_hard_negative_count,
+        "blue_eligible_count": blue_eligible_count,
+        "blue_ineligible_filtered_count": blue_ineligible_filtered_count,
+        "red_positive_repeat": red_positive_repeat,
+        "blue_positive_repeat": blue_positive_repeat,
+        "red_hard_negative_repeat": red_hard_negative_repeat,
+        "blue_hard_negative_repeat": blue_hard_negative_repeat,
+    }
 
 
 def _heading_norm_to_deg(values: torch.Tensor) -> torch.Tensor:
@@ -672,8 +962,13 @@ def compute_losses(
         "event_count": event_count_loss,
         "event_contact_warning": event_group_losses.get("contact_warning_group", torch.zeros_like(event_flag_loss)),
         "event_tactical_transition": event_group_losses.get("tactical_transition_group", torch.zeros_like(event_flag_loss)),
-        "event_critical_outcome": event_group_losses.get("critical_outcome_group", torch.zeros_like(event_flag_loss)),
+        "event_critical_outcome": (
+            event_group_losses.get("critical_first_kill_group", torch.zeros_like(event_flag_loss))
+            + event_group_losses.get("critical_objective_group", torch.zeros_like(event_flag_loss))
+            + event_group_losses.get("critical_termination_group", torch.zeros_like(event_flag_loss))
+        ) / 3.0,
         "event_termination": event_group_losses.get("termination_flag", torch.zeros_like(event_flag_loss)),
+        "event_critical_hard_positive": event_group_losses.get("critical_hard_positive", torch.zeros_like(event_flag_loss)),
         "reward": reward_loss,
     }
 
@@ -850,6 +1145,18 @@ def _build_prediction_records_for_batch(
             event_targets[index : index + 1],
             [event_flag_index["red_first_kill_flag"], event_flag_index["blue_first_kill_flag"]],
         )
+        red_first_kill_prob = float(pred_event_probs[index, event_flag_index["red_first_kill_flag"]].item())
+        red_first_kill_target = float(event_targets[index, event_flag_index["red_first_kill_flag"]].item())
+        blue_first_kill_prob = float(pred_event_probs[index, event_flag_index["blue_first_kill_flag"]].item())
+        blue_first_kill_target = float(event_targets[index, event_flag_index["blue_first_kill_flag"]].item())
+        red_first_kill_accuracy = _binary_single_accuracy(red_first_kill_prob, red_first_kill_target)
+        blue_first_kill_accuracy = _binary_single_accuracy(blue_first_kill_prob, blue_first_kill_target)
+        red_first_kill_positive_recall = _positive_recall_value(red_first_kill_prob, red_first_kill_target)
+        blue_first_kill_positive_recall = _positive_recall_value(blue_first_kill_prob, blue_first_kill_target)
+        red_first_kill_precision = _precision_value(red_first_kill_prob, red_first_kill_target)
+        blue_first_kill_precision = _precision_value(blue_first_kill_prob, blue_first_kill_target)
+        red_first_kill_high_conf_hit_rate = _high_conf_hit_value(red_first_kill_prob, red_first_kill_target)
+        blue_first_kill_high_conf_hit_rate = _high_conf_hit_value(blue_first_kill_prob, blue_first_kill_target)
         event_objective_accuracy = _binary_accuracy(
             pred_event_probs[index : index + 1],
             event_targets[index : index + 1],
@@ -923,15 +1230,14 @@ def _build_prediction_records_for_batch(
 
         meta = raw_record.get("meta", {})
         sampling_meta = meta.get("sampling_meta", {}) if isinstance(meta.get("sampling_meta", {}), dict) else {}
+        blue_first_kill_eligible = bool(meta.get("blue_first_kill_eligible", not bool(meta.get("prior_kill_seen", False))))
         tactic_combo_key = sampling_meta.get("tactic_combo_key")
         if tactic_combo_key is None:
             red_cond = raw_record.get("red_tactic_condition", {})
             blue_cond = raw_record.get("blue_tactic_condition", {})
             tactic_combo_key = f"{red_cond.get('id', 'red_unknown')}__{blue_cond.get('id', 'blue_unknown')}"
 
-        state_signature = hashlib.sha1(
-            json.dumps(raw_record.get("state_t", {}), sort_keys=True, separators=(",", ":")).encode("utf-8")
-        ).hexdigest()
+        state_signature = canonical_signature_from_record(raw_record)
 
         sample_records.append(
             {
@@ -984,6 +1290,23 @@ def _build_prediction_records_for_batch(
                 "event_warning_accuracy": event_warning_accuracy,
                 "event_retarget_accuracy": event_retarget_accuracy,
                 "event_first_kill_accuracy": event_first_kill_accuracy,
+                "red_first_kill_accuracy": red_first_kill_accuracy,
+                "blue_first_kill_accuracy": blue_first_kill_accuracy,
+                "red_first_kill_positive_recall": red_first_kill_positive_recall,
+                "blue_first_kill_positive_recall": blue_first_kill_positive_recall,
+                "red_first_kill_precision": red_first_kill_precision,
+                "blue_first_kill_precision": blue_first_kill_precision,
+                "red_first_kill_high_conf_hit_rate": red_first_kill_high_conf_hit_rate,
+                "blue_first_kill_high_conf_hit_rate": blue_first_kill_high_conf_hit_rate,
+                "blue_first_kill_pred_positive_rate": _pred_positive_value(blue_first_kill_prob),
+                "blue_first_kill_false_positive_rate": _false_positive_value(blue_first_kill_prob, blue_first_kill_target),
+                "blue_first_kill_eligible": blue_first_kill_eligible,
+                "blue_first_kill_eligible_subset_accuracy": (
+                    blue_first_kill_accuracy if blue_first_kill_eligible else None
+                ),
+                "blue_first_kill_eligible_subset_precision": (
+                    blue_first_kill_precision if blue_first_kill_eligible else None
+                ),
                 "event_objective_accuracy": event_objective_accuracy,
                 "event_termination_accuracy": event_termination_accuracy,
                 "critical_event_accuracy": critical_event_accuracy,
@@ -1078,6 +1401,22 @@ def _build_prediction_records_for_batch(
                 ),
                 "true_event_blue_retarget": float(
                     event_targets[index, event_flag_index["blue_retarget_flag"]].item()
+                ),
+                "pred_event_red_first_kill_prob": red_first_kill_prob,
+                "true_event_red_first_kill": red_first_kill_target,
+                "pred_event_blue_first_kill_prob": blue_first_kill_prob,
+                "true_event_blue_first_kill": blue_first_kill_target,
+                "pred_event_red_objective_complete_prob": float(
+                    pred_event_probs[index, event_flag_index["red_objective_complete_flag"]].item()
+                ),
+                "true_event_red_objective_complete": float(
+                    event_targets[index, event_flag_index["red_objective_complete_flag"]].item()
+                ),
+                "pred_event_blue_objective_complete_prob": float(
+                    pred_event_probs[index, event_flag_index["blue_objective_complete_flag"]].item()
+                ),
+                "true_event_blue_objective_complete": float(
+                    event_targets[index, event_flag_index["blue_objective_complete_flag"]].item()
                 ),
                 "pred_reward_red": float(pred_reward[index, 0].item()),
                 "true_reward_red": float(reward_targets[index, 0].item()),
@@ -1429,6 +1768,7 @@ def main() -> None:
     parser.add_argument("--lr", type=float, default=1e-3)
     parser.add_argument("--device", type=str, default="cpu", choices=["cpu", "cuda"])
     parser.add_argument("--seed", type=int, default=7)
+    parser.add_argument("--init-model-path", type=Path, default=None)
     parser.add_argument("--counterfactual-data-dir", type=Path, default=None)
     parser.add_argument(
         "--counterfactual-train-splits",
@@ -1450,12 +1790,42 @@ def main() -> None:
     parser.add_argument("--counterfactual-loss-weight", type=float, default=4.0)
     parser.add_argument("--stage2-epochs", type=int, default=2)
     parser.add_argument("--stage2-lr", type=float, default=3e-4)
+    parser.add_argument("--stage2-firstkill-focus", action="store_true")
+    parser.add_argument("--stage2-firstkill-positive-repeat", type=int, default=4)
+    parser.add_argument("--stage2-firstkill-hard-negative-repeat", type=int, default=2)
+    parser.add_argument("--stage2-red-firstkill-positive-repeat", type=int, default=None)
+    parser.add_argument("--stage2-blue-firstkill-positive-repeat", type=int, default=None)
+    parser.add_argument("--stage2-red-firstkill-hard-negative-repeat", type=int, default=None)
+    parser.add_argument("--stage2-blue-firstkill-hard-negative-repeat", type=int, default=None)
+    parser.add_argument(
+        "--loss-config-path",
+        type=Path,
+        default=None,
+        help="Optional JSON file to override DEFAULT_LOSS_CONFIG fields.",
+    )
+    parser.add_argument(
+        "--stage2-loss-config-path",
+        type=Path,
+        default=None,
+        help="Optional JSON file to override STAGE2_LOSS_CONFIG fields.",
+    )
     args = parser.parse_args()
 
     set_seed(args.seed)
     if args.device == "cuda" and not torch.cuda.is_available():
         raise RuntimeError("CUDA requested but not available in current PyTorch runtime.")
     device = torch.device(args.device)
+
+    train_loss_config = (
+        _build_loss_config(read_json(args.loss_config_path))
+        if args.loss_config_path
+        else _build_loss_config(DEFAULT_LOSS_CONFIG)
+    )
+    stage2_loss_config = (
+        _build_loss_config(read_json(args.stage2_loss_config_path))
+        if args.stage2_loss_config_path
+        else _build_loss_config(STAGE2_LOSS_CONFIG)
+    )
 
     train_records = load_split_records(args.data_dir, "train")
     val_records = load_split_records(args.data_dir, "val")
@@ -1473,11 +1843,18 @@ def main() -> None:
     val_loader = DataLoader(val_ds, batch_size=args.batch_size, shuffle=False, collate_fn=collate_world_model)
 
     model = WorldModelNet().to(device)
+    if args.init_model_path is not None:
+        model.load_state_dict(torch.load(args.init_model_path, map_location=device))
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
 
     history = []
     counterfactual_history: List[Dict[str, Any]] = []
     counterfactual_pair_summary: Dict[str, Any] = {}
+    stage2_sampling_summary: Dict[str, Any] = {
+        "mode": "default",
+        "base_count": len(train_records),
+        "expanded_count": len(train_records),
+    }
     best_val = float("inf")
     args.out_dir.mkdir(parents=True, exist_ok=True)
 
@@ -1488,7 +1865,7 @@ def main() -> None:
 
         for batch in train_loader:
             batch = move_to_device(batch, device)
-            _, losses = compute_losses(model, batch, loss_config=DEFAULT_LOSS_CONFIG)
+            _, losses = compute_losses(model, batch, loss_config=train_loss_config)
 
             optimizer.zero_grad()
             losses["total"].backward()
@@ -1522,14 +1899,33 @@ def main() -> None:
     model.load_state_dict(torch.load(args.out_dir / "model.pt", map_location=device))
 
     if args.stage2_epochs > 0:
+        stage2_records = train_records
+        if args.stage2_firstkill_focus:
+            stage2_records, stage2_sampling_summary = build_first_kill_stage2_records(
+                train_records,
+                positive_repeat=args.stage2_firstkill_positive_repeat,
+                hard_negative_repeat=args.stage2_firstkill_hard_negative_repeat,
+                red_positive_repeat=args.stage2_red_firstkill_positive_repeat,
+                blue_positive_repeat=args.stage2_blue_firstkill_positive_repeat,
+                red_hard_negative_repeat=args.stage2_red_firstkill_hard_negative_repeat,
+                blue_hard_negative_repeat=args.stage2_blue_firstkill_hard_negative_repeat,
+            )
+            stage2_sampling_summary["mode"] = "first_kill_focus"
+        stage2_ds = WorldModelDataset(stage2_records, reward_norm_stats=reward_norm_stats)
+        stage2_loader = DataLoader(
+            stage2_ds,
+            batch_size=args.batch_size,
+            shuffle=True,
+            collate_fn=collate_world_model,
+        )
         stage2_optimizer = torch.optim.Adam(model.parameters(), lr=args.stage2_lr)
         for epoch in range(1, args.stage2_epochs + 1):
             model.train()
             stage2_loss_sum = 0.0
             stage2_count = 0
-            for batch in train_loader:
+            for batch in stage2_loader:
                 batch = move_to_device(batch, device)
-                _, losses = compute_losses(model, batch, loss_config=STAGE2_LOSS_CONFIG)
+                _, losses = compute_losses(model, batch, loss_config=stage2_loss_config)
                 stage2_optimizer.zero_grad()
                 losses["total"].backward()
                 stage2_optimizer.step()
@@ -1553,6 +1949,7 @@ def main() -> None:
                     "phase": "stage2_event_reward",
                     "epoch": epoch,
                     "train_loss": avg_stage2_loss,
+                    "stage2_sampling_mode": stage2_sampling_summary.get("mode", "default"),
                     **val_metrics,
                 }
             )
@@ -1608,6 +2005,7 @@ def main() -> None:
                 lr=args.counterfactual_lr,
                 loss_weight=args.counterfactual_loss_weight,
                 seed=args.seed + 101,
+                loss_config=stage2_loss_config,
             )
             torch.save(model.state_dict(), args.out_dir / "model.pt")
 
@@ -1642,6 +2040,18 @@ def main() -> None:
             "counterfactual_loss_weight": args.counterfactual_loss_weight,
             "stage2_epochs": args.stage2_epochs,
             "stage2_lr": args.stage2_lr,
+            "stage2_firstkill_focus": bool(args.stage2_firstkill_focus),
+            "stage2_firstkill_positive_repeat": int(args.stage2_firstkill_positive_repeat),
+            "stage2_firstkill_hard_negative_repeat": int(args.stage2_firstkill_hard_negative_repeat),
+            "stage2_red_firstkill_positive_repeat": args.stage2_red_firstkill_positive_repeat,
+            "stage2_blue_firstkill_positive_repeat": args.stage2_blue_firstkill_positive_repeat,
+            "stage2_red_firstkill_hard_negative_repeat": args.stage2_red_firstkill_hard_negative_repeat,
+            "stage2_blue_firstkill_hard_negative_repeat": args.stage2_blue_firstkill_hard_negative_repeat,
+            "loss_config_path": str(args.loss_config_path) if args.loss_config_path else None,
+            "stage2_loss_config_path": str(args.stage2_loss_config_path) if args.stage2_loss_config_path else None,
+            "effective_loss_config": train_loss_config,
+            "effective_stage2_loss_config": stage2_loss_config,
+            "stage2_sampling_summary": stage2_sampling_summary,
             "reward_norm_stats": reward_norm_stats,
             "processed_summary": processed_summary,
         },

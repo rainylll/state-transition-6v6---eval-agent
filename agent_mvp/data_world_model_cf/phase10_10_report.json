@@ -1,0 +1,172 @@
+{
+  "timestamp": "2026-04-16T18:40:00+08:00",
+  "phase": "10.10",
+  "title": "Eligibility-aware blue-side first-kill fix",
+  "comparison": {
+    "baseline_10_8_checkpoint": "agent_mvp/data_world_model_cf/phase10_8_firstkill_fix/model.pt",
+    "candidate_10_10_checkpoint": "agent_mvp/data_world_model_cf/phase10_10_blue_eligible_fix/model.pt",
+    "data_dir_train": "agent_mvp/data_world_model_cf/ab_train_visible_only",
+    "data_dir_heldout": "agent_mvp/data_world_model_cf/heldout_pack",
+    "shared_eval_protocol": {
+      "strict_splits": "heldout_cf",
+      "counterfactual_splits": "heldout_cf",
+      "counterfactual_horizons": [
+        "20",
+        "terminal"
+      ],
+      "state_step": 0,
+      "min_groups": 8,
+      "min_pairs": 100
+    }
+  },
+  "commands": {
+    "prepare_output_dir": "New-Item -ItemType Directory -Force -Path agent_mvp/data_world_model_cf/phase10_10_blue_eligible_fix | Out-Null",
+    "prepare_checkpoint_copy": "Copy-Item -Force agent_mvp/data_world_model_cf/phase10_8_firstkill_fix/model.pt agent_mvp/data_world_model_cf/phase10_10_blue_eligible_fix/model.pt",
+    "train_10_10": "C:/Users/98466/.conda/envs/rainyll/python.exe agent_mvp/python/train_world_model.py --data-dir agent_mvp/data_world_model_cf/ab_train_visible_only --out-dir agent_mvp/data_world_model_cf/phase10_10_blue_eligible_fix --epochs 0 --stage2-epochs 1 --stage2-lr 0.00015 --init-model-path agent_mvp/data_world_model_cf/phase10_8_firstkill_fix/model.pt --stage2-firstkill-focus --stage2-firstkill-positive-repeat 6 --stage2-firstkill-hard-negative-repeat 3 --stage2-red-firstkill-positive-repeat 6 --stage2-blue-firstkill-positive-repeat 10 --stage2-red-firstkill-hard-negative-repeat 3 --stage2-blue-firstkill-hard-negative-repeat 5 --device cuda --seed 7",
+    "strict_eval_10_10": "C:/Users/98466/.conda/envs/rainyll/python.exe agent_mvp/python/eval_world_model.py --data-dir agent_mvp/data_world_model_cf/heldout_pack --model-path agent_mvp/data_world_model_cf/phase10_10_blue_eligible_fix/model.pt --out-path agent_mvp/data_world_model_cf/phase10_10_blue_eligible_fix_strict_eval.json --splits heldout_cf --device cuda",
+    "counterfactual_eval_10_10": "C:/Users/98466/.conda/envs/rainyll/python.exe agent_mvp/python/counterfactual_eval_world_model.py --data-dir agent_mvp/data_world_model_cf/heldout_pack --model-path agent_mvp/data_world_model_cf/phase10_10_blue_eligible_fix/model.pt --out-path agent_mvp/data_world_model_cf/phase10_10_blue_eligible_fix_counterfactual_eval.json --splits heldout_cf --horizons 20,terminal --state-step 0 --min-groups 8 --min-pairs 100 --device cuda",
+    "strict_eval_10_8_rerun_for_new_metrics": "C:/Users/98466/.conda/envs/rainyll/python.exe agent_mvp/python/eval_world_model.py --data-dir agent_mvp/data_world_model_cf/heldout_pack --model-path agent_mvp/data_world_model_cf/phase10_8_firstkill_fix/model.pt --out-path agent_mvp/data_world_model_cf/phase10_8_firstkill_fix_strict_eval_rerun_1010.json --splits heldout_cf --device cuda"
+  },
+  "eligibility": {
+    "implementation": "annotate_first_kill_eligibility(records) in train_world_model.py",
+    "rule": "For each episode/t_index, use terminal-horizon target_event to infer whether any first_kill still exists in the future. If no future first_kill exists, mark prior_kill_seen=true and blue_first_kill_eligible=false.",
+    "fields_added_to_record_meta": [
+      "prior_kill_seen",
+      "red_first_kill_eligible",
+      "blue_first_kill_eligible",
+      "future_red_first_kill_possible",
+      "future_blue_first_kill_possible"
+    ]
+  },
+  "stage2_sampling": {
+    "base_count": 160,
+    "expanded_count": 488,
+    "first_kill_positive_count": 40,
+    "first_kill_hard_negative_count": 40,
+    "red_first_kill_positive_count": 28,
+    "blue_first_kill_positive_count": 12,
+    "red_first_kill_hard_negative_count": 40,
+    "blue_first_kill_hard_negative_count": 0,
+    "blue_eligible_count": 80,
+    "blue_ineligible_filtered_count": 40,
+    "red_positive_repeat": 6,
+    "blue_positive_repeat": 10,
+    "red_hard_negative_repeat": 3,
+    "blue_hard_negative_repeat": 5,
+    "mode": "first_kill_focus_with_blue_eligibility_filter"
+  },
+  "strict_eval": {
+    "phase10_8": {
+      "event_first_kill_accuracy": 0.7,
+      "red_first_kill_accuracy": 0.6875,
+      "blue_first_kill_accuracy": 0.7125,
+      "blue_first_kill_precision": 0.23333333333333334,
+      "blue_first_kill_pred_positive_rate": 0.375,
+      "blue_first_kill_false_positive_rate": 0.3150684931506849,
+      "blue_first_kill_eligible_subset_accuracy": 0.7272727272727273,
+      "blue_first_kill_eligible_subset_precision": 0.3684210526315789,
+      "critical_event_accuracy": 0.7650000086054206,
+      "termination_flag_accuracy": 0.9625,
+      "termination_flag_high_conf_hit_rate": 1.0,
+      "reward_red_mae": 3.1467823445796967,
+      "reward_total_mae": 3.074378564953804,
+      "terminal_win_accuracy": 0.5375,
+      "trajectory_alive_accuracy": 0.9083333333333332
+    },
+    "phase10_10": {
+      "event_first_kill_accuracy": 0.66875,
+      "red_first_kill_accuracy": 0.6875,
+      "blue_first_kill_accuracy": 0.65,
+      "blue_first_kill_precision": 0.2,
+      "blue_first_kill_pred_positive_rate": 0.4375,
+      "blue_first_kill_false_positive_rate": 0.3835616438356164,
+      "blue_first_kill_eligible_subset_accuracy": 0.7045454545454546,
+      "blue_first_kill_eligible_subset_precision": 0.35,
+      "critical_event_accuracy": 0.7525000080466271,
+      "termination_flag_accuracy": 0.9625,
+      "termination_flag_high_conf_hit_rate": 1.0,
+      "reward_red_mae": 3.135571575164795,
+      "reward_total_mae": 3.1699243128299712,
+      "terminal_win_accuracy": 0.5375,
+      "trajectory_alive_accuracy": 0.9083333333333332
+    }
+  },
+  "heldout_counterfactual": {
+    "phase10_8": {
+      "event_blue_first_kill_prob": {
+        "num_pairs": 160,
+        "num_signal_pairs": 20,
+        "delta_mae": 0.1252025414013133,
+        "mean_true_abs_delta": 0.125,
+        "mean_pred_abs_delta": 0.000248352041171529,
+        "sign_accuracy_on_signal_pairs": 0.4
+      },
+      "termination_flag": {
+        "num_pairs": 160,
+        "num_signal_pairs": 12,
+        "delta_mae": 0.07500086683007226,
+        "mean_true_abs_delta": 0.075,
+        "mean_pred_abs_delta": 1.0337230776258366e-06,
+        "sign_accuracy_on_signal_pairs": 0.4166666666666667
+      },
+      "reward_red": {
+        "num_pairs": 160,
+        "num_signal_pairs": 59,
+        "delta_mae": 0.45898618185892703,
+        "mean_true_abs_delta": 0.4585757934488356,
+        "mean_pred_abs_delta": 0.0012095913290977478,
+        "sign_accuracy_on_signal_pairs": 0.6101694915254238
+      },
+      "terminal_red_win_prob": {
+        "num_pairs": 160,
+        "num_signal_pairs": 88,
+        "delta_mae": 0.5500929433852434,
+        "mean_true_abs_delta": 0.55,
+        "mean_pred_abs_delta": 0.0008214801549911499,
+        "sign_accuracy_on_signal_pairs": 0.6704545454545454
+      }
+    },
+    "phase10_10": {
+      "event_blue_first_kill_prob": {
+        "num_pairs": 160,
+        "num_signal_pairs": 20,
+        "delta_mae": 0.1251487828965537,
+        "mean_true_abs_delta": 0.125,
+        "mean_pred_abs_delta": 0.0001881443138472605,
+        "sign_accuracy_on_signal_pairs": 0.5
+      },
+      "termination_flag": {
+        "num_pairs": 160,
+        "num_signal_pairs": 12,
+        "delta_mae": 0.07500175429831302,
+        "mean_true_abs_delta": 0.075,
+        "mean_pred_abs_delta": 2.2400761679364224e-06,
+        "sign_accuracy_on_signal_pairs": 0.16666666666666666
+      },
+      "reward_red": {
+        "num_pairs": 160,
+        "num_signal_pairs": 59,
+        "delta_mae": 0.4588979565538466,
+        "mean_true_abs_delta": 0.4585757934488356,
+        "mean_pred_abs_delta": 0.001067325472831726,
+        "sign_accuracy_on_signal_pairs": 0.6101694915254238
+      },
+      "terminal_red_win_prob": {
+        "num_pairs": 160,
+        "num_signal_pairs": 88,
+        "delta_mae": 0.5500890605151654,
+        "mean_true_abs_delta": 0.55,
+        "mean_pred_abs_delta": 0.0008102916181087494,
+        "sign_accuracy_on_signal_pairs": 0.6704545454545454
+      }
+    }
+  },
+  "decision": {
+    "blue_counterfactual_sign_kept": true,
+    "strict_blue_first_kill_kept": false,
+    "critical_kept": false,
+    "termination_kept": true,
+    "reward_not_exploded": true,
+    "go_no_go": "NO-GO to replace 10.8 with this 10.10 eligibility-only variant"
+  }
+}

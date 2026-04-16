@@ -1,0 +1,117 @@
+{
+  "timestamp": "2026-04-15T20:37:58.325815",
+  "comparison": {
+    "model_A": {
+      "name": "Phase10.5 retrain baseline (re-evaluated under effective termination semantics)",
+      "checkpoint": "..\\data_world_model_cf\\ab_phase10_5_retrain\\model.pt"
+    },
+    "model_B": {
+      "name": "Phase10.6 targeted fix final",
+      "checkpoint": "..\\data_world_model_cf\\phase10_6_ft_nocf\\model.pt"
+    },
+    "heldout_pack": "..\\data_world_model_cf\\heldout_pack",
+    "shared_eval_config": {
+      "splits": "heldout_cf",
+      "horizons": [
+        "20",
+        "terminal"
+      ],
+      "state_step": 0,
+      "min_groups": 8,
+      "min_pairs": 100
+    }
+  },
+  "strict_eval": {
+    "phase10_5": {
+      "trajectory_alive_accuracy": 0.9083333333333332,
+      "terminal_win_accuracy": 0.525,
+      "critical_event_accuracy": 0.7650000086054206,
+      "termination_flag_accuracy": 0.9625,
+      "termination_flag_high_conf_hit_rate": 1.0,
+      "event_first_fire_accuracy": 0.85625,
+      "event_fire_count_mae": 0.7838523497863207,
+      "reward_red_mae": 2.9964044868946074,
+      "reward_total_mae": 3.014285999536514,
+      "event_first_kill_accuracy": 0.7,
+      "event_objective_accuracy": 0.73125,
+      "event_termination_accuracy": 0.9625
+    },
+    "phase10_6": {
+      "trajectory_alive_accuracy": 0.9083333333333332,
+      "terminal_win_accuracy": 0.55,
+      "critical_event_accuracy": 0.7525000080466271,
+      "termination_flag_accuracy": 0.9625,
+      "termination_flag_high_conf_hit_rate": 1.0,
+      "event_first_fire_accuracy": 0.85625,
+      "event_fire_count_mae": 0.8076997295138426,
+      "reward_red_mae": 2.9904629051685334,
+      "reward_total_mae": 2.990074399113655,
+      "event_first_kill_accuracy": 0.66875,
+      "event_objective_accuracy": 0.73125,
+      "event_termination_accuracy": 0.9625
+    }
+  },
+  "counterfactual_eval": {
+    "phase10_5": {
+      "valid": true,
+      "num_counterfactual_groups": 16,
+      "num_counterfactual_pairs": 160,
+      "event_red_fire_count": {
+        "delta_mae": 1.0253706853138282,
+        "num_signal_pairs": 61,
+        "sign_accuracy_on_signal_pairs": 0.5573770491803278
+      },
+      "termination_flag": {
+        "delta_mae": 0.07500016808894543,
+        "num_signal_pairs": 12,
+        "sign_accuracy_on_signal_pairs": 0.16666666666666666
+      },
+      "reward_red": {
+        "delta_mae": 0.4590221271850169,
+        "num_signal_pairs": 59,
+        "sign_accuracy_on_signal_pairs": 0.6101694915254238
+      },
+      "terminal_red_win_prob": {
+        "delta_mae": 0.5501008929684759,
+        "num_signal_pairs": 88,
+        "sign_accuracy_on_signal_pairs": 0.6818181818181818
+      }
+    },
+    "phase10_6": {
+      "valid": true,
+      "num_counterfactual_groups": 16,
+      "num_counterfactual_pairs": 160,
+      "event_red_fire_count": {
+        "delta_mae": 1.0253425266360865,
+        "num_signal_pairs": 61,
+        "sign_accuracy_on_signal_pairs": 0.5573770491803278
+      },
+      "termination_flag": {
+        "delta_mae": 0.07500017833523884,
+        "num_signal_pairs": 12,
+        "sign_accuracy_on_signal_pairs": 0.25
+      },
+      "reward_red": {
+        "delta_mae": 0.4589945667423308,
+        "num_signal_pairs": 59,
+        "sign_accuracy_on_signal_pairs": 0.6101694915254238
+      },
+      "terminal_red_win_prob": {
+        "delta_mae": 0.5500992350280285,
+        "num_signal_pairs": 88,
+        "sign_accuracy_on_signal_pairs": 0.6818181818181818
+      }
+    }
+  },
+  "deltas": {
+    "trajectory_alive_accuracy_gain": 0.0,
+    "terminal_win_accuracy_gain": 0.025000000000000022,
+    "critical_event_accuracy_gain": -0.012500000558793523,
+    "event_fire_count_mae_improvement": -0.023847379727521933,
+    "reward_red_mae_improvement": 0.005941581726073952,
+    "reward_total_mae_improvement": 0.024211600422859192,
+    "cf_termination_signal_pairs_delta": 0,
+    "cf_termination_sign_acc_gain": 0.08333333333333334,
+    "cf_terminal_win_sign_acc_gain": 0.0
+  }
+}

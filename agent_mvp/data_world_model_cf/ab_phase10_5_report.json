@@ -1,0 +1,144 @@
+{
+  "timestamp": "2026-04-15T19:59:25.110436",
+  "ab_setup": {
+    "model_A": {
+      "name": "Phase7 functional baseline",
+      "checkpoint": "..\\data_world_model\\phase7_functional_cf_run\\model.pt"
+    },
+    "model_B": {
+      "name": "Phase10.5 retrained on train_visible_cf",
+      "checkpoint": "..\\data_world_model_cf\\ab_phase10_5_retrain\\model.pt",
+      "trained_now": true,
+      "train_command": "train_world_model.py --data-dir ../data_world_model_cf/ab_train_visible_only --counterfactual-data-dir ../data_world_model_cf/heldout_pack --counterfactual-train-splits train_visible_cf --counterfactual-horizons 20,terminal --counterfactual-state-step 0"
+    },
+    "heldout_pack": "..\\data_world_model_cf\\heldout_pack",
+    "shared_eval_config": {
+      "strict": {
+        "splits": "heldout_cf"
+      },
+      "counterfactual": {
+        "splits": "heldout_cf",
+        "horizons": [
+          "20",
+          "terminal"
+        ],
+        "state_step": 0,
+        "min_groups": 8,
+        "min_pairs": 100
+      }
+    }
+  },
+  "strict_eval": {
+    "A": {
+      "trajectory_alive_accuracy": 0.8708333333333333,
+      "terminal_win_accuracy": 0.475,
+      "critical_event_accuracy": 0.7950000070035458,
+      "termination_flag_accuracy": 1.0,
+      "termination_flag_high_conf_hit_rate": 1.0,
+      "event_first_fire_accuracy": 0.85625,
+      "event_fire_count_mae": 1.1009429537982214,
+      "reward_red_mae": 71.1013928413391,
+      "reward_total_mae": 65.83648985028267,
+      "reward_red_delta_scale": 78.05485545396805,
+      "reward_red_true_delta_scale": 6.953462612628937
+    },
+    "B": {
+      "trajectory_alive_accuracy": 0.9083333333333332,
+      "terminal_win_accuracy": 0.525,
+      "critical_event_accuracy": 0.7725000087171793,
+      "termination_flag_accuracy": 1.0,
+      "termination_flag_high_conf_hit_rate": 1.0,
+      "event_first_fire_accuracy": 0.85625,
+      "event_fire_count_mae": 0.7838523497863207,
+      "reward_red_mae": 2.9964044868946074,
+      "reward_total_mae": 3.014285999536514,
+      "reward_red_delta_scale": 5.949282878637314,
+      "reward_red_true_delta_scale": 6.953462612628937
+    }
+  },
+  "counterfactual_eval": {
+    "A": {
+      "valid": true,
+      "coverage_insufficient": false,
+      "num_counterfactual_groups": 16,
+      "num_counterfactual_pairs": 160,
+      "focus_metrics": {
+        "event_red_fire_count": {
+          "delta_mae": 1.0277445227373392,
+          "sign_accuracy_on_signal_pairs": 0.45901639344262296,
+          "num_signal_pairs": 61
+        },
+        "termination_flag": {
+          "delta_mae": 1.7149845348285453e-06,
+          "sign_accuracy_on_signal_pairs": null,
+          "num_signal_pairs": 0
+        },
+        "reward_red": {
+          "delta_mae": 0.46392205404117703,
+          "sign_accuracy_on_signal_pairs": 0.6101694915254238,
+          "num_signal_pairs": 59
+        },
+        "terminal_red_win_prob": {
+          "delta_mae": 0.5535499071702361,
+          "sign_accuracy_on_signal_pairs": 0.3181818181818182,
+          "num_signal_pairs": 88
+        }
+      }
+    },
+    "B": {
+      "valid": true,
+      "coverage_insufficient": false,
+      "num_counterfactual_groups": 16,
+      "num_counterfactual_pairs": 160,
+      "focus_metrics": {
+        "event_red_fire_count": {
+          "delta_mae": 1.0253706853138282,
+          "sign_accuracy_on_signal_pairs": 0.5573770491803278,
+          "num_signal_pairs": 61
+        },
+        "termination_flag": {
+          "delta_mae": 1.7255929378734437e-07,
+          "sign_accuracy_on_signal_pairs": null,
+          "num_signal_pairs": 0
+        },
+        "reward_red": {
+          "delta_mae": 0.4590221271850169,
+          "sign_accuracy_on_signal_pairs": 0.6101694915254238,
+          "num_signal_pairs": 59
+        },
+        "terminal_red_win_prob": {
+          "delta_mae": 0.5501008929684759,
+          "sign_accuracy_on_signal_pairs": 0.6818181818181818,
+          "num_signal_pairs": 88
+        }
+      }
+    }
+  },
+  "summary_deltas": {
+    "trajectory_alive_accuracy_gain": 0.03749999999999987,
+    "terminal_win_accuracy_gain": 0.050000000000000044,
+    "critical_event_accuracy_gain": -0.022499998286366507,
+    "termination_flag_accuracy_gain": 0.0,
+    "termination_flag_high_conf_hit_rate_gain": 0.0,
+    "event_fire_count_mae_improvement": 0.3170906040119007,
+    "reward_red_mae_improvement": 68.1049883544445,
+    "reward_total_mae_improvement": 62.82220385074616,
+    "reward_delta_scale_gap_to_true_A": 71.1013928413391,
+    "reward_delta_scale_gap_to_true_B": 1.0041797339916227,
+    "cf_event_red_fire_count_delta_mae_improvement": 0.0023738374235109383,
+    "cf_event_red_fire_count_sign_acc_gain": 0.09836065573770486,
+    "cf_reward_red_delta_mae_improvement": 0.004899926856160142,
+    "cf_reward_red_sign_acc_gain": 0.0,
+    "cf_termination_flag_delta_mae_improvement": 1.542425241041201e-06,
+    "cf_terminal_win_delta_mae_improvement": 0.0034490142017602476,
+    "cf_terminal_win_sign_acc_gain": 0.3636363636363636
+  },
+  "decision": {
+    "worth_continue_phase10_5": true,
+    "rationale": [
+      "reward prediction error and reward delta-scale mismatch improved substantially on held-out strict eval",
+      "counterfactual event and reward discrimination improved on key focus metrics",
+      "critical_event_accuracy is still below baseline and needs targeted head-level fixing"
+    ]
+  }
+}

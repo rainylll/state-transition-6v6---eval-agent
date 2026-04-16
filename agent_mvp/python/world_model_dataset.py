@@ -20,6 +20,12 @@ TERMINATION_REASON_TO_ID = {
     "objective_complete": 3,
     "safety_limit": 4,
 }
+NON_DECISIVE_TERMINATION_REASONS = {
+    "none",
+    "safety_limit",
+    "timeout",
+    "time_limit",
+}
 EVENT_FLAG_KEYS = (
     "red_first_contact_flag",
     "blue_first_contact_flag",
@@ -238,11 +244,38 @@ def _build_terminal_scalars(target_terminal: Dict) -> Dict[str, torch.Tensor]:
     }
 
 
-def _build_event_targets(target_event: Dict) -> Dict[str, torch.Tensor]:
+def derive_effective_termination_flag(record: Dict) -> float:
+    target_event = record.get("target_event", {}) if isinstance(record.get("target_event", {}), dict) else {}
+    base_flag = 1.0 if bool(target_event.get("termination_flag", False)) else 0.0
+
+    if str(record.get("horizon")) != "terminal":
+        return base_flag
+
+    meta = record.get("meta", {}) if isinstance(record.get("meta", {}), dict) else {}
+    reason = str(meta.get("target_termination_reason", "")).strip().lower()
+    if not reason:
+        target_terminal = record.get("target_terminal", {}) if isinstance(record.get("target_terminal", {}), dict) else {}
+        episode_outcome = target_terminal.get("episode_outcome", {}) if isinstance(target_terminal.get("episode_outcome", {}), dict) else {}
+        reason = str(episode_outcome.get("termination_reason", "none")).strip().lower()
+
+    if reason in NON_DECISIVE_TERMINATION_REASONS:
+        return 0.0
+    return 1.0 if base_flag >= 0.5 else 0.0
+
+
+def _build_event_targets(record: Dict) -> Dict[str, torch.Tensor]:
+    target_event = record.get("target_event", {})
     if not isinstance(target_event, dict):
         target_event = {}
+
+    termination_value = derive_effective_termination_flag(record)
     event_flags = torch.tensor(
-        [1.0 if bool(target_event.get(key, False)) else 0.0 for key in EVENT_FLAG_KEYS],
+        [
+            termination_value
+            if key == "termination_flag"
+            else (1.0 if bool(target_event.get(key, False)) else 0.0)
+            for key in EVENT_FLAG_KEYS
+        ],
         dtype=torch.float32,
     )
     event_counts = torch.tensor(
@@ -379,7 +412,7 @@ class WorldModelDataset(Dataset):
             "meta": record.get("meta", {}),
         }
         sample.update(terminal_scalars)
-        sample.update(_build_event_targets(record.get("target_event", {})))
+        sample.update(_build_event_targets(record))
         sample.update({
             "reward_target": build_reward_target_tensor(record.get("target_reward", {}), self.reward_norm_stats)
         })
