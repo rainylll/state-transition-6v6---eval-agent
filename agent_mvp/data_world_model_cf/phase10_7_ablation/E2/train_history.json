@@ -1,0 +1,18 @@
+{
+  "history": [
+    {
+      "phase": "stage2_event_reward",
+      "epoch": 1,
+      "train_loss": 1.3829564902897302,
+      "loss_total": 1.3851414178814334,
+      "loss_trajectory": 0.14777052066741309,
+      "loss_terminal": 0.684614957970058,
+      "loss_consistency": 0.006319702609610637,
+      "loss_event": 1.0426627359735765,
+      "loss_reward": 0.12064250283661121,
+      "win_accuracy": 0.7363978704064407,
+      "num_samples": 38505
+    }
+  ],
+  "counterfactual_history": []
+}

@@ -1,0 +1,30 @@
+{
+  "history": [
+    {
+      "epoch": 1,
+      "train_loss": 1.107789084302553,
+      "loss_total": 12.486407482103715,
+      "loss_trajectory": 3.149443540149348,
+      "loss_terminal": 9.3362570641503,
+      "loss_consistency": 0.0026341496521443703,
+      "loss_event": 0.00018626768183872483,
+      "loss_reward": 0.0003476579410887008,
+      "win_accuracy": 0.0,
+      "num_samples": 2543
+    },
+    {
+      "phase": "stage2_event_reward",
+      "epoch": 1,
+      "train_loss": 0.059301285906491676,
+      "loss_total": 14.847226957050403,
+      "loss_trajectory": 3.872386842743412,
+      "loss_terminal": 10.974622259541285,
+      "loss_consistency": 0.0010156349354841817,
+      "loss_event": 2.1382371170887218e-05,
+      "loss_reward": 1.590208942155294e-05,
+      "win_accuracy": 0.0,
+      "num_samples": 2543
+    }
+  ],
+  "counterfactual_history": []
+}

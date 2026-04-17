@@ -1,0 +1,78 @@
+{
+  "phase": "A",
+  "frozen_baseline": {
+    "model_name": "phase10_8_firstkill_fix",
+    "role": "current main version",
+    "why_frozen": [
+      "best balance across strict first_kill, critical_event, termination, and reward",
+      "later 10.9/10.10/10.11 patches improved some blue-side directionality but failed to preserve strict calibration"
+    ]
+  },
+  "target_contract_doc": "D:\\sky\\Projects\\state-transition 6v6 + eval agent\\agent_mvp\\docs\\PhaseA_Target_Contract.md",
+  "contract_decisions": {
+    "first_kill_target_kind": "future_window_event_with_side_and_horizon_qualification_metadata",
+    "first_kill_is_not": [
+      "win proxy",
+      "objective proxy",
+      "termination proxy"
+    ],
+    "terminal_negative_rules": [
+      "blue objective success without blue first kill must remain blue_first_kill=0",
+      "red first-kill dominated terminal outcomes must remain blue_first_kill=0",
+      "no-first-kill-remaining terminal endings must keep both first_kill flags at 0"
+    ],
+    "qualification_rules": [
+      "keep event label and eligibility metadata separate",
+      "use side-aware terminal qualification for filtering/masking rather than relabeling objective or termination as first_kill"
+    ]
+  },
+  "diagnosis_context": {
+    "blue_false_positive_count_10_8": 23,
+    "top_buckets": [
+      "terminal_red_first_kill_outcome_confusion",
+      "terminal_blue_objective_without_first_kill",
+      "terminal_or_late_window_without_any_first_kill_remaining"
+    ],
+    "primary_false_positive_bucket_distribution": {
+      "terminal_red_first_kill_outcome_confusion": {
+        "count": 12,
+        "share_of_blue_false_positives": 0.5217391304347826
+      },
+      "terminal_blue_objective_without_first_kill": {
+        "count": 9,
+        "share_of_blue_false_positives": 0.391304347826087
+      },
+      "terminal_or_late_window_without_any_first_kill_remaining": {
+        "count": 2,
+        "share_of_blue_false_positives": 0.08695652173913043
+      }
+    }
+  },
+  "terminal_confusion_pack": {
+    "pack_dir": "D:\\sky\\Projects\\state-transition 6v6 + eval agent\\agent_mvp\\data_world_model_cf\\terminal_confusion_pack",
+    "primary_records": 30,
+    "extended_records": 33,
+    "primary_bucket_counts": {
+      "terminal_blue_objective_without_first_kill": 15,
+      "terminal_red_first_kill_outcome_confusion": 15
+    },
+    "extended_bucket_counts": {
+      "terminal_blue_objective_without_first_kill": 15,
+      "terminal_or_late_window_without_any_first_kill_remaining": 3,
+      "terminal_red_first_kill_outcome_confusion": 15
+    },
+    "intended_use": "terminal blue-side false-positive regression",
+    "train_allowed": false,
+    "eval_allowed": true
+  },
+  "next_step_recommendation": {
+    "preferred_next_step": "new target definition comparison",
+    "not_preferred_next_step": "more training-budget or repeat-weight patching on top of current contract",
+    "reason": "current evidence points to target-definition and terminal-qualification mismatch, not under-training"
+  },
+  "suggested_abc_experiment": {
+    "A": "freeze 10.8 contract and report baseline on heldout_pack + terminal_confusion_primary_cf",
+    "B": "introduce side-aware terminal qualification / masking only for blue first_kill target consumption, no backbone changes",
+    "C": "if B shows clean strict gain on terminal_confusion pack, add minimal training-side use of the new qualification while keeping 10.8 reward/termination settings fixed"
+  }
+}

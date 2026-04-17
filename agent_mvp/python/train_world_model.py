@@ -33,6 +33,7 @@ DEFAULT_BUCKET_KEYS = (
     "force_size_key",
     "red_attr_bucket",
     "blue_attr_bucket",
+    "terminal_confusion_bucket",
 )
 SUMMARY_METRIC_KEYS = (
     "trajectory_alive_accuracy",
@@ -207,8 +208,13 @@ def make_data_loader(
     batch_size: int,
     shuffle: bool,
     reward_norm_stats: Dict[str, Dict[str, float]],
+    target_contract: str = "baseline",
 ) -> DataLoader:
-    dataset = WorldModelDataset(records, reward_norm_stats=reward_norm_stats)
+    dataset = WorldModelDataset(
+        records,
+        reward_norm_stats=reward_norm_stats,
+        target_contract=target_contract,
+    )
     return DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, collate_fn=collate_world_model)
 
 
@@ -268,25 +274,51 @@ def annotate_first_kill_eligibility(records: List[Dict[str, Any]]) -> List[Dict[
         blue_first_kill_true = bool(target_event.get("blue_first_kill_flag", False))
         red_objective_true = bool(target_event.get("red_objective_complete_flag", False))
         blue_objective_true = bool(target_event.get("blue_objective_complete_flag", False))
+        target_termination_reason = str(meta.get("target_termination_reason", "")).strip().lower()
+        effective_terminal = bool(
+            horizon == "terminal"
+            and target_termination_reason
+            and target_termination_reason not in {"none", "safety_limit", "timeout", "time_limit"}
+        )
         terminal_red_outcome_conflict = bool(
-            horizon == "terminal" and (not blue_first_kill_true) and red_first_kill_true
+            effective_terminal
+            and (not blue_first_kill_true)
+            and red_first_kill_true
+            and red_objective_true
         )
         terminal_blue_objective_conflict = bool(
-            horizon == "terminal" and (not blue_first_kill_true) and blue_objective_true
+            effective_terminal
+            and (not blue_first_kill_true)
+            and (not red_first_kill_true)
+            and blue_objective_true
         )
         terminal_no_first_kill_remaining_conflict = bool(
-            horizon == "terminal" and (not blue_first_kill_true) and (not future_any_first_kill)
+            horizon == "terminal"
+            and (not blue_first_kill_true)
+            and (not red_first_kill_true)
+            and (not future_any_first_kill)
+            and (not effective_terminal)
+            and (not red_objective_true)
+            and (not blue_objective_true)
         )
         blue_first_kill_terminal_conflict = bool(
             terminal_red_outcome_conflict
             or terminal_blue_objective_conflict
             or terminal_no_first_kill_remaining_conflict
         )
+        terminal_confusion_bucket = "none"
+        if terminal_red_outcome_conflict:
+            terminal_confusion_bucket = "terminal_red_first_kill_outcome_confusion"
+        elif terminal_blue_objective_conflict:
+            terminal_confusion_bucket = "terminal_blue_objective_without_first_kill"
+        elif terminal_no_first_kill_remaining_conflict:
+            terminal_confusion_bucket = "terminal_or_late_window_without_any_first_kill_remaining"
         meta["prior_kill_seen"] = prior_kill_seen
-        meta["red_first_kill_eligible"] = bool(future_any_first_kill)
-        meta["blue_first_kill_eligible"] = bool(future_any_first_kill)
+        meta["red_first_kill_eligible"] = bool(future_red_first_kill)
+        meta["blue_first_kill_eligible"] = bool(future_blue_first_kill)
         meta["future_red_first_kill_possible"] = bool(future_red_first_kill)
         meta["future_blue_first_kill_possible"] = bool(future_blue_first_kill)
+        meta["effective_terminal"] = effective_terminal
         meta["terminal_red_outcome_conflict"] = terminal_red_outcome_conflict
         meta["terminal_blue_objective_without_blue_first_kill_conflict"] = terminal_blue_objective_conflict
         meta["terminal_no_first_kill_remaining_conflict"] = terminal_no_first_kill_remaining_conflict
@@ -294,6 +326,7 @@ def annotate_first_kill_eligibility(records: List[Dict[str, Any]]) -> List[Dict[
         meta["blue_first_kill_terminal_eligible"] = bool(
             horizon != "terminal" or blue_first_kill_true or (not blue_first_kill_terminal_conflict)
         )
+        meta["terminal_confusion_bucket"] = terminal_confusion_bucket
         record["meta"] = meta
 
     return records
@@ -359,6 +392,7 @@ def _build_loss_config(overrides: Dict[str, Any] = None) -> Dict[str, Any]:
 def _compute_event_grouped_loss(
     event_flag_logits: torch.Tensor,
     event_flags: torch.Tensor,
+    event_flag_weights: torch.Tensor | None,
     loss_config: Dict[str, Any],
 ) -> Tuple[torch.Tensor, Dict[str, torch.Tensor]]:
     device = event_flag_logits.device
@@ -373,6 +407,10 @@ def _compute_event_grouped_loss(
         pos_weight=pos_weight,
         reduction="none",
     )
+    if event_flag_weights is None:
+        event_flag_weights = torch.ones_like(bce_raw)
+    else:
+        event_flag_weights = event_flag_weights.to(device=device, dtype=bce_raw.dtype)
 
     group_losses: Dict[str, torch.Tensor] = {}
     weighted_sum = torch.zeros((), device=device)
@@ -381,14 +419,16 @@ def _compute_event_grouped_loss(
         indices = _event_flag_indices(keys)
         if not indices:
             continue
-        group_loss = bce_raw[:, indices].mean()
+        group_weight_tensor = event_flag_weights[:, indices]
+        group_loss = (bce_raw[:, indices] * group_weight_tensor).sum() / group_weight_tensor.sum().clamp(min=1.0)
         group_losses[group_name] = group_loss
         group_weight = float(loss_config["event_group_weights"].get(group_name, 1.0))
         weighted_sum = weighted_sum + group_weight * group_loss
         weight_total += group_weight
 
     termination_idx = EVENT_FLAG_KEYS.index("termination_flag")
-    termination_loss = bce_raw[:, termination_idx].mean()
+    termination_weights = event_flag_weights[:, termination_idx]
+    termination_loss = (bce_raw[:, termination_idx] * termination_weights).sum() / termination_weights.sum().clamp(min=1.0)
     group_losses["termination_flag"] = termination_loss
 
     critical_indices = _event_flag_indices(
@@ -715,6 +755,14 @@ def _normalize_split_value(value: Any) -> str:
 def _extract_bucket_value(record: Dict[str, Any], bucket_key: str) -> str:
     value = record.get(bucket_key)
     if value is None:
+        meta = record.get("meta", {})
+        if isinstance(meta, dict):
+            value = meta.get(bucket_key)
+            if value is None:
+                sampling_meta = meta.get("sampling_meta", {})
+                if isinstance(sampling_meta, dict):
+                    value = sampling_meta.get(bucket_key)
+    if value is None:
         return "unknown"
     return _normalize_split_value(value)
 
@@ -980,6 +1028,7 @@ def compute_losses(
     event_flag_loss, event_group_losses = _compute_event_grouped_loss(
         outputs["event_flag_logits"],
         batch["event_flags"],
+        batch.get("event_flag_weights"),
         cfg,
     )
     event_count_loss = F.smooth_l1_loss(
@@ -1301,6 +1350,7 @@ def _build_prediction_records_for_batch(
                 "t_index": meta.get("t_index"),
                 "state_step": meta.get("state_step"),
                 "target_step": meta.get("target_step"),
+                "terminal_confusion_bucket": meta.get("terminal_confusion_bucket", "none"),
                 "tactic_pair_key": sampling_meta.get("tactic_pair_key"),
                 "tactic_combo_key": tactic_combo_key,
                 "red_tactic_id": sampling_meta.get("red_tactic_id"),
@@ -1879,6 +1929,13 @@ def main() -> None:
     parser.add_argument("--stage2-blue-firstkill-hard-negative-repeat", type=int, default=None)
     parser.add_argument("--stage2-blue-terminal-conflict-repeat", type=int, default=1)
     parser.add_argument(
+        "--target-contract",
+        type=str,
+        default="baseline",
+        choices=["baseline", "phaseA_v1"],
+        help="Target-consumption contract used by the training dataset.",
+    )
+    parser.add_argument(
         "--loss-config-path",
         type=Path,
         default=None,
@@ -1915,7 +1972,11 @@ def main() -> None:
 
     reward_norm_stats = compute_reward_norm_stats(train_records)
 
-    train_ds = WorldModelDataset(train_records, reward_norm_stats=reward_norm_stats)
+    train_ds = WorldModelDataset(
+        train_records,
+        reward_norm_stats=reward_norm_stats,
+        target_contract=args.target_contract,
+    )
     val_ds = WorldModelDataset(val_records, reward_norm_stats=reward_norm_stats)
     if len(train_ds) == 0:
         raise RuntimeError("No training samples found for world-model training.")
@@ -1993,7 +2054,11 @@ def main() -> None:
                 blue_terminal_conflict_repeat=args.stage2_blue_terminal_conflict_repeat,
             )
             stage2_sampling_summary["mode"] = "first_kill_focus"
-        stage2_ds = WorldModelDataset(stage2_records, reward_norm_stats=reward_norm_stats)
+        stage2_ds = WorldModelDataset(
+            stage2_records,
+            reward_norm_stats=reward_norm_stats,
+            target_contract=args.target_contract,
+        )
         stage2_loader = DataLoader(
             stage2_ds,
             batch_size=args.batch_size,
@@ -2135,6 +2200,7 @@ def main() -> None:
             "effective_loss_config": train_loss_config,
             "effective_stage2_loss_config": stage2_loss_config,
             "stage2_sampling_summary": stage2_sampling_summary,
+            "target_contract": args.target_contract,
             "reward_norm_stats": reward_norm_stats,
             "processed_summary": processed_summary,
         },

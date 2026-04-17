@@ -127,6 +127,42 @@ JSONL 示例（每行一条）：
 - `tactic_id`：战术模板 ID。
 - `initial_state.red_features` / `initial_state.blue_features`：7D 数组列表。
 
+### 2.3 Phase 1.5 双边 tactic condition 推荐格式
+
+Phase 1.5 推荐在任务中显式提供双边独立战术条件：
+
+```json
+{
+  "task_id": "sim_task_00001",
+  "red_tactic_condition": {
+    "family": "rule",
+    "id": "tactic_1",
+    "params": { "tactic_id": 1 }
+  },
+  "blue_tactic_condition": {
+    "family": "rule",
+    "id": "tactic_2",
+    "params": { "tactic_id": 2 }
+  },
+  "initial_state": {
+    "red_features": [[0.0, 300.0, 120.0, 4.0, 116.850, 22.100, 1.0]],
+    "blue_features": [[0.0, 300.0, 120.0, 4.0, 119.350, 22.400, 1.0]]
+  }
+}
+```
+
+最小字段约定：
+
+- `family`：战术族别，例如 `rule`
+- `id`：战术标识，例如 `tactic_1`
+- `params.tactic_id`：当前 C++ tactic controller 实际消费的整数 tactic id
+
+兼容性约定：
+
+- 如果任务只有旧字段 `tactic_id`，runner 会自动回退为红蓝共享条件
+- 如果任务显式提供 `red_tactic_condition / blue_tactic_condition`，则优先使用新字段
+- 当红蓝条件完全相同，任务里可以继续额外保留旧 `tactic_id` 作为兼容字段
+
 ### 2.1 `type_id` 字段说明
 
 `type_id` 是**作战单位的种类编码**，不是阵营编码；一个编号代表一个种类。
@@ -208,4 +244,142 @@ Python 摄取端会将 2D 数组统一解析为浮点并进入 `float32` 张量�
 - `dataset.py`：构建 `torch.tensor(..., dtype=torch.float32)`
 
 结论：C++ 端只管把数值填入 2D 数组，整数/小数都可。
+
+---
+
+## 5. Phase 1 World Model Rollout Contract
+
+`episodes.jsonl` continues to serve as the lightweight terminal contract for the existing baseline:
+
+- producer: `EncounterBatchRunner.cpp`
+- archive path: `agent_mvp/data_real/raw/episodes.jsonl`
+- downstream chain: `merge -> ingest_real_episodes.py -> train.py -> eval.py`
+
+`rollouts.jsonl` is a new parallel contract for world-model training:
+
+- producer: `EncounterBatchRunner.cpp`
+- archive path: `agent_mvp/data_real/raw/rollouts.jsonl`
+- downstream chain: `ingest_rollouts.py -> train_world_model.py -> eval_world_model.py`
+- it is additive and does not replace `episodes.jsonl`
+
+### 5.1 Export cadence
+
+- format: row-per-step JSONL
+- raw sim step: `0.1s`
+- Phase 1 export stride: every `10` raw sim steps
+- effective rollout cadence: `1.0s`
+
+### 5.2 Required top-level fields
+
+Each JSONL row in `rollouts.jsonl` must contain:
+
+```json
+{
+  "task_id": "sim_task_00001",
+  "episode_id": "sim_task_00001",
+  "step": 0,
+  "sim_time_s": 0.0,
+  "export_stride_steps": 10,
+  "schema_version": "rollouts.v1",
+  "red_tactic_condition": {},
+  "blue_tactic_condition": {},
+  "state": {},
+  "next_state": {},
+  "done": false,
+  "episode_outcome": {}
+}
+```
+
+Field notes:
+
+- `task_id`: source task id from `simulation_tasks.jsonl`
+- `episode_id`: Phase 1 uses the same value as `task_id`
+- `step`: exported rollout row index, not raw physics step
+- `sim_time_s`: time of `state`
+- `export_stride_steps`: export cadence in raw sim steps
+- `schema_version`: current value is `rollouts.v1`
+- `done`: `true` only for the last rollout row of the episode
+- `episode_outcome`: terminal summary copied onto each rollout row for simpler Python ingest
+
+### 5.3 Required state fields
+
+`state` and `next_state` both contain:
+
+```json
+{
+  "red_units": [
+    {
+      "unit_id": 10012,
+      "type_id": 0.0,
+      "alive": 1,
+      "missile_count": 4,
+      "lon": 116.85,
+      "lat": 22.10,
+      "alt_m": 5000.0,
+      "speed_mps": 300.0,
+      "heading_deg": 90.0
+    }
+  ],
+  "blue_units": []
+}
+```
+
+Required unit fields:
+
+- `unit_id`
+- `type_id`
+- `alive`
+- `missile_count`
+- `lon`
+- `lat`
+- `alt_m`
+- `speed_mps`
+- `heading_deg`
+
+Contract notes:
+
+- `unit_id` must remain stable within one episode
+- dead units must remain in the array and keep their slot
+- Phase 1 keeps fixed red/blue unit ordering from runner initialization
+
+### 5.4 Tactic condition in Phase 1.5
+
+Phase 1.5 writes the normalized red / blue tactic conditions directly into `rollouts.jsonl`:
+
+```json
+{
+  "family": "rule",
+  "id": "tactic_2",
+  "params": {
+    "tactic_id": 2
+  },
+  "fallback_from_legacy_tactic_id": false
+}
+```
+
+Legacy compatibility remains supported. If the task only contains the old shared `tactic_id`, runner falls back to:
+
+```json
+{
+  "family": "legacy_shared_tactic",
+  "id": "tactic_1",
+  "params": {
+    "tactic_id": 1
+  },
+  "fallback_from_legacy_tactic_id": true
+}
+```
+
+This is still intentionally minimal. Side-specific richer condition payloads and policy metadata are future extensions.
+
+### 5.5 Deferred fields
+
+The following fields are not required in Phase 1 and can be added later:
+
+- `event`
+- `reward`
+- `policy_family`
+- `policy_id`
+- lock / warning / inbound missile counters
+- richer termination metadata beyond `episode_outcome`
 

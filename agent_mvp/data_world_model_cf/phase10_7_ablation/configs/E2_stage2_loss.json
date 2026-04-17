@@ -1,0 +1,7 @@
+{
+  "event_group_weights": {
+    "critical_first_kill_group": 3.0,
+    "critical_objective_group": 3.8,
+    "critical_termination_group": 4.5
+  }
+}

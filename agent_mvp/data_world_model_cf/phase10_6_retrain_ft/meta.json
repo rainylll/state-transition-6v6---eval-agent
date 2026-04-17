@@ -1,0 +1,46 @@
+{
+  "seed": 2026,
+  "epochs": 2,
+  "batch_size": 32,
+  "lr": 0.0003,
+  "device": "cpu",
+  "best_val_loss": 0.0,
+  "train_samples": 160,
+  "val_samples": 0,
+  "test_samples": 0,
+  "ood_samples": 0,
+  "counterfactual_pair_summary": {
+    "data_dir": "..\\data_world_model_cf\\heldout_pack",
+    "train_splits": [
+      "train_visible_cf"
+    ],
+    "num_records": 160,
+    "num_pairs": 420,
+    "state_step": 0,
+    "horizons": [
+      "20",
+      "terminal"
+    ],
+    "mean_pair_weight": 4.760404761904761
+  },
+  "counterfactual_epochs": 6,
+  "counterfactual_lr": 0.00015,
+  "counterfactual_loss_weight": 1.5,
+  "stage2_epochs": 1,
+  "stage2_lr": 0.0002,
+  "reward_norm_stats": {
+    "red": {
+      "clip_low": 0.0,
+      "clip_high": 36.60050000000005,
+      "mean": 5.87113125000001,
+      "std": 8.11868664553565
+    },
+    "blue": {
+      "clip_low": 0.0,
+      "clip_high": 36.650000000000055,
+      "mean": 6.105000000000013,
+      "std": 8.054048283316934
+    }
+  },
+  "processed_summary": {}
+}

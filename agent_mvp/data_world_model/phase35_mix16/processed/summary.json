@@ -1,0 +1,206 @@
+{
+  "rollouts_path": "agent_mvp\\data_world_model\\raw\\rollouts_phase35_mix16.jsonl",
+  "horizons": [
+    1,
+    5,
+    10,
+    20,
+    "terminal"
+  ],
+  "num_rollout_rows": 10344,
+  "num_episodes": 16,
+  "num_split_groups": 16,
+  "ood_axis": "force_size_key",
+  "ood_values": [
+    "6v6"
+  ],
+  "observed_top_level_fields": [
+    "blue_tactic_condition",
+    "done",
+    "episode_id",
+    "episode_outcome",
+    "next_state",
+    "red_tactic_condition",
+    "sampling_meta",
+    "sim_time_s",
+    "split_group_key",
+    "state",
+    "step",
+    "task_id",
+    "termination_reason"
+  ],
+  "group_leak_report": {
+    "train__val": [],
+    "train__test": [],
+    "train__ood": [],
+    "val__test": [],
+    "val__ood": [],
+    "test__ood": [],
+    "group_leak_detected": false
+  },
+  "splits": {
+    "train": {
+      "groups": 8,
+      "split_group_keys": [
+        "rl-rl__2v1__slow_short_light__slow_short_light__rl_tactic_4__rl_tactic_4",
+        "rule-rl__2v1__slow_short_light__slow_short_light__rule_tactic_1__rl_tactic_2",
+        "rl-rl__3v2__balanced_medium__balanced_medium__rl_tactic_4__rl_tactic_4",
+        "rl-rule__2v1__fast_long_heavy__fast_long_heavy__rl_tactic_4__rule_tactic_3",
+        "rule-rule__2v2__balanced_medium__fast_long_heavy__rule_tactic_1__rule_tactic_3",
+        "rl-rule__2v2__balanced_medium__slow_short_light__rl_tactic_4__rule_tactic_3",
+        "rule-rl__2v2__fast_long_heavy__fast_long_heavy__rule_tactic_1__rl_tactic_2",
+        "rule-rule__3v2__balanced_medium__slow_short_light__rule_tactic_3__rule_tactic_1"
+      ],
+      "episodes": 8,
+      "episode_ids": [
+        "sim_task_00002",
+        "sim_task_00005",
+        "sim_task_00006",
+        "sim_task_00007",
+        "sim_task_00011",
+        "sim_task_00012",
+        "sim_task_00013",
+        "sim_task_00016"
+      ],
+      "samples": 20889,
+      "skipped_episodes": 0,
+      "tactic_pair_keys": [
+        "rl-rl",
+        "rl-rule",
+        "rule-rl",
+        "rule-rule"
+      ],
+      "force_size_keys": [
+        "2v1",
+        "2v2",
+        "3v2"
+      ],
+      "red_attr_buckets": [
+        "balanced_medium",
+        "fast_long_heavy",
+        "slow_short_light"
+      ],
+      "blue_attr_buckets": [
+        "balanced_medium",
+        "fast_long_heavy",
+        "slow_short_light"
+      ],
+      "attr_bucket_pairs": [
+        "balanced_medium__balanced_medium",
+        "balanced_medium__fast_long_heavy",
+        "balanced_medium__slow_short_light",
+        "fast_long_heavy__fast_long_heavy",
+        "slow_short_light__slow_short_light"
+      ]
+    },
+    "val": {
+      "groups": 1,
+      "split_group_keys": [
+        "rule-rule__2v1__slow_short_light__balanced_medium__rule_tactic_3__rule_tactic_3"
+      ],
+      "episodes": 1,
+      "episode_ids": [
+        "sim_task_00003"
+      ],
+      "samples": 2118,
+      "skipped_episodes": 0,
+      "tactic_pair_keys": [
+        "rule-rule"
+      ],
+      "force_size_keys": [
+        "2v1"
+      ],
+      "red_attr_buckets": [
+        "slow_short_light"
+      ],
+      "blue_attr_buckets": [
+        "balanced_medium"
+      ],
+      "attr_bucket_pairs": [
+        "slow_short_light__balanced_medium"
+      ]
+    },
+    "test": {
+      "groups": 3,
+      "split_group_keys": [
+        "rule-rl__3v2__fast_long_heavy__balanced_medium__rule_tactic_1__rl_tactic_4",
+        "rl-rule__3v2__slow_short_light__slow_short_light__rl_tactic_2__rule_tactic_3",
+        "rl-rl__2v2__balanced_medium__fast_long_heavy__rl_tactic_4__rl_tactic_2"
+      ],
+      "episodes": 3,
+      "episode_ids": [
+        "sim_task_00008",
+        "sim_task_00010",
+        "sim_task_00014"
+      ],
+      "samples": 10809,
+      "skipped_episodes": 0,
+      "tactic_pair_keys": [
+        "rl-rl",
+        "rl-rule",
+        "rule-rl"
+      ],
+      "force_size_keys": [
+        "2v2",
+        "3v2"
+      ],
+      "red_attr_buckets": [
+        "balanced_medium",
+        "fast_long_heavy",
+        "slow_short_light"
+      ],
+      "blue_attr_buckets": [
+        "balanced_medium",
+        "fast_long_heavy",
+        "slow_short_light"
+      ],
+      "attr_bucket_pairs": [
+        "balanced_medium__fast_long_heavy",
+        "fast_long_heavy__balanced_medium",
+        "slow_short_light__slow_short_light"
+      ]
+    },
+    "ood": {
+      "groups": 4,
+      "split_group_keys": [
+        "rl-rl__6v6__fast_long_heavy__fast_long_heavy__rl_tactic_4__rl_tactic_2",
+        "rl-rule__6v6__balanced_medium__slow_short_light__rl_tactic_4__rule_tactic_3",
+        "rule-rl__6v6__slow_short_light__fast_long_heavy__rule_tactic_3__rl_tactic_4",
+        "rule-rule__6v6__balanced_medium__fast_long_heavy__rule_tactic_3__rule_tactic_3"
+      ],
+      "episodes": 4,
+      "episode_ids": [
+        "sim_task_00001",
+        "sim_task_00004",
+        "sim_task_00009",
+        "sim_task_00015"
+      ],
+      "samples": 17392,
+      "skipped_episodes": 0,
+      "tactic_pair_keys": [
+        "rl-rl",
+        "rl-rule",
+        "rule-rl",
+        "rule-rule"
+      ],
+      "force_size_keys": [
+        "6v6"
+      ],
+      "red_attr_buckets": [
+        "balanced_medium",
+        "fast_long_heavy",
+        "slow_short_light"
+      ],
+      "blue_attr_buckets": [
+        "fast_long_heavy",
+        "slow_short_light"
+      ],
+      "attr_bucket_pairs": [
+        "balanced_medium__fast_long_heavy",
+        "balanced_medium__slow_short_light",
+        "fast_long_heavy__fast_long_heavy",
+        "slow_short_light__fast_long_heavy"
+      ]
+    }
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "critical_hard_positive_weight": 1.2,
+  "event_group_weights": {
+    "critical_first_kill_group": 3.2,
+    "critical_objective_group": 3.6,
+    "critical_termination_group": 4.2
+  }
+}

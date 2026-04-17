@@ -10,3 +10,6 @@ x64/
 .idea/
 .vs/
 .vscode/
+
+
+*.jsonl

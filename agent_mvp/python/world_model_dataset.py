@@ -67,6 +67,8 @@ EVENT_FLAG_DIM = len(EVENT_FLAG_KEYS)
 EVENT_COUNT_DIM = len(EVENT_COUNT_KEYS)
 REWARD_DIM = len(REWARD_KEYS)
 _NUMERIC_ID_RE = re.compile(r"-?\d+")
+TARGET_CONTRACTS = ("baseline", "phaseA_v1")
+PHASEA_BLUE_TERMINAL_CONFLICT_WEIGHT = 2.5
 
 
 DEFAULT_REWARD_CLIP_LOW = -10.0
@@ -263,7 +265,7 @@ def derive_effective_termination_flag(record: Dict) -> float:
     return 1.0 if base_flag >= 0.5 else 0.0
 
 
-def _build_event_targets(record: Dict) -> Dict[str, torch.Tensor]:
+def _build_event_targets(record: Dict, target_contract: str = "baseline") -> Dict[str, torch.Tensor]:
     target_event = record.get("target_event", {})
     if not isinstance(target_event, dict):
         target_event = {}
@@ -278,12 +280,21 @@ def _build_event_targets(record: Dict) -> Dict[str, torch.Tensor]:
         ],
         dtype=torch.float32,
     )
+    event_flag_weights = torch.ones((EVENT_FLAG_DIM,), dtype=torch.float32)
+    if target_contract == "phaseA_v1":
+        meta = record.get("meta", {}) if isinstance(record.get("meta", {}), dict) else {}
+        blue_first_kill_idx = EVENT_FLAG_KEYS.index("blue_first_kill_flag")
+        blue_first_kill_target = float(event_flags[blue_first_kill_idx].item())
+        blue_terminal_conflict = bool(meta.get("blue_first_kill_terminal_conflict", False))
+        if blue_terminal_conflict and blue_first_kill_target < 0.5:
+            event_flag_weights[blue_first_kill_idx] = float(PHASEA_BLUE_TERMINAL_CONFLICT_WEIGHT)
     event_counts = torch.tensor(
         [float(target_event.get(key, 0.0)) for key in EVENT_COUNT_KEYS],
         dtype=torch.float32,
     )
     return {
         "event_flags": event_flags,
+        "event_flag_weights": event_flag_weights,
         "event_counts": event_counts,
     }
 
@@ -355,9 +366,17 @@ def build_reward_target_tensor(target_reward: Dict, reward_norm_stats: Optional[
 
 
 class WorldModelDataset(Dataset):
-    def __init__(self, records: List[Dict], reward_norm_stats: Optional[Dict[str, Dict[str, Any]]] = None):
+    def __init__(
+        self,
+        records: List[Dict],
+        reward_norm_stats: Optional[Dict[str, Dict[str, Any]]] = None,
+        target_contract: str = "baseline",
+    ):
         self.records = records
         self.reward_norm_stats = normalize_reward_stats(reward_norm_stats)
+        if target_contract not in TARGET_CONTRACTS:
+            raise ValueError(f"Unsupported target contract: {target_contract}")
+        self.target_contract = str(target_contract)
 
     def __len__(self) -> int:
         return len(self.records)
@@ -412,7 +431,7 @@ class WorldModelDataset(Dataset):
             "meta": record.get("meta", {}),
         }
         sample.update(terminal_scalars)
-        sample.update(_build_event_targets(record))
+        sample.update(_build_event_targets(record, target_contract=self.target_contract))
         sample.update({
             "reward_target": build_reward_target_tensor(record.get("target_reward", {}), self.reward_norm_stats)
         })
@@ -504,6 +523,7 @@ def collate_world_model(batch: List[Dict]) -> Dict:
         "terminal_red_mean_missile": torch.stack([item["terminal_red_mean_missile"] for item in batch], dim=0),
         "terminal_blue_mean_missile": torch.stack([item["terminal_blue_mean_missile"] for item in batch], dim=0),
         "event_flags": torch.stack([item["event_flags"] for item in batch], dim=0),
+        "event_flag_weights": torch.stack([item["event_flag_weights"] for item in batch], dim=0),
         "event_counts": torch.stack([item["event_counts"] for item in batch], dim=0),
         "reward_target": torch.stack([item["reward_target"] for item in batch], dim=0),
         "meta": [item["meta"] for item in batch],

@@ -1,0 +1,233 @@
+{
+  "data_dir": "..\\data_world_model",
+  "loaded_splits": [
+    "train",
+    "val",
+    "test"
+  ],
+  "horizons": [
+    "20",
+    "terminal"
+  ],
+  "state_step": 0,
+  "grouping_definition": {
+    "same_initial_key": "canonical_state_signature(state_t)",
+    "group_key_fields": [
+      "state_signature",
+      "horizon",
+      "state_step"
+    ],
+    "different_tactic_key": "tactic_combo_key"
+  },
+  "evaluation_semantics": {
+    "reward_space": {
+      "pred_reward_red": "denormalized_raw_reward",
+      "true_reward_red": "denormalized_raw_reward",
+      "pred_reward_blue": "denormalized_raw_reward",
+      "true_reward_blue": "denormalized_raw_reward"
+    },
+    "termination": {
+      "termination_flag": "binary_flag_delta_only",
+      "termination_reason": "not_evaluated_in_counterfactual_delta"
+    }
+  },
+  "num_records": 6774,
+  "num_prediction_records": 6774,
+  "num_counterfactual_groups": 0,
+  "num_counterfactual_pairs": 0,
+  "metrics": {
+    "event_red_first_contact_prob": {
+      "num_pairs": 0,
+      "num_signal_pairs": 0,
+      "delta_mae": 0.0,
+      "mean_true_abs_delta": 0.0,
+      "mean_pred_abs_delta": 0.0,
+      "sign_accuracy_on_signal_pairs": null
+    },
+    "event_blue_first_contact_prob": {
+      "num_pairs": 0,
+      "num_signal_pairs": 0,
+      "delta_mae": 0.0,
+      "mean_true_abs_delta": 0.0,
+      "mean_pred_abs_delta": 0.0,
+      "sign_accuracy_on_signal_pairs": null
+    },
+    "event_red_first_fire_prob": {
+      "num_pairs": 0,
+      "num_signal_pairs": 0,
+      "delta_mae": 0.0,
+      "mean_true_abs_delta": 0.0,
+      "mean_pred_abs_delta": 0.0,
+      "sign_accuracy_on_signal_pairs": null
+    },
+    "event_blue_first_fire_prob": {
+      "num_pairs": 0,
+      "num_signal_pairs": 0,
+      "delta_mae": 0.0,
+      "mean_true_abs_delta": 0.0,
+      "mean_pred_abs_delta": 0.0,
+      "sign_accuracy_on_signal_pairs": null
+    },
+    "event_red_fire_count": {
+      "num_pairs": 0,
+      "num_signal_pairs": 0,
+      "delta_mae": 0.0,
+      "mean_true_abs_delta": 0.0,
+      "mean_pred_abs_delta": 0.0,
+      "sign_accuracy_on_signal_pairs": null
+    },
+    "event_blue_fire_count": {
+      "num_pairs": 0,
+      "num_signal_pairs": 0,
+      "delta_mae": 0.0,
+      "mean_true_abs_delta": 0.0,
+      "mean_pred_abs_delta": 0.0,
+      "sign_accuracy_on_signal_pairs": null
+    },
+    "event_red_kill_count": {
+      "num_pairs": 0,
+      "num_signal_pairs": 0,
+      "delta_mae": 0.0,
+      "mean_true_abs_delta": 0.0,
+      "mean_pred_abs_delta": 0.0,
+      "sign_accuracy_on_signal_pairs": null
+    },
+    "event_blue_kill_count": {
+      "num_pairs": 0,
+      "num_signal_pairs": 0,
+      "delta_mae": 0.0,
+      "mean_true_abs_delta": 0.0,
+      "mean_pred_abs_delta": 0.0,
+      "sign_accuracy_on_signal_pairs": null
+    },
+    "termination_flag": {
+      "num_pairs": 0,
+      "num_signal_pairs": 0,
+      "delta_mae": 0.0,
+      "mean_true_abs_delta": 0.0,
+      "mean_pred_abs_delta": 0.0,
+      "sign_accuracy_on_signal_pairs": null
+    },
+    "reward_red": {
+      "num_pairs": 0,
+      "num_signal_pairs": 0,
+      "delta_mae": 0.0,
+      "mean_true_abs_delta": 0.0,
+      "mean_pred_abs_delta": 0.0,
+      "sign_accuracy_on_signal_pairs": null
+    },
+    "reward_blue": {
+      "num_pairs": 0,
+      "num_signal_pairs": 0,
+      "delta_mae": 0.0,
+      "mean_true_abs_delta": 0.0,
+      "mean_pred_abs_delta": 0.0,
+      "sign_accuracy_on_signal_pairs": null
+    },
+    "trajectory_red_alive_ratio": {
+      "num_pairs": 0,
+      "num_signal_pairs": 0,
+      "delta_mae": 0.0,
+      "mean_true_abs_delta": 0.0,
+      "mean_pred_abs_delta": 0.0,
+      "sign_accuracy_on_signal_pairs": null
+    },
+    "trajectory_blue_alive_ratio": {
+      "num_pairs": 0,
+      "num_signal_pairs": 0,
+      "delta_mae": 0.0,
+      "mean_true_abs_delta": 0.0,
+      "mean_pred_abs_delta": 0.0,
+      "sign_accuracy_on_signal_pairs": null
+    },
+    "trajectory_red_mean_missile": {
+      "num_pairs": 0,
+      "num_signal_pairs": 0,
+      "delta_mae": 0.0,
+      "mean_true_abs_delta": 0.0,
+      "mean_pred_abs_delta": 0.0,
+      "sign_accuracy_on_signal_pairs": null
+    },
+    "trajectory_blue_mean_missile": {
+      "num_pairs": 0,
+      "num_signal_pairs": 0,
+      "delta_mae": 0.0,
+      "mean_true_abs_delta": 0.0,
+      "mean_pred_abs_delta": 0.0,
+      "sign_accuracy_on_signal_pairs": null
+    },
+    "terminal_red_win_prob": {
+      "num_pairs": 0,
+      "num_signal_pairs": 0,
+      "delta_mae": 0.0,
+      "mean_true_abs_delta": 0.0,
+      "mean_pred_abs_delta": 0.0,
+      "sign_accuracy_on_signal_pairs": null
+    },
+    "terminal_red_alive_ratio": {
+      "num_pairs": 0,
+      "num_signal_pairs": 0,
+      "delta_mae": 0.0,
+      "mean_true_abs_delta": 0.0,
+      "mean_pred_abs_delta": 0.0,
+      "sign_accuracy_on_signal_pairs": null
+    },
+    "terminal_blue_alive_ratio": {
+      "num_pairs": 0,
+      "num_signal_pairs": 0,
+      "delta_mae": 0.0,
+      "mean_true_abs_delta": 0.0,
+      "mean_pred_abs_delta": 0.0,
+      "sign_accuracy_on_signal_pairs": null
+    },
+    "terminal_red_mean_missile": {
+      "num_pairs": 0,
+      "num_signal_pairs": 0,
+      "delta_mae": 0.0,
+      "mean_true_abs_delta": 0.0,
+      "mean_pred_abs_delta": 0.0,
+      "sign_accuracy_on_signal_pairs": null
+    },
+    "terminal_blue_mean_missile": {
+      "num_pairs": 0,
+      "num_signal_pairs": 0,
+      "delta_mae": 0.0,
+      "mean_true_abs_delta": 0.0,
+      "mean_pred_abs_delta": 0.0,
+      "sign_accuracy_on_signal_pairs": null
+    }
+  },
+  "focus_metrics": {
+    "event_red_fire_count": {
+      "num_pairs": 0,
+      "num_signal_pairs": 0,
+      "delta_mae": 0.0,
+      "mean_true_abs_delta": 0.0,
+      "mean_pred_abs_delta": 0.0,
+      "sign_accuracy_on_signal_pairs": null
+    },
+    "termination_flag": {
+      "num_pairs": 0,
+      "num_signal_pairs": 0,
+      "delta_mae": 0.0,
+      "mean_true_abs_delta": 0.0,
+      "mean_pred_abs_delta": 0.0,
+      "sign_accuracy_on_signal_pairs": null
+    },
+    "reward_red": {
+      "num_pairs": 0,
+      "num_signal_pairs": 0,
+      "delta_mae": 0.0,
+      "mean_true_abs_delta": 0.0,
+      "mean_pred_abs_delta": 0.0,
+      "sign_accuracy_on_signal_pairs": null
+    }
+  },
+  "group_examples": [],
+  "valid": false,
+  "coverage_insufficient": true,
+  "groups_ok": false,
+  "pairs_ok": false,
+  "min_groups": 3,
+  "min_pairs": 10
+}

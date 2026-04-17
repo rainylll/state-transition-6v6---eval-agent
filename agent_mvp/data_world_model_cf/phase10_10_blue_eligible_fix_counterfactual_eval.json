@@ -1,0 +1,650 @@
+{
+  "data_dir": "agent_mvp\\data_world_model_cf\\heldout_pack",
+  "loaded_splits": [
+    "heldout_cf"
+  ],
+  "horizons": [
+    "20",
+    "terminal"
+  ],
+  "state_step": 0,
+  "grouping_definition": {
+    "same_initial_key": "canonical_state_signature(state_t)",
+    "group_key_fields": [
+      "state_signature",
+      "horizon",
+      "state_step"
+    ],
+    "different_tactic_key": "tactic_combo_key"
+  },
+  "evaluation_semantics": {
+    "reward_space": {
+      "pred_reward_red": "denormalized_raw_reward",
+      "true_reward_red": "denormalized_raw_reward",
+      "pred_reward_blue": "denormalized_raw_reward",
+      "true_reward_blue": "denormalized_raw_reward"
+    },
+    "termination": {
+      "termination_flag": "effective_combat_termination_flag",
+      "effective_definition": "terminal horizon with non-decisive reasons (safety_limit/none/timeout/time_limit) mapped to 0"
+    }
+  },
+  "num_records": 80,
+  "num_prediction_records": 80,
+  "num_counterfactual_groups": 16,
+  "num_counterfactual_pairs": 160,
+  "metrics": {
+    "event_red_first_contact_prob": {
+      "num_pairs": 160,
+      "num_signal_pairs": 0,
+      "delta_mae": 8.211337672037189e-06,
+      "mean_true_abs_delta": 0.0,
+      "mean_pred_abs_delta": 8.211337672037189e-06,
+      "sign_accuracy_on_signal_pairs": null
+    },
+    "event_blue_first_contact_prob": {
+      "num_pairs": 160,
+      "num_signal_pairs": 0,
+      "delta_mae": 7.809778162481962e-06,
+      "mean_true_abs_delta": 0.0,
+      "mean_pred_abs_delta": 7.809778162481962e-06,
+      "sign_accuracy_on_signal_pairs": null
+    },
+    "event_red_first_fire_prob": {
+      "num_pairs": 160,
+      "num_signal_pairs": 32,
+      "delta_mae": 0.20017192365012307,
+      "mean_true_abs_delta": 0.2,
+      "mean_pred_abs_delta": 0.0002917304762377171,
+      "sign_accuracy_on_signal_pairs": 0.53125
+    },
+    "event_blue_first_fire_prob": {
+      "num_pairs": 160,
+      "num_signal_pairs": 36,
+      "delta_mae": 0.225183337269209,
+      "mean_true_abs_delta": 0.225,
+      "mean_pred_abs_delta": 0.00020479643144426517,
+      "sign_accuracy_on_signal_pairs": 0.3333333333333333
+    },
+    "event_red_fire_count": {
+      "num_pairs": 160,
+      "num_signal_pairs": 61,
+      "delta_mae": 1.025500383786857,
+      "mean_true_abs_delta": 1.025,
+      "mean_pred_abs_delta": 0.0029904281720519064,
+      "sign_accuracy_on_signal_pairs": 0.5573770491803278
+    },
+    "event_blue_fire_count": {
+      "num_pairs": 160,
+      "num_signal_pairs": 42,
+      "delta_mae": 0.8122143016196788,
+      "mean_true_abs_delta": 0.8125,
+      "mean_pred_abs_delta": 0.002853307221084833,
+      "sign_accuracy_on_signal_pairs": 0.8095238095238095
+    },
+    "event_red_kill_count": {
+      "num_pairs": 160,
+      "num_signal_pairs": 44,
+      "delta_mae": 0.27516546766273675,
+      "mean_true_abs_delta": 0.275,
+      "mean_pred_abs_delta": 0.00026552672497928145,
+      "sign_accuracy_on_signal_pairs": 0.38636363636363635
+    },
+    "event_blue_kill_count": {
+      "num_pairs": 160,
+      "num_signal_pairs": 20,
+      "delta_mae": 0.12573830443434417,
+      "mean_true_abs_delta": 0.125,
+      "mean_pred_abs_delta": 0.0009072888176888227,
+      "sign_accuracy_on_signal_pairs": 0.5
+    },
+    "event_red_first_kill_prob": {
+      "num_pairs": 160,
+      "num_signal_pairs": 44,
+      "delta_mae": 0.2749917874440143,
+      "mean_true_abs_delta": 0.275,
+      "mean_pred_abs_delta": 0.0002756135865638498,
+      "sign_accuracy_on_signal_pairs": 0.6363636363636364
+    },
+    "event_blue_first_kill_prob": {
+      "num_pairs": 160,
+      "num_signal_pairs": 20,
+      "delta_mae": 0.1251487828965537,
+      "mean_true_abs_delta": 0.125,
+      "mean_pred_abs_delta": 0.0001881443138472605,
+      "sign_accuracy_on_signal_pairs": 0.5
+    },
+    "termination_flag": {
+      "num_pairs": 160,
+      "num_signal_pairs": 12,
+      "delta_mae": 0.07500175429831302,
+      "mean_true_abs_delta": 0.075,
+      "mean_pred_abs_delta": 2.2400761679364224e-06,
+      "sign_accuracy_on_signal_pairs": 0.16666666666666666
+    },
+    "reward_red": {
+      "num_pairs": 160,
+      "num_signal_pairs": 59,
+      "delta_mae": 0.4588979565538466,
+      "mean_true_abs_delta": 0.4585757934488356,
+      "mean_pred_abs_delta": 0.001067325472831726,
+      "sign_accuracy_on_signal_pairs": 0.6101694915254238
+    },
+    "reward_blue": {
+      "num_pairs": 160,
+      "num_signal_pairs": 60,
+      "delta_mae": 0.4647873194888234,
+      "mean_true_abs_delta": 0.46426137778908017,
+      "mean_pred_abs_delta": 0.0008966468274593353,
+      "sign_accuracy_on_signal_pairs": 0.65
+    },
+    "trajectory_red_alive_ratio": {
+      "num_pairs": 160,
+      "num_signal_pairs": 20,
+      "delta_mae": 0.06266552582383156,
+      "mean_true_abs_delta": 0.0625,
+      "mean_pred_abs_delta": 0.00017580315470695497,
+      "sign_accuracy_on_signal_pairs": 0.15
+    },
+    "trajectory_blue_alive_ratio": {
+      "num_pairs": 160,
+      "num_signal_pairs": 44,
+      "delta_mae": 0.27495511397719385,
+      "mean_true_abs_delta": 0.275,
+      "mean_pred_abs_delta": 0.00037437081336975095,
+      "sign_accuracy_on_signal_pairs": 0.8181818181818182
+    },
+    "trajectory_red_mean_missile": {
+      "num_pairs": 160,
+      "num_signal_pairs": 61,
+      "delta_mae": 0.5147673323750496,
+      "mean_true_abs_delta": 0.5125,
+      "mean_pred_abs_delta": 0.0065459772944450375,
+      "sign_accuracy_on_signal_pairs": 0.639344262295082
+    },
+    "trajectory_blue_mean_missile": {
+      "num_pairs": 160,
+      "num_signal_pairs": 42,
+      "delta_mae": 0.813083565980196,
+      "mean_true_abs_delta": 0.8125,
+      "mean_pred_abs_delta": 0.000812898576259613,
+      "sign_accuracy_on_signal_pairs": 0.5714285714285714
+    },
+    "terminal_red_win_prob": {
+      "num_pairs": 160,
+      "num_signal_pairs": 88,
+      "delta_mae": 0.5500890605151654,
+      "mean_true_abs_delta": 0.55,
+      "mean_pred_abs_delta": 0.0008102916181087494,
+      "sign_accuracy_on_signal_pairs": 0.6704545454545454
+    },
+    "terminal_red_alive_ratio": {
+      "num_pairs": 160,
+      "num_signal_pairs": 40,
+      "delta_mae": 0.12573125436902047,
+      "mean_true_abs_delta": 0.125,
+      "mean_pred_abs_delta": 0.0008432239294052124,
+      "sign_accuracy_on_signal_pairs": 0.325
+    },
+    "terminal_blue_alive_ratio": {
+      "num_pairs": 160,
+      "num_signal_pairs": 88,
+      "delta_mae": 0.5499098137021065,
+      "mean_true_abs_delta": 0.55,
+      "mean_pred_abs_delta": 0.0012406431138515472,
+      "sign_accuracy_on_signal_pairs": 0.8181818181818182
+    },
+    "terminal_red_mean_missile": {
+      "num_pairs": 160,
+      "num_signal_pairs": 122,
+      "delta_mae": 1.0254650622606278,
+      "mean_true_abs_delta": 1.025,
+      "mean_pred_abs_delta": 0.00792393833398819,
+      "sign_accuracy_on_signal_pairs": 0.639344262295082
+    },
+    "terminal_blue_mean_missile": {
+      "num_pairs": 160,
+      "num_signal_pairs": 84,
+      "delta_mae": 1.6306044593453408,
+      "mean_true_abs_delta": 1.625,
+      "mean_pred_abs_delta": 0.005977685004472733,
+      "sign_accuracy_on_signal_pairs": 0.09523809523809523
+    }
+  },
+  "focus_metrics": {
+    "event_red_fire_count": {
+      "num_pairs": 160,
+      "num_signal_pairs": 61,
+      "delta_mae": 1.025500383786857,
+      "mean_true_abs_delta": 1.025,
+      "mean_pred_abs_delta": 0.0029904281720519064,
+      "sign_accuracy_on_signal_pairs": 0.5573770491803278
+    },
+    "event_red_first_kill_prob": {
+      "num_pairs": 160,
+      "num_signal_pairs": 44,
+      "delta_mae": 0.2749917874440143,
+      "mean_true_abs_delta": 0.275,
+      "mean_pred_abs_delta": 0.0002756135865638498,
+      "sign_accuracy_on_signal_pairs": 0.6363636363636364
+    },
+    "event_blue_first_kill_prob": {
+      "num_pairs": 160,
+      "num_signal_pairs": 20,
+      "delta_mae": 0.1251487828965537,
+      "mean_true_abs_delta": 0.125,
+      "mean_pred_abs_delta": 0.0001881443138472605,
+      "sign_accuracy_on_signal_pairs": 0.5
+    },
+    "termination_flag": {
+      "num_pairs": 160,
+      "num_signal_pairs": 12,
+      "delta_mae": 0.07500175429831302,
+      "mean_true_abs_delta": 0.075,
+      "mean_pred_abs_delta": 2.2400761679364224e-06,
+      "sign_accuracy_on_signal_pairs": 0.16666666666666666
+    },
+    "reward_red": {
+      "num_pairs": 160,
+      "num_signal_pairs": 59,
+      "delta_mae": 0.4588979565538466,
+      "mean_true_abs_delta": 0.4585757934488356,
+      "mean_pred_abs_delta": 0.001067325472831726,
+      "sign_accuracy_on_signal_pairs": 0.6101694915254238
+    },
+    "terminal_red_win_prob": {
+      "num_pairs": 160,
+      "num_signal_pairs": 88,
+      "delta_mae": 0.5500890605151654,
+      "mean_true_abs_delta": 0.55,
+      "mean_pred_abs_delta": 0.0008102916181087494,
+      "sign_accuracy_on_signal_pairs": 0.6704545454545454
+    }
+  },
+  "group_examples": [
+    {
+      "state_signature": "2e0e3db97da405665451744ae6539c48988cdea1",
+      "horizon": "20",
+      "state_step": 0,
+      "num_variants": 5,
+      "variants": [
+        {
+          "episode_id": "sim_task_00016",
+          "split_name": "val",
+          "tactic_combo_key": "tactic_1__tactic_1",
+          "pred_target_red_alive_ratio": 0.9999947547912598,
+          "true_target_red_alive_ratio": 1.0,
+          "pred_target_blue_alive_ratio": 0.9999446868896484,
+          "true_target_blue_alive_ratio": 1.0,
+          "pred_red_win_prob": 0.47385382652282715,
+          "true_red_win": 0.0
+        },
+        {
+          "episode_id": "sim_task_00017",
+          "split_name": "val",
+          "tactic_combo_key": "tactic_1__tactic_2",
+          "pred_target_red_alive_ratio": 0.9999948740005493,
+          "true_target_red_alive_ratio": 1.0,
+          "pred_target_blue_alive_ratio": 0.9999457597732544,
+          "true_target_blue_alive_ratio": 1.0,
+          "pred_red_win_prob": 0.4732264578342438,
+          "true_red_win": 1.0
+        },
+        {
+          "episode_id": "sim_task_00018",
+          "split_name": "val",
+          "tactic_combo_key": "tactic_2__tactic_1",
+          "pred_target_red_alive_ratio": 0.9999947547912598,
+          "true_target_red_alive_ratio": 1.0,
+          "pred_target_blue_alive_ratio": 0.9999445676803589,
+          "true_target_blue_alive_ratio": 1.0,
+          "pred_red_win_prob": 0.4738631546497345,
+          "true_red_win": 1.0
+        },
+        {
+          "episode_id": "sim_task_00019",
+          "split_name": "val",
+          "tactic_combo_key": "tactic_2__tactic_2",
+          "pred_target_red_alive_ratio": 0.9999948740005493,
+          "true_target_red_alive_ratio": 1.0,
+          "pred_target_blue_alive_ratio": 0.9999456405639648,
+          "true_target_blue_alive_ratio": 1.0,
+          "pred_red_win_prob": 0.4732375144958496,
+          "true_red_win": 0.0
+        },
+        {
+          "episode_id": "sim_task_00020",
+          "split_name": "val",
+          "tactic_combo_key": "tactic_3__tactic_2",
+          "pred_target_red_alive_ratio": 0.9999948143959045,
+          "true_target_red_alive_ratio": 1.0,
+          "pred_target_blue_alive_ratio": 0.9999455213546753,
+          "true_target_blue_alive_ratio": 1.0,
+          "pred_red_win_prob": 0.47324860095977783,
+          "true_red_win": 0.0
+        }
+      ]
+    },
+    {
+      "state_signature": "653d56a9d96d9863f4d4a16d77ccf95f79e0b7ef",
+      "horizon": "20",
+      "state_step": 0,
+      "num_variants": 5,
+      "variants": [
+        {
+          "episode_id": "sim_task_00046",
+          "split_name": "train",
+          "tactic_combo_key": "tactic_1__tactic_1",
+          "pred_target_red_alive_ratio": 0.999960720539093,
+          "true_target_red_alive_ratio": 1.0,
+          "pred_target_blue_alive_ratio": 0.9999525547027588,
+          "true_target_blue_alive_ratio": 1.0,
+          "pred_red_win_prob": 0.43685150146484375,
+          "true_red_win": 0.0
+        },
+        {
+          "episode_id": "sim_task_00047",
+          "split_name": "train",
+          "tactic_combo_key": "tactic_1__tactic_2",
+          "pred_target_red_alive_ratio": 0.9999610185623169,
+          "true_target_red_alive_ratio": 1.0,
+          "pred_target_blue_alive_ratio": 0.9999533891677856,
+          "true_target_blue_alive_ratio": 1.0,
+          "pred_red_win_prob": 0.4361843168735504,
+          "true_red_win": 1.0
+        },
+        {
+          "episode_id": "sim_task_00048",
+          "split_name": "train",
+          "tactic_combo_key": "tactic_2__tactic_1",
+          "pred_target_red_alive_ratio": 0.9999606013298035,
+          "true_target_red_alive_ratio": 1.0,
+          "pred_target_blue_alive_ratio": 0.9999524354934692,
+          "true_target_blue_alive_ratio": 1.0,
+          "pred_red_win_prob": 0.4368668496608734,
+          "true_red_win": 1.0
+        },
+        {
+          "episode_id": "sim_task_00049",
+          "split_name": "train",
+          "tactic_combo_key": "tactic_2__tactic_2",
+          "pred_target_red_alive_ratio": 0.9999609589576721,
+          "true_target_red_alive_ratio": 1.0,
+          "pred_target_blue_alive_ratio": 0.9999532699584961,
+          "true_target_blue_alive_ratio": 1.0,
+          "pred_red_win_prob": 0.4361996650695801,
+          "true_red_win": 1.0
+        },
+        {
+          "episode_id": "sim_task_00050",
+          "split_name": "train",
+          "tactic_combo_key": "tactic_3__tactic_2",
+          "pred_target_red_alive_ratio": 0.9999608397483826,
+          "true_target_red_alive_ratio": 1.0,
+          "pred_target_blue_alive_ratio": 0.9999532699584961,
+          "true_target_blue_alive_ratio": 1.0,
+          "pred_red_win_prob": 0.43621498346328735,
+          "true_red_win": 1.0
+        }
+      ]
+    },
+    {
+      "state_signature": "65e083e38976675af120fd48b5d83ef978a6b7b3",
+      "horizon": "20",
+      "state_step": 0,
+      "num_variants": 5,
+      "variants": [
+        {
+          "episode_id": "sim_task_00096",
+          "split_name": "train",
+          "tactic_combo_key": "tactic_1__tactic_1",
+          "pred_target_red_alive_ratio": 0.999989926815033,
+          "true_target_red_alive_ratio": 1.0,
+          "pred_target_blue_alive_ratio": 0.9999624490737915,
+          "true_target_blue_alive_ratio": 1.0,
+          "pred_red_win_prob": 0.4565686881542206,
+          "true_red_win": 0.0
+        },
+        {
+          "episode_id": "sim_task_00097",
+          "split_name": "train",
+          "tactic_combo_key": "tactic_1__tactic_2",
+          "pred_target_red_alive_ratio": 0.9999900460243225,
+          "true_target_red_alive_ratio": 1.0,
+          "pred_target_blue_alive_ratio": 0.9999632835388184,
+          "true_target_blue_alive_ratio": 1.0,
+          "pred_red_win_prob": 0.4557883143424988,
+          "true_red_win": 0.0
+        },
+        {
+          "episode_id": "sim_task_00098",
+          "split_name": "train",
+          "tactic_combo_key": "tactic_2__tactic_1",
+          "pred_target_red_alive_ratio": 0.999989926815033,
+          "true_target_red_alive_ratio": 1.0,
+          "pred_target_blue_alive_ratio": 0.999962329864502,
+          "true_target_blue_alive_ratio": 1.0,
+          "pred_red_win_prob": 0.45658451318740845,
+          "true_red_win": 1.0
+        },
+        {
+          "episode_id": "sim_task_00099",
+          "split_name": "train",
+          "tactic_combo_key": "tactic_2__tactic_2",
+          "pred_target_red_alive_ratio": 0.9999899864196777,
+          "true_target_red_alive_ratio": 1.0,
+          "pred_target_blue_alive_ratio": 0.9999631643295288,
+          "true_target_blue_alive_ratio": 1.0,
+          "pred_red_win_prob": 0.45580407977104187,
+          "true_red_win": 1.0
+        },
+        {
+          "episode_id": "sim_task_00100",
+          "split_name": "train",
+          "tactic_combo_key": "tactic_3__tactic_2",
+          "pred_target_red_alive_ratio": 0.9999899864196777,
+          "true_target_red_alive_ratio": 1.0,
+          "pred_target_blue_alive_ratio": 0.9999631643295288,
+          "true_target_blue_alive_ratio": 1.0,
+          "pred_red_win_prob": 0.45581987500190735,
+          "true_red_win": 0.0
+        }
+      ]
+    },
+    {
+      "state_signature": "818f2c1a76453e281a806ad1be189a9dde94ec1a",
+      "horizon": "20",
+      "state_step": 0,
+      "num_variants": 5,
+      "variants": [
+        {
+          "episode_id": "sim_task_00066",
+          "split_name": "train",
+          "tactic_combo_key": "tactic_1__tactic_1",
+          "pred_target_red_alive_ratio": 0.9999558925628662,
+          "true_target_red_alive_ratio": 1.0,
+          "pred_target_blue_alive_ratio": 0.9999426603317261,
+          "true_target_blue_alive_ratio": 1.0,
+          "pred_red_win_prob": 0.43929994106292725,
+          "true_red_win": 1.0
+        },
+        {
+          "episode_id": "sim_task_00067",
+          "split_name": "train",
+          "tactic_combo_key": "tactic_1__tactic_2",
+          "pred_target_red_alive_ratio": 0.9999563097953796,
+          "true_target_red_alive_ratio": 1.0,
+          "pred_target_blue_alive_ratio": 0.999943733215332,
+          "true_target_blue_alive_ratio": 1.0,
+          "pred_red_win_prob": 0.4386318624019623,
+          "true_red_win": 0.0
+        },
+        {
+          "episode_id": "sim_task_00068",
+          "split_name": "train",
+          "tactic_combo_key": "tactic_2__tactic_1",
+          "pred_target_red_alive_ratio": 0.9999558329582214,
+          "true_target_red_alive_ratio": 1.0,
+          "pred_target_blue_alive_ratio": 0.9999425411224365,
+          "true_target_blue_alive_ratio": 1.0,
+          "pred_red_win_prob": 0.4393153190612793,
+          "true_red_win": 1.0
+        },
+        {
+          "episode_id": "sim_task_00069",
+          "split_name": "train",
+          "tactic_combo_key": "tactic_2__tactic_2",
+          "pred_target_red_alive_ratio": 0.9999562501907349,
+          "true_target_red_alive_ratio": 1.0,
+          "pred_target_blue_alive_ratio": 0.9999436140060425,
+          "true_target_blue_alive_ratio": 1.0,
+          "pred_red_win_prob": 0.43864724040031433,
+          "true_red_win": 0.0
+        },
+        {
+          "episode_id": "sim_task_00070",
+          "split_name": "train",
+          "tactic_combo_key": "tactic_3__tactic_2",
+          "pred_target_red_alive_ratio": 0.9999561309814453,
+          "true_target_red_alive_ratio": 1.0,
+          "pred_target_blue_alive_ratio": 0.9999434947967529,
+          "true_target_blue_alive_ratio": 1.0,
+          "pred_red_win_prob": 0.4386625587940216,
+          "true_red_win": 0.0
+        }
+      ]
+    },
+    {
+      "state_signature": "a5e441ede9faa804000a2cb4d89872988dfff80c",
+      "horizon": "20",
+      "state_step": 0,
+      "num_variants": 5,
+      "variants": [
+        {
+          "episode_id": "sim_task_00036",
+          "split_name": "train",
+          "tactic_combo_key": "tactic_1__tactic_1",
+          "pred_target_red_alive_ratio": 0.9997855424880981,
+          "true_target_red_alive_ratio": 1.0,
+          "pred_target_blue_alive_ratio": 0.9998828172683716,
+          "true_target_blue_alive_ratio": 1.0,
+          "pred_red_win_prob": 0.42215481400489807,
+          "true_red_win": 1.0
+        },
+        {
+          "episode_id": "sim_task_00037",
+          "split_name": "train",
+          "tactic_combo_key": "tactic_1__tactic_2",
+          "pred_target_red_alive_ratio": 0.9997873306274414,
+          "true_target_red_alive_ratio": 1.0,
+          "pred_target_blue_alive_ratio": 0.9998844861984253,
+          "true_target_blue_alive_ratio": 1.0,
+          "pred_red_win_prob": 0.4211418330669403,
+          "true_red_win": 0.0
+        },
+        {
+          "episode_id": "sim_task_00038",
+          "split_name": "train",
+          "tactic_combo_key": "tactic_2__tactic_1",
+          "pred_target_red_alive_ratio": 0.9997851252555847,
+          "true_target_red_alive_ratio": 1.0,
+          "pred_target_blue_alive_ratio": 0.9998825788497925,
+          "true_target_blue_alive_ratio": 1.0,
+          "pred_red_win_prob": 0.4221752882003784,
+          "true_red_win": 1.0
+        },
+        {
+          "episode_id": "sim_task_00039",
+          "split_name": "train",
+          "tactic_combo_key": "tactic_2__tactic_2",
+          "pred_target_red_alive_ratio": 0.999786913394928,
+          "true_target_red_alive_ratio": 1.0,
+          "pred_target_blue_alive_ratio": 0.9998842477798462,
+          "true_target_blue_alive_ratio": 1.0,
+          "pred_red_win_prob": 0.42116230726242065,
+          "true_red_win": 0.0
+        },
+        {
+          "episode_id": "sim_task_00040",
+          "split_name": "train",
+          "tactic_combo_key": "tactic_3__tactic_2",
+          "pred_target_red_alive_ratio": 0.9997864961624146,
+          "true_target_red_alive_ratio": 1.0,
+          "pred_target_blue_alive_ratio": 0.9998841285705566,
+          "true_target_blue_alive_ratio": 1.0,
+          "pred_red_win_prob": 0.421182781457901,
+          "true_red_win": 0.0
+        }
+      ]
+    },
+    {
+      "state_signature": "b7daf0b97382b380dd85f2a1c8da51ec2eb7fc66",
+      "horizon": "20",
+      "state_step": 0,
+      "num_variants": 5,
+      "variants": [
+        {
+          "episode_id": "sim_task_00051",
+          "split_name": "test",
+          "tactic_combo_key": "tactic_1__tactic_1",
+          "pred_target_red_alive_ratio": 0.999962568283081,
+          "true_target_red_alive_ratio": 1.0,
+          "pred_target_blue_alive_ratio": 0.9999525547027588,
+          "true_target_blue_alive_ratio": 1.0,
+          "pred_red_win_prob": 0.4372209310531616,
+          "true_red_win": 0.0
+        },
+        {
+          "episode_id": "sim_task_00052",
+          "split_name": "test",
+          "tactic_combo_key": "tactic_1__tactic_2",
+          "pred_target_red_alive_ratio": 0.9999629259109497,
+          "true_target_red_alive_ratio": 1.0,
+          "pred_target_blue_alive_ratio": 0.9999533891677856,
+          "true_target_blue_alive_ratio": 1.0,
+          "pred_red_win_prob": 0.4365443289279938,
+          "true_red_win": 0.0
+        },
+        {
+          "episode_id": "sim_task_00053",
+          "split_name": "test",
+          "tactic_combo_key": "tactic_2__tactic_1",
+          "pred_target_red_alive_ratio": 0.9999625086784363,
+          "true_target_red_alive_ratio": 1.0,
+          "pred_target_blue_alive_ratio": 0.9999524354934692,
+          "true_target_blue_alive_ratio": 1.0,
+          "pred_red_win_prob": 0.43723633885383606,
+          "true_red_win": 1.0
+        },
+        {
+          "episode_id": "sim_task_00054",
+          "split_name": "test",
+          "tactic_combo_key": "tactic_2__tactic_2",
+          "pred_target_red_alive_ratio": 0.9999628067016602,
+          "true_target_red_alive_ratio": 1.0,
+          "pred_target_blue_alive_ratio": 0.9999533891677856,
+          "true_target_blue_alive_ratio": 1.0,
+          "pred_red_win_prob": 0.4365595877170563,
+          "true_red_win": 0.0
+        },
+        {
+          "episode_id": "sim_task_00055",
+          "split_name": "test",
+          "tactic_combo_key": "tactic_3__tactic_2",
+          "pred_target_red_alive_ratio": 0.9999628067016602,
+          "true_target_red_alive_ratio": 1.0,
+          "pred_target_blue_alive_ratio": 0.9999532699584961,
+          "true_target_blue_alive_ratio": 1.0,
+          "pred_red_win_prob": 0.4365749657154083,
+          "true_red_win": 0.0
+        }
+      ]
+    }
+  ],
+  "valid": true,
+  "coverage_insufficient": false,
+  "groups_ok": true,
+  "pairs_ok": true,
+  "min_groups": 8,
+  "min_pairs": 100
+}

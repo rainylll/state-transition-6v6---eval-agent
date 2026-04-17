@@ -1,0 +1,51 @@
+{
+  "rollouts_path": "agent_mvp\\data_world_model\\raw\\rollouts_smoke.jsonl",
+  "horizons": [
+    1,
+    5,
+    10,
+    20,
+    "terminal"
+  ],
+  "num_rollout_rows": 1374,
+  "num_episodes": 3,
+  "observed_top_level_fields": [
+    "blue_tactic_condition",
+    "done",
+    "episode_id",
+    "episode_outcome",
+    "next_state",
+    "red_tactic_condition",
+    "sim_time_s",
+    "state",
+    "step",
+    "task_id",
+    "termination_reason"
+  ],
+  "splits": {
+    "train": {
+      "episodes": 1,
+      "episode_ids": [
+        "sim_task_00003"
+      ],
+      "skipped_episodes": 0,
+      "samples": 2338
+    },
+    "val": {
+      "episodes": 1,
+      "episode_ids": [
+        "sim_task_00001"
+      ],
+      "skipped_episodes": 0,
+      "samples": 2543
+    },
+    "test": {
+      "episodes": 1,
+      "episode_ids": [
+        "sim_task_00002"
+      ],
+      "skipped_episodes": 0,
+      "samples": 1893
+    }
+  }
+}

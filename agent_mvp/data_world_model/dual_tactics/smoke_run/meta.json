@@ -1,0 +1,58 @@
+{
+  "seed": 7,
+  "epochs": 1,
+  "batch_size": 8,
+  "lr": 0.001,
+  "best_val_loss": 0.24195266638239163,
+  "processed_summary": {
+    "rollouts_path": "agent_mvp\\data_world_model\\raw\\rollouts_dual_tactics.jsonl",
+    "horizons": [
+      1,
+      5,
+      10,
+      20,
+      "terminal"
+    ],
+    "num_rollout_rows": 1364,
+    "num_episodes": 3,
+    "observed_top_level_fields": [
+      "blue_tactic_condition",
+      "done",
+      "episode_id",
+      "episode_outcome",
+      "next_state",
+      "red_tactic_condition",
+      "sim_time_s",
+      "state",
+      "step",
+      "task_id",
+      "termination_reason"
+    ],
+    "splits": {
+      "train": {
+        "episodes": 1,
+        "episode_ids": [
+          "sim_task_00003"
+        ],
+        "skipped_episodes": 0,
+        "samples": 2323
+      },
+      "val": {
+        "episodes": 1,
+        "episode_ids": [
+          "sim_task_00002"
+        ],
+        "skipped_episodes": 0,
+        "samples": 1953
+      },
+      "test": {
+        "episodes": 1,
+        "episode_ids": [
+          "sim_task_00001"
+        ],
+        "skipped_episodes": 0,
+        "samples": 2448
+      }
+    }
+  }
+}

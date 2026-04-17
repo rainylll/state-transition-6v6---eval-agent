@@ -10,6 +10,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include <nlohmann/json.hpp>
@@ -47,6 +48,47 @@ struct BattleOutcome {
     std::string termination_reason;
     bool red_objective_complete = false;
     bool blue_objective_complete = false;
+    std::vector<json> rollout_rows;
+};
+
+struct TerminationStatus {
+    bool done = false;
+    std::string reason = "none";
+};
+
+struct RolloutEventAccumulator {
+    int red_fire_count_delta = 0;
+    int blue_fire_count_delta = 0;
+    int red_kill_delta = 0;
+    int blue_kill_delta = 0;
+    int red_dodge_trigger_count = 0;
+    int blue_dodge_trigger_count = 0;
+    bool red_first_contact_flag = false;
+    bool blue_first_contact_flag = false;
+    bool red_contact_flag = false;
+    bool blue_contact_flag = false;
+    bool red_first_fire_flag = false;
+    bool blue_first_fire_flag = false;
+    bool red_warning_flag = false;
+    bool blue_warning_flag = false;
+    bool red_retarget_flag = false;
+    bool blue_retarget_flag = false;
+    bool red_first_kill_flag = false;
+    bool blue_first_kill_flag = false;
+    bool red_objective_complete_flag = false;
+    bool blue_objective_complete_flag = false;
+    bool termination_flag = false;
+};
+
+struct EpisodeEventState {
+    bool red_contact_seen = false;
+    bool blue_contact_seen = false;
+    bool red_fire_seen = false;
+    bool blue_fire_seen = false;
+    bool red_kill_seen = false;
+    bool blue_kill_seen = false;
+    double red_reward_cumulative = 0.0;
+    double blue_reward_cumulative = 0.0;
 };
 
 struct GeoPoint {
@@ -75,6 +117,8 @@ static constexpr double kReturnCompletionRadiusMeters = 15000.0;
 static constexpr int kMissionCompletionHoldSteps = 20;
 static constexpr int kMissionLogIntervalSteps = 200;
 static constexpr int kMissionSafetyMaxSteps = 9000;
+static constexpr double kSimulationStepSeconds = 0.1;
+static constexpr int kRolloutExportStrideSteps = 10;
 
 static double Clamp01(double v) {
     return std::max(0.0, std::min(1.0, v));
@@ -86,6 +130,18 @@ static double DegToRad(double deg) {
 
 static double RadToDeg(double rad) {
     return rad * 180.0 / 3.14159265358979323846;
+}
+
+static double NormalizeHeadingDegrees(double heading_deg) {
+    if (!std::isfinite(heading_deg)) {
+        return 0.0;
+    }
+
+    double normalized = std::fmod(heading_deg, 360.0);
+    if (normalized < 0.0) {
+        normalized += 360.0;
+    }
+    return normalized;
 }
 
 static double LongitudeDegreesForMeters(double meters, double latitude_deg) {
@@ -384,10 +440,393 @@ static int CountCandidateTasks(const std::string& input_path, int max_tasks) {
     return count;
 }
 
+static bool TryParseLooseInt(const std::string& text, int* value) {
+    if (value == nullptr) {
+        return false;
+    }
+
+    try {
+        size_t parsed_chars = 0;
+        const int parsed = std::stoi(text, &parsed_chars);
+        if (parsed_chars == text.size()) {
+            *value = parsed;
+            return true;
+        }
+    } catch (const std::exception&) {
+    }
+
+    std::string current_run;
+    std::string last_run;
+    for (char ch : text) {
+        if (std::isdigit(static_cast<unsigned char>(ch)) || (ch == '-' && current_run.empty())) {
+            current_run.push_back(ch);
+            continue;
+        }
+        if (!current_run.empty()) {
+            last_run = current_run;
+            current_run.clear();
+        }
+    }
+    if (!current_run.empty()) {
+        last_run = current_run;
+    }
+
+    if (last_run.empty() || last_run == "-") {
+        return false;
+    }
+
+    try {
+        *value = std::stoi(last_run);
+        return true;
+    } catch (const std::exception&) {
+        return false;
+    }
+}
+
+static bool TryExtractTacticId(const json& payload, int* tactic_id) {
+    if (tactic_id == nullptr) {
+        return false;
+    }
+    if (payload.is_number_integer()) {
+        *tactic_id = payload.get<int>();
+        return true;
+    }
+    if (payload.is_number_float()) {
+        *tactic_id = static_cast<int>(std::round(payload.get<double>()));
+        return true;
+    }
+    if (payload.is_string()) {
+        return TryParseLooseInt(payload.get<std::string>(), tactic_id);
+    }
+    if (!payload.is_object()) {
+        return false;
+    }
+
+    if (payload.contains("params") && payload["params"].is_object()) {
+        const json& params = payload["params"];
+        if (params.contains("tactic_id") && TryExtractTacticId(params["tactic_id"], tactic_id)) {
+            return true;
+        }
+    }
+    if (payload.contains("tactic_id") && TryExtractTacticId(payload["tactic_id"], tactic_id)) {
+        return true;
+    }
+    if (payload.contains("id") && TryExtractTacticId(payload["id"], tactic_id)) {
+        return true;
+    }
+    return false;
+}
+
+static json BuildLegacyTacticCondition(int tactic_id) {
+    return json{
+        {"source", "legacy_tactic_id"},
+        {"family", "legacy_shared_tactic"},
+        {"id", "tactic_" + std::to_string(tactic_id)},
+        {"params", {{"tactic_id", tactic_id}}}};
+}
+
+static json NormalizeTaskTacticCondition(
+    const json& task,
+    const char* field_name,
+    int legacy_tactic_id) {
+    if (!task.contains(field_name) || !task[field_name].is_object()) {
+        return BuildLegacyTacticCondition(legacy_tactic_id);
+    }
+
+    json normalized = task[field_name];
+    int resolved_tactic_id = legacy_tactic_id;
+    if (!TryExtractTacticId(normalized, &resolved_tactic_id)) {
+        resolved_tactic_id = legacy_tactic_id;
+    }
+
+    if (!normalized.contains("source")) {
+        normalized["source"] = "task_config";
+    } else if (!normalized["source"].is_string()) {
+        normalized["source"] = normalized["source"].dump();
+    }
+
+    if (!normalized.contains("family")) {
+        normalized["family"] = "rule";
+    } else if (!normalized["family"].is_string()) {
+        normalized["family"] = normalized["family"].dump();
+    }
+
+    if (!normalized.contains("id")) {
+        normalized["id"] = "tactic_" + std::to_string(resolved_tactic_id);
+    } else if (!normalized["id"].is_string()) {
+        normalized["id"] = normalized["id"].dump();
+    }
+
+    json params = normalized.value("params", json::object());
+    if (!params.is_object()) {
+        params = json::object();
+    }
+    params["tactic_id"] = resolved_tactic_id;
+    normalized["params"] = params;
+    return normalized;
+}
+
+static int ResolveTacticId(const json& tactic_condition, int fallback_tactic_id) {
+    int tactic_id = fallback_tactic_id;
+    if (TryExtractTacticId(tactic_condition, &tactic_id)) {
+        return tactic_id;
+    }
+    return fallback_tactic_id;
+}
+
+static json BuildRolloutTacticCondition(
+    const json& tactic_condition,
+    const char* side,
+    int resolved_tactic_id) {
+    json compact = json::object();
+    compact["side"] = side;
+
+    if (tactic_condition.contains("source")) {
+        compact["source"] = tactic_condition["source"];
+    } else {
+        compact["source"] = "task_config";
+    }
+
+    compact["family"] = tactic_condition.value("family", "rule");
+    if (tactic_condition.contains("id")) {
+        compact["id"] = tactic_condition["id"];
+    } else {
+        compact["id"] = resolved_tactic_id;
+    }
+
+    json params = tactic_condition.value("params", json::object());
+    if (!params.is_object()) {
+        params = json::object();
+    }
+    params["tactic_id"] = resolved_tactic_id;
+    compact["params"] = params;
+    return compact;
+}
+
+static std::string JsonValueToStableString(const json& value, const char* fallback) {
+    if (value.is_string()) {
+        return value.get<std::string>();
+    }
+    if (value.is_number_integer()) {
+        return std::to_string(value.get<int>());
+    }
+    if (value.is_number_float()) {
+        std::ostringstream oss;
+        oss << value.get<double>();
+        return oss.str();
+    }
+    if (value.is_boolean()) {
+        return value.get<bool>() ? "true" : "false";
+    }
+    return std::string(fallback);
+}
+
+static json NormalizeTaskSamplingMeta(
+    const json& task,
+    const json& red_tactic_condition,
+    const json& blue_tactic_condition,
+    size_t red_unit_count,
+    size_t blue_unit_count) {
+    json normalized = task.value("sampling_meta", json::object());
+    if (!normalized.is_object()) {
+        normalized = json::object();
+    }
+
+    const std::string red_family = JsonValueToStableString(
+        red_tactic_condition.value("family", json("rule")),
+        "rule");
+    const std::string blue_family = JsonValueToStableString(
+        blue_tactic_condition.value("family", json("rule")),
+        "rule");
+    const std::string red_id = JsonValueToStableString(
+        red_tactic_condition.value("id", json("unknown_red")),
+        "unknown_red");
+    const std::string blue_id = JsonValueToStableString(
+        blue_tactic_condition.value("id", json("unknown_blue")),
+        "unknown_blue");
+    const std::string force_size_key = std::to_string(red_unit_count) + "v" + std::to_string(blue_unit_count);
+    const std::string tactic_pair_key = red_family + "-" + blue_family;
+    const std::string tactic_combo_key = red_id + "__" + blue_id;
+    const std::string fallback_scenario_key = force_size_key + "__" + tactic_combo_key;
+
+    if (!normalized.contains("sampling_plan")) {
+        normalized["sampling_plan"] = "rollout_fallback_v1";
+    }
+    normalized["tactic_pair_key"] = JsonValueToStableString(
+        normalized.value("tactic_pair_key", json(tactic_pair_key)),
+        tactic_pair_key.c_str());
+    normalized["tactic_combo_key"] = JsonValueToStableString(
+        normalized.value("tactic_combo_key", json(tactic_combo_key)),
+        tactic_combo_key.c_str());
+    normalized["red_tactic_family"] = JsonValueToStableString(
+        normalized.value("red_tactic_family", json(red_family)),
+        red_family.c_str());
+    normalized["blue_tactic_family"] = JsonValueToStableString(
+        normalized.value("blue_tactic_family", json(blue_family)),
+        blue_family.c_str());
+    normalized["red_tactic_id"] = red_tactic_condition["params"].value("tactic_id", 0);
+    normalized["blue_tactic_id"] = blue_tactic_condition["params"].value("tactic_id", 0);
+    normalized["force_size_key"] = JsonValueToStableString(
+        normalized.value("force_size_key", json(force_size_key)),
+        force_size_key.c_str());
+    normalized["red_force_size"] = normalized.value("red_force_size", static_cast<int>(red_unit_count));
+    normalized["blue_force_size"] = normalized.value("blue_force_size", static_cast<int>(blue_unit_count));
+    normalized["red_attr_bucket"] = JsonValueToStableString(
+        normalized.value("red_attr_bucket", json("unknown")),
+        "unknown");
+    normalized["blue_attr_bucket"] = JsonValueToStableString(
+        normalized.value("blue_attr_bucket", json("unknown")),
+        "unknown");
+    normalized["scenario_key"] = JsonValueToStableString(
+        normalized.value("scenario_key", json(fallback_scenario_key)),
+        fallback_scenario_key.c_str());
+
+    const std::string split_group_key = JsonValueToStableString(
+        task.value(
+            "split_group_key",
+            normalized.value("split_group_key", normalized["scenario_key"])),
+        JsonValueToStableString(normalized["scenario_key"], fallback_scenario_key.c_str()).c_str());
+    normalized["split_group_key"] = split_group_key;
+    return normalized;
+}
+
+static json BuildUnitSnapshot(const PlaneState_S& plane, const Unit7D& seed_unit, const char* side) {
+    return json{
+        {"unit_id", std::string(side) + "_" + std::to_string(plane._planeID)},
+        {"type_id", seed_unit.type_id},
+        {"alive", plane._isAlive > 0 ? 1 : 0},
+        {"missile_count", std::max(0, plane._missileCount)},
+        {"lon", plane._longitude},
+        {"lat", plane._latitude},
+        {"alt_m", plane._altitude},
+        {"speed_mps", plane.TAS},
+        {"heading_deg", NormalizeHeadingDegrees(plane._yaw)}};
+}
+
+static json BuildStateSnapshot(
+    const std::vector<PlaneState_S>& planes,
+    int red_count,
+    int blue_count,
+    const std::vector<Unit7D>& red_units,
+    const std::vector<Unit7D>& blue_units) {
+    json state;
+    state["red_units"] = json::array();
+    state["blue_units"] = json::array();
+
+    for (int i = 0; i < red_count; ++i) {
+        state["red_units"].push_back(BuildUnitSnapshot(
+            planes[i],
+            red_units[static_cast<size_t>(i)],
+            "red"));
+    }
+    for (int i = 0; i < blue_count; ++i) {
+        const int pidx = red_count + i;
+        state["blue_units"].push_back(BuildUnitSnapshot(
+            planes[pidx],
+            blue_units[static_cast<size_t>(i)],
+            "blue"));
+    }
+    return state;
+}
+
+static TerminationStatus DetectTermination(
+    int red_alive,
+    int blue_alive,
+    bool red_objective_complete,
+    bool blue_objective_complete,
+    int step_plus_one) {
+    if (red_alive == 0) {
+        return TerminationStatus{true, "red_eliminated"};
+    }
+    if (blue_alive == 0) {
+        return TerminationStatus{true, "blue_eliminated"};
+    }
+    if (red_objective_complete || blue_objective_complete) {
+        return TerminationStatus{true, "objective_complete"};
+    }
+    if (step_plus_one >= kMissionSafetyMaxSteps) {
+        return TerminationStatus{true, "safety_limit"};
+    }
+    return TerminationStatus{};
+}
+
+static json BuildRolloutEventJson(const RolloutEventAccumulator& event_acc) {
+    return json{
+        {"red_fire_count_delta", event_acc.red_fire_count_delta},
+        {"blue_fire_count_delta", event_acc.blue_fire_count_delta},
+        {"red_kill_delta", event_acc.red_kill_delta},
+        {"blue_kill_delta", event_acc.blue_kill_delta},
+        {"red_dodge_trigger_count", event_acc.red_dodge_trigger_count},
+        {"blue_dodge_trigger_count", event_acc.blue_dodge_trigger_count},
+        {"red_first_contact_flag", event_acc.red_first_contact_flag},
+        {"blue_first_contact_flag", event_acc.blue_first_contact_flag},
+        {"red_contact_flag", event_acc.red_contact_flag},
+        {"blue_contact_flag", event_acc.blue_contact_flag},
+        {"red_first_fire_flag", event_acc.red_first_fire_flag},
+        {"blue_first_fire_flag", event_acc.blue_first_fire_flag},
+        {"red_warning_flag", event_acc.red_warning_flag},
+        {"blue_warning_flag", event_acc.blue_warning_flag},
+        {"red_retarget_flag", event_acc.red_retarget_flag},
+        {"blue_retarget_flag", event_acc.blue_retarget_flag},
+        {"red_first_kill_flag", event_acc.red_first_kill_flag},
+        {"blue_first_kill_flag", event_acc.blue_first_kill_flag},
+        {"red_objective_complete_flag", event_acc.red_objective_complete_flag},
+        {"blue_objective_complete_flag", event_acc.blue_objective_complete_flag},
+        {"termination_flag", event_acc.termination_flag}};
+}
+
+static std::pair<double, double> ComputeRewardStep(
+    const RolloutEventAccumulator& event_acc) {
+    const double red_reward =
+        1.00 * static_cast<double>(event_acc.red_kill_delta) -
+        1.00 * static_cast<double>(event_acc.blue_kill_delta) +
+        0.25 * static_cast<double>(event_acc.red_first_contact_flag ? 1 : 0) +
+        0.10 * static_cast<double>(event_acc.red_contact_flag ? 1 : 0) +
+        0.25 * static_cast<double>(event_acc.red_first_fire_flag ? 1 : 0) +
+        0.05 * static_cast<double>(event_acc.red_fire_count_delta) +
+        0.50 * static_cast<double>(event_acc.red_first_kill_flag ? 1 : 0) -
+        0.05 * static_cast<double>(event_acc.red_warning_flag ? 1 : 0) -
+        0.02 * static_cast<double>(event_acc.red_dodge_trigger_count) +
+        1.50 * static_cast<double>(event_acc.red_objective_complete_flag ? 1 : 0) -
+        1.50 * static_cast<double>(event_acc.blue_objective_complete_flag ? 1 : 0);
+    const double blue_reward =
+        1.00 * static_cast<double>(event_acc.blue_kill_delta) -
+        1.00 * static_cast<double>(event_acc.red_kill_delta) +
+        0.25 * static_cast<double>(event_acc.blue_first_contact_flag ? 1 : 0) +
+        0.10 * static_cast<double>(event_acc.blue_contact_flag ? 1 : 0) +
+        0.25 * static_cast<double>(event_acc.blue_first_fire_flag ? 1 : 0) +
+        0.05 * static_cast<double>(event_acc.blue_fire_count_delta) +
+        0.50 * static_cast<double>(event_acc.blue_first_kill_flag ? 1 : 0) -
+        0.05 * static_cast<double>(event_acc.blue_warning_flag ? 1 : 0) -
+        0.02 * static_cast<double>(event_acc.blue_dodge_trigger_count) +
+        1.50 * static_cast<double>(event_acc.blue_objective_complete_flag ? 1 : 0) -
+        1.50 * static_cast<double>(event_acc.red_objective_complete_flag ? 1 : 0);
+    return {red_reward, blue_reward};
+}
+
+static json BuildRewardJson(double red_reward, double blue_reward) {
+    return json{{"red", red_reward}, {"blue", blue_reward}};
+}
+
+static json BuildEpisodeOutcomeJson(const BattleOutcome& battle) {
+    return json{
+        {"red_win", battle.red_win},
+        {"elapsed_steps", battle.elapsed_steps},
+        {"termination_reason", battle.termination_reason},
+        {"red_alive_final", CountAliveUnits(battle.red_final)},
+        {"blue_alive_final", CountAliveUnits(battle.blue_final)},
+        {"red_missile_final", SumRemainingMissiles(battle.red_final)},
+        {"blue_missile_final", SumRemainingMissiles(battle.blue_final)}};
+}
+
 static BattleOutcome RunTactic(
     const std::vector<Unit7D>& red_units,
     const std::vector<Unit7D>& blue_units,
-    int tactic_id,
+    int red_tactic_id,
+    int blue_tactic_id,
+    const json& red_tactic_condition,
+    const json& blue_tactic_condition,
+    const json& sampling_meta,
     bool write_replay,
     int episode_index,
     const std::string& task_id,
@@ -488,7 +927,7 @@ static BattleOutcome RunTactic(
         }
     }
 
-    const double dt = 0.1;
+    const double dt = kSimulationStepSeconds;
     int red_alive = 0;
     int blue_alive = 0;
     const GeoPoint red_base_anchor = GetBaseAnchorForTeam(1);
@@ -507,20 +946,61 @@ static BattleOutcome RunTactic(
         blue_base_anchor.lat);
     EncounterBatchTactics::TeamTacticController red_tactic(
         1,
-        tactic_id,
+        red_tactic_id,
         EncounterBatchTactics::GeoPoint{red_scene_anchor_seed.lon, red_scene_anchor_seed.lat},
         "red");
     EncounterBatchTactics::TeamTacticController blue_tactic(
         2,
-        tactic_id,
+        blue_tactic_id,
         EncounterBatchTactics::GeoPoint{blue_scene_anchor_seed.lon, blue_scene_anchor_seed.lat},
         "blue");
+    const json compact_red_tactic_condition = BuildRolloutTacticCondition(
+        red_tactic_condition,
+        "red",
+        red_tactic_id);
+    const json compact_blue_tactic_condition = BuildRolloutTacticCondition(
+        blue_tactic_condition,
+        "blue",
+        blue_tactic_id);
     red_tactic.Initialize(planes.data(), plane_count);
     blue_tactic.Initialize(planes.data(), plane_count);
     bool should_sync_from_engine = false;
     bool reached_terminal_state = false;
+    std::vector<json> rollout_buffer;
+    json export_interval_start_state = BuildStateSnapshot(
+        planes,
+        red_count,
+        blue_count,
+        red_units,
+        blue_units);
     const auto initial_red_telemetry = red_tactic.GetTelemetry(planes.data(), plane_count);
     const auto initial_blue_telemetry = blue_tactic.GetTelemetry(planes.data(), plane_count);
+    EpisodeEventState episode_event_state;
+    episode_event_state.red_contact_seen = initial_red_telemetry.contact_plane_count > 0;
+    episode_event_state.blue_contact_seen = initial_blue_telemetry.contact_plane_count > 0;
+    episode_event_state.red_fire_seen = initial_red_telemetry.fired_total > 0;
+    episode_event_state.blue_fire_seen = initial_blue_telemetry.fired_total > 0;
+    auto previous_red_telemetry = initial_red_telemetry;
+    auto previous_blue_telemetry = initial_blue_telemetry;
+    RolloutEventAccumulator interval_event;
+
+    red_alive = CountAliveByTeam(planes.data(), plane_count, 1);
+    blue_alive = CountAliveByTeam(planes.data(), plane_count, 2);
+    const bool red_initial_objective_complete = red_tactic.UpdateObjective(planes.data(), plane_count);
+    const bool blue_initial_objective_complete = blue_tactic.UpdateObjective(planes.data(), plane_count);
+    bool previous_red_objective_complete = red_initial_objective_complete;
+    bool previous_blue_objective_complete = blue_initial_objective_complete;
+    const TerminationStatus initial_term = DetectTermination(
+        red_alive,
+        blue_alive,
+        red_initial_objective_complete,
+        blue_initial_objective_complete,
+        0);
+    if (initial_term.done) {
+        out.elapsed_steps = 0;
+        out.termination_reason = initial_term.reason;
+        reached_terminal_state = true;
+    }
 
     std::cout
         << "[TASK " << task_number << "/" << total_tasks << "] mission_plan"
@@ -536,7 +1016,7 @@ static BattleOutcome RunTactic(
         << " | blue_side=" << ((initial_blue_telemetry.side == ZhanShu::SurroundSide::West) ? "west" : "east")
         << std::endl;
 
-    for (int step = 0; step < kMissionSafetyMaxSteps; ++step) {
+    for (int step = 0; step < kMissionSafetyMaxSteps && !reached_terminal_state; ++step) {
         if (should_sync_from_engine) {
             SyncFromEngine(planes.data(), plane_count);
         } else {
@@ -552,8 +1032,8 @@ static BattleOutcome RunTactic(
         const auto blue_telemetry = blue_tactic.GetTelemetry(planes.data(), plane_count);
         const bool red_target_alive = red_telemetry.target_id != -1 && IsPlaneAliveById(planes.data(), plane_count, red_telemetry.target_id);
         const bool blue_target_alive = blue_telemetry.target_id != -1 && IsPlaneAliveById(planes.data(), plane_count, blue_telemetry.target_id);
-        const bool red_objective_complete = red_tactic.UpdateObjective(planes.data(), plane_count);
-        const bool blue_objective_complete = blue_tactic.UpdateObjective(planes.data(), plane_count);
+        const bool red_objective_complete = red_tactic.objective_complete();
+        const bool blue_objective_complete = blue_tactic.objective_complete();
 
         if (step == 0 || ((step + 1) % kMissionLogIntervalSteps) == 0) {
             std::cout
@@ -576,25 +1056,6 @@ static BattleOutcome RunTactic(
                 << std::endl;
         }
 
-        if (red_alive == 0 || blue_alive == 0) {
-            out.termination_reason = (red_alive == 0) ? "red force destroyed" : "blue force destroyed";
-            out.elapsed_steps = step + 1;
-            reached_terminal_state = true;
-            break;
-        }
-        if (red_objective_complete || blue_objective_complete) {
-            if (red_objective_complete && blue_objective_complete) {
-                out.termination_reason = "both objectives completed";
-            } else if (red_objective_complete) {
-                out.termination_reason = "red objective completed";
-            } else {
-                out.termination_reason = "blue objective completed";
-            }
-            out.elapsed_steps = step + 1;
-            reached_terminal_state = true;
-            break;
-        }
-
         for (int i = 0; i < plane_count; ++i) {
             if (planes[i]._isAlive <= 0) {
                 continue;
@@ -607,19 +1068,148 @@ static BattleOutcome RunTactic(
 
         // Bottom API: physics step.
         EnvStep(dt, planes.data());
+        SyncFromEngine(planes.data(), plane_count);
+
+        const json export_interval_end_state = BuildStateSnapshot(
+            planes,
+            red_count,
+            blue_count,
+            red_units,
+            blue_units);
+
+        const int red_alive_after = CountAliveByTeam(planes.data(), plane_count, 1);
+        const int blue_alive_after = CountAliveByTeam(planes.data(), plane_count, 2);
+        const bool red_objective_after = red_tactic.UpdateObjective(planes.data(), plane_count);
+        const bool blue_objective_after = blue_tactic.UpdateObjective(planes.data(), plane_count);
+        const auto red_telemetry_after = red_tactic.GetTelemetry(planes.data(), plane_count);
+        const auto blue_telemetry_after = blue_tactic.GetTelemetry(planes.data(), plane_count);
+
+        const int red_fire_step_delta = std::max(0, red_telemetry_after.fired_total - previous_red_telemetry.fired_total);
+        const int blue_fire_step_delta = std::max(0, blue_telemetry_after.fired_total - previous_blue_telemetry.fired_total);
+        const int red_kill_step_delta = std::max(0, blue_alive - blue_alive_after);
+        const int blue_kill_step_delta = std::max(0, red_alive - red_alive_after);
+        const int red_dodge_step_delta = std::max(
+            0,
+            red_telemetry_after.dodge_trigger_total - previous_red_telemetry.dodge_trigger_total);
+        const int blue_dodge_step_delta = std::max(
+            0,
+            blue_telemetry_after.dodge_trigger_total - previous_blue_telemetry.dodge_trigger_total);
+        const bool red_contact_active = red_telemetry_after.contact_plane_count > 0;
+        const bool blue_contact_active = blue_telemetry_after.contact_plane_count > 0;
+        const bool red_warning_active =
+            red_telemetry_after.warning_plane_count > 0 || red_telemetry_after.warning_max_count > 0;
+        const bool blue_warning_active =
+            blue_telemetry_after.warning_plane_count > 0 || blue_telemetry_after.warning_max_count > 0;
+        const bool red_retarget_step = red_telemetry_after.retarget_total > previous_red_telemetry.retarget_total;
+        const bool blue_retarget_step = blue_telemetry_after.retarget_total > previous_blue_telemetry.retarget_total;
+
+        interval_event.red_fire_count_delta += red_fire_step_delta;
+        interval_event.blue_fire_count_delta += blue_fire_step_delta;
+        interval_event.red_kill_delta += red_kill_step_delta;
+        interval_event.blue_kill_delta += blue_kill_step_delta;
+        interval_event.red_dodge_trigger_count += red_dodge_step_delta;
+        interval_event.blue_dodge_trigger_count += blue_dodge_step_delta;
+        interval_event.red_contact_flag = interval_event.red_contact_flag || red_contact_active;
+        interval_event.blue_contact_flag = interval_event.blue_contact_flag || blue_contact_active;
+        interval_event.red_warning_flag = interval_event.red_warning_flag || red_warning_active;
+        interval_event.blue_warning_flag = interval_event.blue_warning_flag || blue_warning_active;
+        interval_event.red_retarget_flag = interval_event.red_retarget_flag || red_retarget_step;
+        interval_event.blue_retarget_flag = interval_event.blue_retarget_flag || blue_retarget_step;
+        interval_event.red_objective_complete_flag =
+            interval_event.red_objective_complete_flag ||
+            (red_objective_after && !previous_red_objective_complete);
+        interval_event.blue_objective_complete_flag =
+            interval_event.blue_objective_complete_flag ||
+            (blue_objective_after && !previous_blue_objective_complete);
+
+        if (!episode_event_state.red_contact_seen && red_contact_active) {
+            interval_event.red_first_contact_flag = true;
+            episode_event_state.red_contact_seen = true;
+        }
+        if (!episode_event_state.blue_contact_seen && blue_contact_active) {
+            interval_event.blue_first_contact_flag = true;
+            episode_event_state.blue_contact_seen = true;
+        }
+        if (!episode_event_state.red_fire_seen && red_fire_step_delta > 0) {
+            interval_event.red_first_fire_flag = true;
+            episode_event_state.red_fire_seen = true;
+        } else if (red_fire_step_delta > 0) {
+            episode_event_state.red_fire_seen = true;
+        }
+        if (!episode_event_state.blue_fire_seen && blue_fire_step_delta > 0) {
+            interval_event.blue_first_fire_flag = true;
+            episode_event_state.blue_fire_seen = true;
+        } else if (blue_fire_step_delta > 0) {
+            episode_event_state.blue_fire_seen = true;
+        }
+        if (!episode_event_state.red_kill_seen && red_kill_step_delta > 0) {
+            interval_event.red_first_kill_flag = true;
+            episode_event_state.red_kill_seen = true;
+        } else if (red_kill_step_delta > 0) {
+            episode_event_state.red_kill_seen = true;
+        }
+        if (!episode_event_state.blue_kill_seen && blue_kill_step_delta > 0) {
+            interval_event.blue_first_kill_flag = true;
+            episode_event_state.blue_kill_seen = true;
+        } else if (blue_kill_step_delta > 0) {
+            episode_event_state.blue_kill_seen = true;
+        }
+
+        const TerminationStatus term = DetectTermination(
+            red_alive_after,
+            blue_alive_after,
+            red_objective_after,
+            blue_objective_after,
+            step + 1);
+        const bool on_export_stride = (((step + 1) % kRolloutExportStrideSteps) == 0);
+        interval_event.termination_flag = interval_event.termination_flag || term.done;
+
+        if (on_export_stride || term.done) {
+            const auto reward_step = ComputeRewardStep(interval_event);
+            episode_event_state.red_reward_cumulative += reward_step.first;
+            episode_event_state.blue_reward_cumulative += reward_step.second;
+            json row;
+            row["task_id"] = task_id;
+            row["episode_id"] = task_id;
+            row["split_group_key"] = sampling_meta.value("split_group_key", task_id);
+            row["sampling_meta"] = sampling_meta;
+            row["step"] = step + 1;
+            row["sim_time_s"] = (step + 1) * dt;
+            row["red_tactic_condition"] = compact_red_tactic_condition;
+            row["blue_tactic_condition"] = compact_blue_tactic_condition;
+            row["state"] = export_interval_start_state;
+            row["next_state"] = export_interval_end_state;
+            row["done"] = term.done;
+            row["termination_reason"] = term.reason;
+            row["event"] = BuildRolloutEventJson(interval_event);
+            row["reward_step"] = BuildRewardJson(reward_step.first, reward_step.second);
+            row["reward_cumulative"] = BuildRewardJson(
+                episode_event_state.red_reward_cumulative,
+                episode_event_state.blue_reward_cumulative);
+            rollout_buffer.push_back(std::move(row));
+            export_interval_start_state = export_interval_end_state;
+            interval_event = RolloutEventAccumulator{};
+        }
+
+        previous_red_telemetry = red_telemetry_after;
+        previous_blue_telemetry = blue_telemetry_after;
+        previous_red_objective_complete = red_objective_after;
+        previous_blue_objective_complete = blue_objective_after;
+        red_alive = red_alive_after;
+        blue_alive = blue_alive_after;
+
+        if (term.done) {
+            out.elapsed_steps = step + 1;
+            out.termination_reason = term.reason;
+            reached_terminal_state = true;
+        }
     }
 
     if (!reached_terminal_state) {
-        out.termination_reason = "mission safety cap reached";
         out.elapsed_steps = kMissionSafetyMaxSteps;
-        std::cout
-            << "[TASK " << task_number << "/" << total_tasks << "] warning"
-            << " | reason=" << out.termination_reason
-            << " | max_rounds=" << kMissionSafetyMaxSteps
-            << std::endl;
+        out.termination_reason = "safety_limit";
     }
 
-    SyncFromEngine(planes.data(), plane_count);
     red_alive = CountAliveByTeam(planes.data(), plane_count, 1);
     blue_alive = CountAliveByTeam(planes.data(), plane_count, 2);
     out.red_objective_complete = red_tactic.objective_complete();
@@ -653,6 +1243,12 @@ static BattleOutcome RunTactic(
         }
     }
 
+    const json episode_outcome = BuildEpisodeOutcomeJson(out);
+    for (auto& row : rollout_buffer) {
+        row["episode_outcome"] = episode_outcome;
+        out.rollout_rows.push_back(std::move(row));
+    }
+
     return out;
 }
 
@@ -682,14 +1278,16 @@ static std::vector<Unit7D> ParseUnits7D(const json& features) {
 int main() {
     const std::string input_path = "simulation_tasks.jsonl";
     const std::string output_path = "episodes.jsonl";
+    const std::string rollout_output_path = "rollouts.jsonl";
     const int kMaxTasks = 1000;
     const int total_tasks = CountCandidateTasks(input_path, kMaxTasks);
     const BattlefieldSquare& battlefield = GetBattlefieldSquare();
 
     std::ifstream fin(input_path);
     std::ofstream fout(output_path, std::ios::out | std::ios::trunc);
-    if (!fin.is_open() || !fout.is_open()) {
-        std::cerr << "[ERROR] cannot open simulation_tasks.jsonl or episodes.jsonl" << std::endl;
+    std::ofstream rollout_fout(rollout_output_path, std::ios::out | std::ios::trunc);
+    if (!fin.is_open() || !fout.is_open() || !rollout_fout.is_open()) {
+        std::cerr << "[ERROR] cannot open simulation_tasks.jsonl / episodes.jsonl / rollouts.jsonl" << std::endl;
         return 1;
     }
 
@@ -698,6 +1296,7 @@ int main() {
         << "[INFO] batch runner started"
         << " | input=" << input_path
         << " | output=" << output_path
+        << " | rollout_output=" << rollout_output_path
         << " | queued_tasks=" << total_tasks
         << " | replay_dir=" << kReplayDirectory
         << " | replay_count=" << ACMI_REPLAY_COUNT
@@ -723,11 +1322,21 @@ int main() {
         }
 
         const std::string task_id = task.value("task_id", "");
-        const int tactic_id = task.value("tactic_id", 0);
+        const int legacy_tactic_id = task.value("tactic_id", 0);
+        const json red_tactic_condition = NormalizeTaskTacticCondition(task, "red_tactic_condition", legacy_tactic_id);
+        const json blue_tactic_condition = NormalizeTaskTacticCondition(task, "blue_tactic_condition", legacy_tactic_id);
+        const int red_tactic_id = ResolveTacticId(red_tactic_condition, legacy_tactic_id);
+        const int blue_tactic_id = ResolveTacticId(blue_tactic_condition, legacy_tactic_id);
         const int task_number = count + 1;
 
         const auto red_units = ParseUnits7D(task["initial_state"]["red_features"]);
         const auto blue_units = ParseUnits7D(task["initial_state"]["blue_features"]);
+        const json sampling_meta = NormalizeTaskSamplingMeta(
+            task,
+            red_tactic_condition,
+            blue_tactic_condition,
+            red_units.size(),
+            blue_units.size());
         const auto task_started = std::chrono::steady_clock::now();
 
         // ============================================================
@@ -741,7 +1350,8 @@ int main() {
         std::cout
             << "[TASK " << task_number << "/" << total_tasks << "] starting"
             << " | task_id=" << task_id
-            << " | tactic=" << tactic_id
+            << " | red_tactic=" << red_tactic_id
+            << " | blue_tactic=" << blue_tactic_id
             << " | replay=" << (write_replay ? "on" : "off")
             << std::endl;
 
@@ -749,7 +1359,11 @@ int main() {
         const BattleOutcome battle = RunTactic(
             red_units,
             blue_units,
-            tactic_id,
+            red_tactic_id,
+            blue_tactic_id,
+            red_tactic_condition,
+            blue_tactic_condition,
+            sampling_meta,
             write_replay,
             count,
             task_id,
@@ -776,13 +1390,17 @@ int main() {
         }
 
         fout << ep.dump() << "\n";
+        for (const auto& row : battle.rollout_rows) {
+            rollout_fout << row.dump() << "\n";
+        }
         ++count;
 
         std::cout
             << "[TASK " << count << "/" << total_tasks << "] "
             << "completed"
             << " | task_id=" << task_id
-            << " | tactic=" << tactic_id
+            << " | red_tactic=" << red_tactic_id
+            << " | blue_tactic=" << blue_tactic_id
             << " | red_units=" << red_units.size()
             << " | blue_units=" << blue_units.size()
             << " | red_win=" << battle.red_win

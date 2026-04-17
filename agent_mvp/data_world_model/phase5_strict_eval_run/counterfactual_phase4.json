@@ -1,0 +1,197 @@
+{
+  "data_dir": "D:\\sky\\Projects\\state-transition 6v6 + eval agent\\agent_mvp\\data_world_model\\phase4_same_init",
+  "loaded_splits": [
+    "train",
+    "val",
+    "test"
+  ],
+  "horizons": [
+    "20",
+    "terminal"
+  ],
+  "state_step": 0,
+  "num_records": 16002,
+  "num_prediction_records": 16002,
+  "num_counterfactual_groups": 2,
+  "num_counterfactual_pairs": 12,
+  "metrics": {
+    "trajectory_red_alive_ratio": {
+      "num_pairs": 12,
+      "num_signal_pairs": 3,
+      "delta_mae": 0.12546715637048086,
+      "mean_true_abs_delta": 0.125,
+      "mean_pred_abs_delta": 0.0004671563704808553,
+      "sign_accuracy_on_signal_pairs": 0.0
+    },
+    "trajectory_blue_alive_ratio": {
+      "num_pairs": 12,
+      "num_signal_pairs": 0,
+      "delta_mae": 0.0032164442042509713,
+      "mean_true_abs_delta": 0.0,
+      "mean_pred_abs_delta": 0.0032164442042509713,
+      "sign_accuracy_on_signal_pairs": null
+    },
+    "trajectory_red_mean_missile": {
+      "num_pairs": 12,
+      "num_signal_pairs": 3,
+      "delta_mae": 0.4029264549414317,
+      "mean_true_abs_delta": 0.375,
+      "mean_pred_abs_delta": 0.03070939580599467,
+      "sign_accuracy_on_signal_pairs": 0.3333333333333333
+    },
+    "trajectory_blue_mean_missile": {
+      "num_pairs": 12,
+      "num_signal_pairs": 6,
+      "delta_mae": 0.7312422394752502,
+      "mean_true_abs_delta": 0.7083333333333334,
+      "mean_pred_abs_delta": 0.0395776629447937,
+      "sign_accuracy_on_signal_pairs": 0.3333333333333333
+    },
+    "terminal_red_win_prob": {
+      "num_pairs": 12,
+      "num_signal_pairs": 8,
+      "delta_mae": 0.6666668156782786,
+      "mean_true_abs_delta": 0.6666666666666666,
+      "mean_pred_abs_delta": 1.4901161193847656e-07,
+      "sign_accuracy_on_signal_pairs": 0.0
+    },
+    "terminal_red_alive_ratio": {
+      "num_pairs": 12,
+      "num_signal_pairs": 6,
+      "delta_mae": 0.2688252826531728,
+      "mean_true_abs_delta": 0.25,
+      "mean_pred_abs_delta": 0.01882528265317281,
+      "sign_accuracy_on_signal_pairs": 0.0
+    },
+    "terminal_blue_alive_ratio": {
+      "num_pairs": 12,
+      "num_signal_pairs": 0,
+      "delta_mae": 0.009014738102753958,
+      "mean_true_abs_delta": 0.0,
+      "mean_pred_abs_delta": 0.009014738102753958,
+      "sign_accuracy_on_signal_pairs": null
+    },
+    "terminal_red_mean_missile": {
+      "num_pairs": 12,
+      "num_signal_pairs": 6,
+      "delta_mae": 0.7620317836602529,
+      "mean_true_abs_delta": 0.75,
+      "mean_pred_abs_delta": 0.014337946971257528,
+      "sign_accuracy_on_signal_pairs": 0.3333333333333333
+    },
+    "terminal_blue_mean_missile": {
+      "num_pairs": 12,
+      "num_signal_pairs": 12,
+      "delta_mae": 1.4476256767908733,
+      "mean_true_abs_delta": 1.4166666666666667,
+      "mean_pred_abs_delta": 0.09805162747701009,
+      "sign_accuracy_on_signal_pairs": 0.3333333333333333
+    }
+  },
+  "group_examples": [
+    {
+      "state_signature": "18590986199d8e5396cc64ad752bbaa5817dfded",
+      "horizon": "20",
+      "state_step": 0,
+      "num_variants": 4,
+      "variants": [
+        {
+          "episode_id": "phase4_rl_2_vs_rule_1",
+          "split_name": "test",
+          "tactic_combo_key": "rl_2__rule_1",
+          "pred_target_red_alive_ratio": 0.9998049139976501,
+          "true_target_red_alive_ratio": 1.0,
+          "pred_target_blue_alive_ratio": 0.998099148273468,
+          "true_target_blue_alive_ratio": 1.0,
+          "pred_red_win_prob": 0.9999997615814209,
+          "true_red_win": 0.0
+        },
+        {
+          "episode_id": "phase4_rl_4_vs_rule_1",
+          "split_name": "val",
+          "tactic_combo_key": "rl_4__rule_1",
+          "pred_target_red_alive_ratio": 0.9998106956481934,
+          "true_target_red_alive_ratio": 1.0,
+          "pred_target_blue_alive_ratio": 0.9980325698852539,
+          "true_target_blue_alive_ratio": 1.0,
+          "pred_red_win_prob": 0.9999997615814209,
+          "true_red_win": 0.0
+        },
+        {
+          "episode_id": "phase4_rule_1_vs_rule_1",
+          "split_name": "train",
+          "tactic_combo_key": "rule_1__rule_1",
+          "pred_target_red_alive_ratio": 0.9997857213020325,
+          "true_target_red_alive_ratio": 1.0,
+          "pred_target_blue_alive_ratio": 0.9982552528381348,
+          "true_target_blue_alive_ratio": 1.0,
+          "pred_red_win_prob": 0.9999996423721313,
+          "true_red_win": 1.0
+        },
+        {
+          "episode_id": "phase4_rule_3_vs_rule_1",
+          "split_name": "train",
+          "tactic_combo_key": "rule_3__rule_1",
+          "pred_target_red_alive_ratio": 0.9997923374176025,
+          "true_target_red_alive_ratio": 1.0,
+          "pred_target_blue_alive_ratio": 0.9981983304023743,
+          "true_target_blue_alive_ratio": 1.0,
+          "pred_red_win_prob": 0.9999996423721313,
+          "true_red_win": 1.0
+        }
+      ]
+    },
+    {
+      "state_signature": "18590986199d8e5396cc64ad752bbaa5817dfded",
+      "horizon": "terminal",
+      "state_step": 0,
+      "num_variants": 4,
+      "variants": [
+        {
+          "episode_id": "phase4_rl_2_vs_rule_1",
+          "split_name": "test",
+          "tactic_combo_key": "rl_2__rule_1",
+          "pred_target_red_alive_ratio": 0.9768393039703369,
+          "true_target_red_alive_ratio": 0.5,
+          "pred_target_blue_alive_ratio": 0.05578542500734329,
+          "true_target_blue_alive_ratio": 0.5,
+          "pred_red_win_prob": 0.9999992847442627,
+          "true_red_win": 0.0
+        },
+        {
+          "episode_id": "phase4_rl_4_vs_rule_1",
+          "split_name": "val",
+          "tactic_combo_key": "rl_4__rule_1",
+          "pred_target_red_alive_ratio": 0.9772255420684814,
+          "true_target_red_alive_ratio": 0.5,
+          "pred_target_blue_alive_ratio": 0.05315518006682396,
+          "true_target_blue_alive_ratio": 0.5,
+          "pred_red_win_prob": 0.9999992847442627,
+          "true_red_win": 0.0
+        },
+        {
+          "episode_id": "phase4_rule_1_vs_rule_1",
+          "split_name": "train",
+          "tactic_combo_key": "rule_1__rule_1",
+          "pred_target_red_alive_ratio": 0.9756553769111633,
+          "true_target_red_alive_ratio": 1.0,
+          "pred_target_blue_alive_ratio": 0.06408523768186569,
+          "true_target_blue_alive_ratio": 0.5,
+          "pred_red_win_prob": 0.999998927116394,
+          "true_red_win": 1.0
+        },
+        {
+          "episode_id": "phase4_rule_3_vs_rule_1",
+          "split_name": "train",
+          "tactic_combo_key": "rule_3__rule_1",
+          "pred_target_red_alive_ratio": 0.9760314226150513,
+          "true_target_red_alive_ratio": 0.5,
+          "pred_target_blue_alive_ratio": 0.06082535162568092,
+          "true_target_blue_alive_ratio": 0.5,
+          "pred_red_win_prob": 0.9999990463256836,
+          "true_red_win": 1.0
+        }
+      ]
+    }
+  ]
+}

@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstring>
 #include <cstdio>
 #include <limits>
 #include <sstream>
@@ -21,8 +22,58 @@ constexpr int kMissionCompletionHoldSteps = 20;
 constexpr double kFireReadyHoldTimeoutSteps = 45.0;
 constexpr double kInvalidThreatDistance = 1.0e12;
 
+enum class TacticFlavor {
+    RuleStandoff = 0,
+    RulePress,
+    RlCoordinated,
+    RlSkirmish,
+};
+
 double ClampTo(double v, double lo, double hi) {
     return std::max(lo, std::min(hi, v));
+}
+
+bool IsRuleFamily(int tactic_id) {
+    return (std::abs(tactic_id) % 2) == 1;
+}
+
+int ResolveFamilyVariantIndex(int tactic_id) {
+    const int normalized = std::max(1, std::abs(tactic_id));
+    if ((normalized % 2) == 1) {
+        return ((normalized - 1) / 2) % 2;
+    }
+    return ((normalized / 2) - 1) % 2;
+}
+
+TacticFlavor ResolveTacticFlavor(int tactic_id) {
+    if (IsRuleFamily(tactic_id)) {
+        return (ResolveFamilyVariantIndex(tactic_id) == 0)
+            ? TacticFlavor::RuleStandoff
+            : TacticFlavor::RulePress;
+    }
+    return (ResolveFamilyVariantIndex(tactic_id) == 0)
+        ? TacticFlavor::RlCoordinated
+        : TacticFlavor::RlSkirmish;
+}
+
+const char* TacticFlavorName(TacticFlavor flavor) {
+    switch (flavor) {
+    case TacticFlavor::RuleStandoff:
+        return "rule_standoff";
+    case TacticFlavor::RulePress:
+        return "rule_press";
+    case TacticFlavor::RlCoordinated:
+        return "rl_coordinated";
+    case TacticFlavor::RlSkirmish:
+        return "rl_skirmish";
+    default:
+        return "unknown";
+    }
+}
+
+double PlaneSensorRangeMeters(const PlaneState_S& plane) {
+    const double range = (plane._radar_all_range > 0.0) ? plane._radar_all_range : plane._radar_range;
+    return std::max(0.0, range);
 }
 
 double GeoDistance3DMeters(const PlaneState_S& a, const MissileState_S& b) {
@@ -123,16 +174,17 @@ TeamTacticController::TacticProfile BuildAdaptiveTacticProfile(
         target_point.lon,
         target_point.lat);
     const double distance_deg = distance_m / 111000.0;
+    const TacticFlavor flavor = ResolveTacticFlavor(tactic_id);
     const double avg_sensor_m = ComputeAverageSensorRangeMeters(
         planes,
         count,
         attack_plane_ids,
-        ((tactic_id % 2) == 0) ? 120000.0 : 80000.0);
+        IsRuleFamily(tactic_id) ? 80000.0 : 120000.0);
 
     TeamTacticController::TacticProfile profile;
     profile.side = ChooseAdaptiveSurroundSide(selection_anchor, target_point);
 
-    if ((tactic_id % 2) == 0) {
+    if (!IsRuleFamily(tactic_id)) {
         profile.surround_arc_degrees = ClampTo(45.0 + distance_m / 2500.0, 50.0, 95.0);
         profile.surround_radius = ClampTo(distance_deg * 0.35, 0.20, 0.75);
         profile.mid_radius_ratio = ClampTo(1.08 + distance_deg * 0.08, 1.08, 1.25);
@@ -148,11 +200,175 @@ TeamTacticController::TacticProfile BuildAdaptiveTacticProfile(
         profile.round_range_interval = ClampTo(profile.first_fire_range * 0.15, 8000.0, 12000.0);
     }
 
+    switch (flavor) {
+    case TacticFlavor::RuleStandoff:
+        profile.surround_arc_degrees = ClampTo(profile.surround_arc_degrees + 22.0, 120.0, 180.0);
+        profile.surround_radius = ClampTo(profile.surround_radius * 1.12, 0.16, 0.72);
+        profile.mid_radius_ratio = ClampTo(profile.mid_radius_ratio + 0.05, 1.10, 1.28);
+        profile.altitude = ClampTo(profile.altitude + 700.0, 5000.0, 9000.0);
+        profile.first_fire_range = ClampTo(profile.first_fire_range * 1.12, 40000.0, 95000.0);
+        profile.round_range_interval = ClampTo(profile.round_range_interval * 0.90, 7000.0, 12000.0);
+        profile.attack_reposition_distance_m = 18000.0;
+        profile.attack_hold_range_ratio = 0.90;
+        profile.attack_cruise_speed_mps = 420.0;
+        profile.attack_commit_speed_mps = 455.0;
+        profile.fire_floor_range_m = 30000.0;
+        profile.fire_cooldown_steps = 32;
+        profile.sync_wait_timeout_steps = 60;
+        profile.decoy_forward_base_m = 16000.0;
+        profile.decoy_forward_step_m = 3000.0;
+        profile.decoy_lateral_base_m = 26000.0;
+        profile.decoy_lateral_step_m = 3500.0;
+        profile.decoy_warn_speed_mps = 295.0;
+        profile.decoy_cruise_speed_mps = 345.0;
+        profile.attacker_warn_streak_steps = 28;
+        profile.attacker_warn_distance_m = 32000.0;
+        profile.decoy_warn_streak_steps = 20;
+        profile.decoy_warn_distance_m = 42000.0;
+        profile.missile_dodge_forward_m = -12000.0;
+        profile.missile_dodge_lateral_m = 34000.0;
+        profile.missile_dodge_altitude_delta_m = 1400.0;
+        profile.missile_dodge_duration_steps = 75;
+        profile.close_missile_dodge_duration_steps = 105;
+        profile.warn_dodge_forward_m = -6000.0;
+        profile.warn_dodge_lateral_m = 22000.0;
+        profile.warn_dodge_altitude_delta_m = 900.0;
+        profile.warn_dodge_duration_steps = 42;
+        profile.survival_dodge_speed_mps = 240.0;
+        profile.missile_dodge_speed_mps = 285.0;
+        profile.warn_dodge_speed_mps = 315.0;
+        break;
+    case TacticFlavor::RulePress:
+        profile.surround_arc_degrees = ClampTo(profile.surround_arc_degrees - 32.0, 70.0, 150.0);
+        profile.surround_radius = ClampTo(profile.surround_radius * 0.82, 0.10, 0.48);
+        profile.mid_radius_ratio = ClampTo(profile.mid_radius_ratio - 0.05, 1.02, 1.18);
+        profile.altitude = ClampTo(profile.altitude - 400.0, 4200.0, 7800.0);
+        profile.first_fire_range = ClampTo(profile.first_fire_range * 0.82, 26000.0, 70000.0);
+        profile.round_range_interval = ClampTo(profile.round_range_interval * 1.15, 9000.0, 15000.0);
+        profile.attack_reposition_distance_m = 8500.0;
+        profile.attack_hold_range_ratio = 0.55;
+        profile.attack_cruise_speed_mps = 470.0;
+        profile.attack_commit_speed_mps = 510.0;
+        profile.fire_floor_range_m = 20000.0;
+        profile.fire_cooldown_steps = 18;
+        profile.sync_wait_timeout_steps = 18;
+        profile.opportunistic_single_ready_fire = true;
+        profile.decoy_forward_base_m = 22000.0;
+        profile.decoy_forward_step_m = 5000.0;
+        profile.decoy_lateral_base_m = 10000.0;
+        profile.decoy_lateral_step_m = 1500.0;
+        profile.decoy_warn_speed_mps = 370.0;
+        profile.decoy_cruise_speed_mps = 425.0;
+        profile.attacker_warn_streak_steps = 50;
+        profile.attacker_warn_distance_m = 22000.0;
+        profile.decoy_warn_streak_steps = 34;
+        profile.decoy_warn_distance_m = 28000.0;
+        profile.missile_dodge_forward_m = -4000.0;
+        profile.missile_dodge_lateral_m = 20000.0;
+        profile.missile_dodge_altitude_delta_m = 900.0;
+        profile.missile_dodge_duration_steps = 50;
+        profile.close_missile_dodge_duration_steps = 70;
+        profile.warn_dodge_forward_m = -2000.0;
+        profile.warn_dodge_lateral_m = 12000.0;
+        profile.warn_dodge_altitude_delta_m = 400.0;
+        profile.warn_dodge_duration_steps = 25;
+        profile.survival_dodge_speed_mps = 270.0;
+        profile.missile_dodge_speed_mps = 320.0;
+        profile.warn_dodge_speed_mps = 355.0;
+        break;
+    case TacticFlavor::RlCoordinated:
+        profile.surround_arc_degrees = ClampTo(profile.surround_arc_degrees + 10.0, 60.0, 110.0);
+        profile.surround_radius = ClampTo(profile.surround_radius * 1.08, 0.22, 0.82);
+        profile.mid_radius_ratio = ClampTo(profile.mid_radius_ratio + 0.03, 1.10, 1.30);
+        profile.altitude = ClampTo(profile.altitude + 600.0, 8500.0, 12500.0);
+        profile.first_fire_range = ClampTo(profile.first_fire_range * 1.08, 55000.0, 125000.0);
+        profile.round_range_interval = ClampTo(profile.round_range_interval * 0.92, 9000.0, 16000.0);
+        profile.attack_reposition_distance_m = 15500.0;
+        profile.attack_hold_range_ratio = 0.85;
+        profile.attack_cruise_speed_mps = 435.0;
+        profile.attack_commit_speed_mps = 475.0;
+        profile.fire_floor_range_m = 28000.0;
+        profile.fire_cooldown_steps = 28;
+        profile.sync_wait_timeout_steps = 68;
+        profile.decoy_forward_base_m = 19000.0;
+        profile.decoy_forward_step_m = 3500.0;
+        profile.decoy_lateral_base_m = 22000.0;
+        profile.decoy_lateral_step_m = 2500.0;
+        profile.decoy_warn_speed_mps = 310.0;
+        profile.decoy_cruise_speed_mps = 360.0;
+        profile.attacker_warn_streak_steps = 32;
+        profile.attacker_warn_distance_m = 30000.0;
+        profile.decoy_warn_streak_steps = 24;
+        profile.decoy_warn_distance_m = 38000.0;
+        profile.missile_dodge_forward_m = -10000.0;
+        profile.missile_dodge_lateral_m = 30000.0;
+        profile.missile_dodge_altitude_delta_m = 1300.0;
+        profile.missile_dodge_duration_steps = 70;
+        profile.close_missile_dodge_duration_steps = 100;
+        profile.warn_dodge_forward_m = -5000.0;
+        profile.warn_dodge_lateral_m = 20000.0;
+        profile.warn_dodge_altitude_delta_m = 700.0;
+        profile.warn_dodge_duration_steps = 38;
+        profile.survival_dodge_speed_mps = 250.0;
+        profile.missile_dodge_speed_mps = 290.0;
+        profile.warn_dodge_speed_mps = 320.0;
+        break;
+    case TacticFlavor::RlSkirmish:
+        profile.surround_arc_degrees = ClampTo(profile.surround_arc_degrees - 12.0, 40.0, 95.0);
+        profile.surround_radius = ClampTo(profile.surround_radius * 0.88, 0.18, 0.70);
+        profile.mid_radius_ratio = ClampTo(profile.mid_radius_ratio - 0.04, 1.04, 1.22);
+        profile.altitude = ClampTo(profile.altitude - 1200.0, 6500.0, 10500.0);
+        profile.first_fire_range = ClampTo(profile.first_fire_range * 0.88, 42000.0, 105000.0);
+        profile.round_range_interval = ClampTo(profile.round_range_interval * 1.10, 9000.0, 17000.0);
+        profile.attack_reposition_distance_m = 9500.0;
+        profile.attack_hold_range_ratio = 0.60;
+        profile.attack_cruise_speed_mps = 465.0;
+        profile.attack_commit_speed_mps = 515.0;
+        profile.fire_floor_range_m = 23000.0;
+        profile.fire_cooldown_steps = 18;
+        profile.sync_wait_timeout_steps = 12;
+        profile.opportunistic_single_ready_fire = true;
+        profile.decoy_forward_base_m = 24000.0;
+        profile.decoy_forward_step_m = 4500.0;
+        profile.decoy_lateral_base_m = 12000.0;
+        profile.decoy_lateral_step_m = 1500.0;
+        profile.decoy_warn_speed_mps = 350.0;
+        profile.decoy_cruise_speed_mps = 410.0;
+        profile.attacker_warn_streak_steps = 52;
+        profile.attacker_warn_distance_m = 21000.0;
+        profile.decoy_warn_streak_steps = 36;
+        profile.decoy_warn_distance_m = 26000.0;
+        profile.missile_dodge_forward_m = -5000.0;
+        profile.missile_dodge_lateral_m = 21000.0;
+        profile.missile_dodge_altitude_delta_m = 900.0;
+        profile.missile_dodge_duration_steps = 48;
+        profile.close_missile_dodge_duration_steps = 68;
+        profile.warn_dodge_forward_m = -2500.0;
+        profile.warn_dodge_lateral_m = 12000.0;
+        profile.warn_dodge_altitude_delta_m = 450.0;
+        profile.warn_dodge_duration_steps = 24;
+        profile.survival_dodge_speed_mps = 265.0;
+        profile.missile_dodge_speed_mps = 325.0;
+        profile.warn_dodge_speed_mps = 360.0;
+        break;
+    }
+
     if (attack_plane_ids.size() <= 1) {
         profile.surround_arc_degrees = std::min(profile.surround_arc_degrees, 80.0);
         profile.surround_radius *= 0.75;
         profile.mid_radius_ratio = std::min(profile.mid_radius_ratio, 1.12);
     }
+
+    profile.attack_hold_range_ratio = ClampTo(profile.attack_hold_range_ratio, 0.45, 0.95);
+    profile.attack_reposition_distance_m = ClampTo(profile.attack_reposition_distance_m, 8000.0, 22000.0);
+    profile.fire_floor_range_m = ClampTo(profile.fire_floor_range_m, 18000.0, 42000.0);
+    profile.attack_cruise_speed_mps = ClampTo(profile.attack_cruise_speed_mps, 380.0, 500.0);
+    profile.attack_commit_speed_mps = ClampTo(profile.attack_commit_speed_mps, 420.0, 540.0);
+    profile.decoy_warn_speed_mps = ClampTo(profile.decoy_warn_speed_mps, 260.0, 420.0);
+    profile.decoy_cruise_speed_mps = ClampTo(profile.decoy_cruise_speed_mps, 300.0, 440.0);
+    profile.survival_dodge_speed_mps = ClampTo(profile.survival_dodge_speed_mps, 220.0, 320.0);
+    profile.missile_dodge_speed_mps = ClampTo(profile.missile_dodge_speed_mps, 250.0, 340.0);
+    profile.warn_dodge_speed_mps = ClampTo(profile.warn_dodge_speed_mps, 280.0, 380.0);
 
     return profile;
 }
@@ -300,14 +516,35 @@ GeoPoint TeamTacticController::ComputeTeamAnchorFromPlanes(
 }
 
 int TeamTacticController::FindNearestEnemyToAnchor(const PlaneState_S* planes, int count, const GeoPoint& anchor) const {
+    const TacticFlavor flavor = ResolveTacticFlavor(tactic_id_);
     int best_plane_id = -1;
+    double best_score = std::numeric_limits<double>::max();
     double best_dist = std::numeric_limits<double>::max();
     for (int i = 0; i < count; ++i) {
         if (planes[i]._team == team_ || planes[i]._isAlive <= 0) {
             continue;
         }
         const double d = GeoDistanceMeters(anchor.lon, anchor.lat, planes[i]._longitude, planes[i]._latitude);
-        if (d < best_dist) {
+        const double sensor_range = PlaneSensorRangeMeters(planes[i]);
+        const double missiles = static_cast<double>(std::max(0, planes[i]._missileCount));
+        double score = d;
+        switch (flavor) {
+        case TacticFlavor::RuleStandoff:
+            score = d - missiles * 7000.0 - sensor_range * 0.04;
+            break;
+        case TacticFlavor::RulePress:
+            score = d + missiles * 2000.0;
+            break;
+        case TacticFlavor::RlCoordinated:
+            score = d - missiles * 5500.0 - sensor_range * 0.03;
+            break;
+        case TacticFlavor::RlSkirmish:
+            score = d + missiles * 1500.0 - sensor_range * 0.01;
+            break;
+        }
+
+        if (score < best_score || (std::abs(score - best_score) < 1.0e-6 && d < best_dist)) {
+            best_score = score;
             best_dist = d;
             best_plane_id = planes[i]._planeID;
         }
@@ -520,6 +757,9 @@ void TeamTacticController::RefreshPlan(
     int task_number,
     int total_tasks,
     const char* reason) {
+    const int previous_target_id = plan_.target_id;
+    const bool explicit_retarget =
+        reason != nullptr && std::strcmp(reason, "retarget") == 0;
     GeoPoint team_anchor = ComputeTeamAnchorFromPlanes(
         planes,
         count,
@@ -541,6 +781,10 @@ void TeamTacticController::RefreshPlan(
     }
 
     AssignRoles(planes, count);
+    if ((explicit_retarget && previous_target_id > 0) ||
+        (previous_target_id > 0 && plan_.target_id > 0 && previous_target_id != plan_.target_id)) {
+        ++plan_.retarget_total;
+    }
     const std::vector<int>& anchor_planes = !plan_.primary_attackers.empty() ? plan_.primary_attackers : plan_.team_plane_ids;
     plan_.selection_anchor = ComputeAnchorForPlaneIds(
         planes,
@@ -566,6 +810,7 @@ void TeamTacticController::RefreshPlan(
             << "[TASK " << task_number << "/" << total_tasks << "] adapt"
             << " | team=" << team_name_
             << " | reason=" << reason
+            << " | flavor=" << TacticFlavorName(ResolveTacticFlavor(tactic_id_))
             << " | target=" << plan_.target_id
             << " | attackers=" << plan_.primary_attackers.size()
             << " | decoys=" << plan_.decoys.size()
@@ -679,8 +924,10 @@ GeoPoint TeamTacticController::BuildDecoyPoint(
     const PlaneState_S& target,
     int decoy_index,
     int decoy_count) const {
-    const double toward_target_m = 18000.0 + decoy_index * 4000.0;
-    const double lateral_m = 16000.0 + decoy_count * 2000.0;
+    const double toward_target_m =
+        plan_.profile.decoy_forward_base_m + decoy_index * plan_.profile.decoy_forward_step_m;
+    const double lateral_m =
+        plan_.profile.decoy_lateral_base_m + decoy_count * plan_.profile.decoy_lateral_step_m;
 
     const double mean_lat = (plan_.selection_anchor.lat + target._latitude) * 0.5;
     const double dx_m = (target._longitude - plan_.selection_anchor.lon) * 111000.0 * std::cos(DegToRad(mean_lat));
@@ -703,7 +950,7 @@ void TeamTacticController::ApplyReturnBehavior(PlaneState_S& plane, PlaneControl
         plan_.return_anchor.lon,
         plan_.return_anchor.lat,
         plan_.profile.altitude,
-        400.0,
+        std::max(380.0, plan_.profile.attack_cruise_speed_mps - 20.0),
         dt);
 }
 
@@ -727,13 +974,17 @@ void TeamTacticController::MaybeActivateDodge(
     const bool missile_trigger =
         threat.inbound_missile_count > 0 &&
         threat.nearest_missile_distance_m < kInvalidThreatDistance;
-    const bool radar_trigger = prioritize_survival
-        ? (threat.warning_count > 0 &&
-           state.warning_streak >= 30 &&
-           threat.warning_origin_distance_m <= 35000.0)
-        : (threat.warning_count > 1 &&
-           state.warning_streak >= 40 &&
-           threat.warning_origin_distance_m <= 26000.0);
+    const int radar_warning_count_threshold = prioritize_survival ? 1 : 2;
+    const int radar_warning_streak_steps = prioritize_survival
+        ? plan_.profile.decoy_warn_streak_steps
+        : plan_.profile.attacker_warn_streak_steps;
+    const double radar_warning_distance_m = prioritize_survival
+        ? plan_.profile.decoy_warn_distance_m
+        : plan_.profile.attacker_warn_distance_m;
+    const bool radar_trigger =
+        threat.warning_count >= radar_warning_count_threshold &&
+        state.warning_streak >= radar_warning_streak_steps &&
+        threat.warning_origin_distance_m <= radar_warning_distance_m;
     if (!missile_trigger && !radar_trigger) {
         return;
     }
@@ -760,18 +1011,28 @@ void TeamTacticController::MaybeActivateDodge(
             threat.threat_origin.lon)
         : plane._yaw;
     const double evade_heading = std::fmod(threat_bearing + 90.0 * static_cast<double>(state.dodge.lateral_sign) + 360.0, 360.0);
-    const double forward_m = missile_trigger ? -8000.0 : -4000.0;
-    const double lateral_m = missile_trigger ? 26000.0 : 18000.0;
-    const double altitude_delta = missile_trigger ? 1200.0 : 600.0;
+    const double forward_m = missile_trigger
+        ? plan_.profile.missile_dodge_forward_m
+        : plan_.profile.warn_dodge_forward_m;
+    const double lateral_m = missile_trigger
+        ? plan_.profile.missile_dodge_lateral_m
+        : plan_.profile.warn_dodge_lateral_m;
+    const double altitude_delta = missile_trigger
+        ? plan_.profile.missile_dodge_altitude_delta_m
+        : plan_.profile.warn_dodge_altitude_delta_m;
 
     state.dodge.active = true;
     state.dodge.missile_driven = missile_trigger;
     state.dodge.activation_step = step;
     state.dodge.prioritize_survival = prioritize_survival;
     state.dodge.remaining_steps = missile_trigger
-        ? ((threat.nearest_missile_distance_m < 18000.0) ? 90 : 60)
-        : 35;
-    state.dodge.desired_speed = prioritize_survival ? 260.0 : (missile_trigger ? 300.0 : 340.0);
+        ? ((threat.nearest_missile_distance_m < 18000.0)
+            ? plan_.profile.close_missile_dodge_duration_steps
+            : plan_.profile.missile_dodge_duration_steps)
+        : plan_.profile.warn_dodge_duration_steps;
+    state.dodge.desired_speed = prioritize_survival
+        ? plan_.profile.survival_dodge_speed_mps
+        : (missile_trigger ? plan_.profile.missile_dodge_speed_mps : plan_.profile.warn_dodge_speed_mps);
     state.dodge.desired_altitude = ClampTo(
         plane._altitude + ((state.dodge.lateral_sign > 0) ? altitude_delta : -altitude_delta),
         3500.0,
@@ -785,6 +1046,7 @@ void TeamTacticController::MaybeActivateDodge(
             LatitudeDegreesForMeters(
                 std::sin(DegToRad(evade_heading)) * lateral_m + std::sin(DegToRad(threat_bearing)) * forward_m));
     state.dodge.lateral_sign *= -1;
+    ++state.dodge_trigger_count;
 
     if (!was_active || stronger_missile_threat || step - state.last_dodge_log_step >= 30) {
         state.last_dodge_log_step = step;
@@ -842,10 +1104,12 @@ void TeamTacticController::ApplyDecoyBehavior(
         decoy_point.lon,
         decoy_point.lat,
         std::max(4200.0, plan_.profile.altitude - 700.0),
-        (state.last_threat.warning_count > 0) ? 330.0 : 390.0,
+        (state.last_threat.warning_count > 0)
+            ? plan_.profile.decoy_warn_speed_mps
+            : plan_.profile.decoy_cruise_speed_mps,
         dt);
     if (state.last_threat.warning_count > 0) {
-        plane._throttle = std::min(plane._throttle, 46.0);
+        plane._throttle = std::min(plane._throttle, plan_.profile.decoy_warn_speed_mps <= 320.0 ? 42.0 : 52.0);
     }
 }
 
@@ -872,14 +1136,15 @@ void TeamTacticController::ApplyAttackBehavior(
         --state.cooldown_steps;
     }
 
-    if (dist_to_attack_point > 12000.0 && !HasCapturedTarget(plane, plan_.target_id) &&
-        dist_to_target > plan_.profile.first_fire_range * 0.75) {
+    if (dist_to_attack_point > plan_.profile.attack_reposition_distance_m &&
+        !HasCapturedTarget(plane, plan_.target_id) &&
+        dist_to_target > plan_.profile.first_fire_range * plan_.profile.attack_hold_range_ratio) {
         state.attack_controller.run_control(
             plane,
             attack_point.lon,
             attack_point.lat,
             plan_.profile.altitude,
-            450.0,
+            plan_.profile.attack_cruise_speed_mps,
             dt);
     } else {
         state.attack_controller.run_control(
@@ -887,7 +1152,7 @@ void TeamTacticController::ApplyAttackBehavior(
             target._longitude,
             target._latitude,
             plan_.profile.altitude,
-            485.0,
+            plan_.profile.attack_commit_speed_mps,
             dt);
     }
 
@@ -946,7 +1211,7 @@ void TeamTacticController::HandleVolleyFire(
             target._longitude,
             target._latitude);
         const double fire_threshold = std::max(
-            22000.0,
+            plan_.profile.fire_floor_range_m,
             plan_.profile.first_fire_range - plan_.profile.round_range_interval * state.fired_rounds);
         if (distance <= fire_threshold && CanPlaneFireNow(*plane, state, plan_.target_id, fire_threshold)) {
             ready_planes.push_back({plane_id, distance});
@@ -983,7 +1248,14 @@ void TeamTacticController::HandleVolleyFire(
             other_id == -1 ||
             plan_.plane_states[other_id].dodge.active ||
             plan_.plane_states[other_id].last_threat.severe;
-        allow_single_ready_fire = other_compromised || plan_.sync_wait_steps >= static_cast<int>(kFireReadyHoldTimeoutSteps);
+        allow_single_ready_fire =
+            plan_.profile.opportunistic_single_ready_fire ||
+            other_compromised ||
+            plan_.sync_wait_steps >= std::max(
+                1,
+                std::min(
+                    plan_.profile.sync_wait_timeout_steps,
+                    static_cast<int>(kFireReadyHoldTimeoutSteps * 2.0)));
     }
 
     if (ready_planes.empty() || !allow_single_ready_fire) {
@@ -1001,7 +1273,7 @@ void TeamTacticController::HandleVolleyFire(
         plane->_targetID = plan_.target_id;
         plane->_isShoot = true;
         ++state.fired_rounds;
-        state.cooldown_steps = 25;
+        state.cooldown_steps = plan_.profile.fire_cooldown_steps;
 
         std::cout
             << "[TACTIC] team=" << team_name_
@@ -1126,6 +1398,28 @@ TeamTelemetry TeamTacticController::GetTelemetry(const PlaneState_S* planes, int
     telemetry.primary_attacker_count = static_cast<int>(plan_.primary_attackers.size());
     telemetry.decoy_count = static_cast<int>(plan_.decoys.size());
     telemetry.fired_total = std::max(0, plan_.initial_team_missiles - SumTeamMissiles(planes, count));
+    telemetry.retarget_total = plan_.retarget_total;
+    for (int i = 0; i < count; ++i) {
+        if (planes[i]._team != team_ || planes[i]._isAlive <= 0) {
+            continue;
+        }
+        const int warning_count = std::max(0, planes[i]._recvRadarWarnCount);
+        if (warning_count > 0) {
+            ++telemetry.warning_plane_count;
+        }
+        telemetry.warning_max_count = std::max(telemetry.warning_max_count, warning_count);
+        if (planes[i]._raderCaptureCount > 0) {
+            ++telemetry.contact_plane_count;
+        }
+
+        const auto state_it = plan_.plane_states.find(planes[i]._planeID);
+        if (state_it != plan_.plane_states.end()) {
+            telemetry.dodge_trigger_total += state_it->second.dodge_trigger_count;
+            telemetry.warning_max_count = std::max(
+                telemetry.warning_max_count,
+                std::max(0, state_it->second.last_threat.warning_count));
+        }
+    }
     return telemetry;
 }
 

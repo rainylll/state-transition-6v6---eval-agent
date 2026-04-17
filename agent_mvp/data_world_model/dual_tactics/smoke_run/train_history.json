@@ -1,0 +1,14 @@
+{
+  "history": [
+    {
+      "epoch": 1,
+      "train_loss": 0.2765142114107744,
+      "loss_total": 0.24195266638239163,
+      "loss_trajectory": 0.07769652153520296,
+      "loss_terminal": 0.16332548413439035,
+      "loss_consistency": 0.004653303867458241,
+      "win_accuracy": 1.0,
+      "num_samples": 1953
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "loss_total": 0.32484796194569243,
+  "loss_trajectory": 0.17325572053150595,
+  "loss_terminal": 0.15111929886692488,
+  "loss_consistency": 0.0023647166500276383,
+  "win_accuracy": 1.0,
+  "num_samples": 1893
+}

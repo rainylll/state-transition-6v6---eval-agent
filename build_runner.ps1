@@ -85,8 +85,10 @@ $RunnerExe = Join-Path $BuildDir "bin\$Configuration\EncounterBatchRunner.exe"
 $TasksSource = Join-Path $RepoRoot "agent_mvp\data_real\raw\simulation_tasks.jsonl"
 $TasksLocal = Join-Path $RepoRoot "simulation_tasks.jsonl"
 $EpisodesLocal = Join-Path $RepoRoot "episodes.jsonl"
+$RolloutsLocal = Join-Path $RepoRoot "rollouts.jsonl"
 $EpisodesOutDir = Join-Path $RepoRoot "agent_mvp\data_real\raw"
 $EpisodesOut = Join-Path $EpisodesOutDir "episodes.jsonl"
+$RolloutsOut = Join-Path $EpisodesOutDir "rollouts.jsonl"
 $ReplayDir = Join-Path $RepoRoot "agent_mvp\data_real\replays"
 $ReplayCount = 10
 
@@ -160,6 +162,9 @@ if (-not $SkipRun) {
     if (Test-Path $EpisodesLocal) {
         Remove-Item -LiteralPath $EpisodesLocal -Force
     }
+    if (Test-Path $RolloutsLocal) {
+        Remove-Item -LiteralPath $RolloutsLocal -Force
+    }
 
     Copy-Item -LiteralPath $TasksSource -Destination $TasksLocal -Force
     New-Item -ItemType Directory -Path $ReplayDir -Force | Out-Null
@@ -169,6 +174,7 @@ if (-not $SkipRun) {
     Write-Detail "Task count detected: $taskCount"
     Write-Detail "Local runner input: $TasksLocal"
     Write-Detail "Episodes output: $EpisodesOut"
+    Write-Detail "Rollouts output: $RolloutsOut"
     Write-Detail "Replay output dir: $ReplayDir"
 
     Write-Stage "Run EncounterBatchRunner"
@@ -189,12 +195,18 @@ if (-not $SkipRun) {
     if (-not (Test-Path $EpisodesLocal)) {
         throw "Runner finished but episodes.jsonl was not produced at $EpisodesLocal"
     }
+    if (-not (Test-Path $RolloutsLocal)) {
+        throw "Runner finished but rollouts.jsonl was not produced at $RolloutsLocal"
+    }
 
     Write-Stage "Archive episodes.jsonl"
     New-Item -ItemType Directory -Path $EpisodesOutDir -Force | Out-Null
     Move-Item -LiteralPath $EpisodesLocal -Destination $EpisodesOut -Force
     Write-Host "Episodes archived to: $EpisodesOut" -ForegroundColor Green
     Write-Detail "Episode line count: $(Get-TextLineCount -Path $EpisodesOut)"
+    Move-Item -LiteralPath $RolloutsLocal -Destination $RolloutsOut -Force
+    Write-Host "Rollouts archived to: $RolloutsOut" -ForegroundColor Green
+    Write-Detail "Rollout line count: $(Get-TextLineCount -Path $RolloutsOut)"
     Write-Detail "Replay file count: $((Get-ChildItem -Path $ReplayDir -Filter *.acmi -File -ErrorAction SilentlyContinue | Measure-Object).Count)"
 } else {
     Write-Stage "Skip run"

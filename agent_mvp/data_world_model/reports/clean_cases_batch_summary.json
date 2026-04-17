@@ -1,0 +1,123 @@
+{
+  "num_cases": 3,
+  "num_clean_cases": 3,
+  "cases": [
+    {
+      "episode_id": "sim_task_00001",
+      "pairing": {
+        "episode_id_match": true,
+        "state_step": 0,
+        "horizon": 1,
+        "initial_state_exact_match": true,
+        "red_tactic_id_real": 1,
+        "red_tactic_id_seed": 1,
+        "blue_tactic_id_real": 1,
+        "blue_tactic_id_seed": 1,
+        "red_tactic_id_match": true,
+        "blue_tactic_id_match": true
+      },
+      "is_clean_case": true,
+      "trajectory": {
+        "mean_lon_abs_err_deg": 7.048028231308472,
+        "mean_lat_abs_err_deg": 1.0716141646160933,
+        "mean_alt_abs_err_m": 468.56326946904386,
+        "mean_speed_abs_err_mps": 206.67238920286974,
+        "mean_heading_abs_err_deg": 54.106593345312234,
+        "alive_match_ratio": 1.0
+      },
+      "events": {
+        "matched_event_count": 0,
+        "likely_event_count": 5,
+        "missing_event_in_pred": [
+          "termination"
+        ]
+      },
+      "terminal": {
+        "red_win_match": false,
+        "termination_reason_match": false,
+        "red_alive_delta": 1,
+        "blue_alive_delta": 0,
+        "red_missile_delta": -1,
+        "blue_missile_delta": 1
+      }
+    },
+    {
+      "episode_id": "sim_task_00002",
+      "pairing": {
+        "episode_id_match": true,
+        "state_step": 0,
+        "horizon": 1,
+        "initial_state_exact_match": true,
+        "red_tactic_id_real": 1,
+        "red_tactic_id_seed": 1,
+        "blue_tactic_id_real": 1,
+        "blue_tactic_id_seed": 1,
+        "red_tactic_id_match": true,
+        "blue_tactic_id_match": true
+      },
+      "is_clean_case": true,
+      "trajectory": {
+        "mean_lon_abs_err_deg": 7.368439597454608,
+        "mean_lat_abs_err_deg": 3.7358468214154614,
+        "mean_alt_abs_err_m": 903.7339208323868,
+        "mean_speed_abs_err_mps": 263.1114245472247,
+        "mean_heading_abs_err_deg": 57.731025443501785,
+        "alive_match_ratio": 1.0
+      },
+      "events": {
+        "matched_event_count": 0,
+        "likely_event_count": 1,
+        "missing_event_in_pred": [
+          "termination"
+        ]
+      },
+      "terminal": {
+        "red_win_match": true,
+        "termination_reason_match": false,
+        "red_alive_delta": 0,
+        "blue_alive_delta": 1,
+        "red_missile_delta": 4,
+        "blue_missile_delta": 1
+      }
+    },
+    {
+      "episode_id": "sim_task_00003",
+      "pairing": {
+        "episode_id_match": true,
+        "state_step": 0,
+        "horizon": 1,
+        "initial_state_exact_match": true,
+        "red_tactic_id_real": 1,
+        "red_tactic_id_seed": 1,
+        "blue_tactic_id_real": 1,
+        "blue_tactic_id_seed": 1,
+        "red_tactic_id_match": true,
+        "blue_tactic_id_match": true
+      },
+      "is_clean_case": true,
+      "trajectory": {
+        "mean_lon_abs_err_deg": 4.325161398119348,
+        "mean_lat_abs_err_deg": 2.3443774104332853,
+        "mean_alt_abs_err_m": 649.178671853659,
+        "mean_speed_abs_err_mps": 207.55429017808967,
+        "mean_heading_abs_err_deg": 96.73159365731803,
+        "alive_match_ratio": 1.0
+      },
+      "events": {
+        "matched_event_count": 0,
+        "likely_event_count": 5,
+        "missing_event_in_pred": [
+          "termination"
+        ]
+      },
+      "terminal": {
+        "red_win_match": true,
+        "termination_reason_match": false,
+        "red_alive_delta": 0,
+        "blue_alive_delta": 1,
+        "red_missile_delta": 3,
+        "blue_missile_delta": -2
+      }
+    }
+  ]
+}

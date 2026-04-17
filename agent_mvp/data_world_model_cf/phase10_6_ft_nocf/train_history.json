@@ -1,0 +1,30 @@
+{
+  "history": [
+    {
+      "epoch": 1,
+      "train_loss": 2.304584097862244,
+      "loss_total": 0.0,
+      "loss_trajectory": 0.0,
+      "loss_terminal": 0.0,
+      "loss_consistency": 0.0,
+      "loss_event": 0.0,
+      "loss_reward": 0.0,
+      "win_accuracy": 0.0,
+      "num_samples": 0
+    },
+    {
+      "phase": "stage2_event_reward",
+      "epoch": 1,
+      "train_loss": 4.111876058578491,
+      "loss_total": 0.0,
+      "loss_trajectory": 0.0,
+      "loss_terminal": 0.0,
+      "loss_consistency": 0.0,
+      "loss_event": 0.0,
+      "loss_reward": 0.0,
+      "win_accuracy": 0.0,
+      "num_samples": 0
+    }
+  ],
+  "counterfactual_history": []
+}

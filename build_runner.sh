@@ -9,8 +9,10 @@ build_dir="$repo_root/build/encounter-runner"
 tasks_source="$repo_root/agent_mvp/data_real/raw/simulation_tasks.jsonl"
 tasks_local="$repo_root/simulation_tasks.jsonl"
 episodes_local="$repo_root/episodes.jsonl"
+rollouts_local="$repo_root/rollouts.jsonl"
 episodes_out_dir="$repo_root/agent_mvp/data_real/raw"
 episodes_out="$episodes_out_dir/episodes.jsonl"
+rollouts_out="$episodes_out_dir/rollouts.jsonl"
 replay_dir="$repo_root/agent_mvp/data_real/replays"
 replay_count=10
 
@@ -127,7 +129,7 @@ if ((skip_run == 0)); then
     exit 1
   fi
 
-  rm -f "$episodes_local"
+  rm -f "$episodes_local" "$rollouts_local"
   cp "$tasks_source" "$tasks_local"
   mkdir -p "$replay_dir" "$episodes_out_dir"
   find "$replay_dir" -maxdepth 1 -type f -name '*.acmi' -delete
@@ -137,6 +139,7 @@ if ((skip_run == 0)); then
   write_detail "Task count detected: $task_count"
   write_detail "Local runner input: $tasks_local"
   write_detail "Episodes output: $episodes_out"
+  write_detail "Rollouts output: $rollouts_out"
   write_detail "Replay output dir: $replay_dir"
 
   write_stage "Run EncounterBatchRunner"
@@ -152,13 +155,21 @@ if ((skip_run == 0)); then
     echo "Runner finished but episodes.jsonl was not produced at $episodes_local" >&2
     exit 1
   fi
+  if [[ ! -f "$rollouts_local" ]]; then
+    echo "Runner finished but rollouts.jsonl was not produced at $rollouts_local" >&2
+    exit 1
+  fi
 
   write_stage "Archive episodes.jsonl"
   mv -f "$episodes_local" "$episodes_out"
+  mv -f "$rollouts_local" "$rollouts_out"
   episode_count="$(wc -l < "$episodes_out" | tr -d '[:space:]')"
+  rollout_count="$(wc -l < "$rollouts_out" | tr -d '[:space:]')"
   replay_file_count="$(find "$replay_dir" -maxdepth 1 -type f -name '*.acmi' | wc -l | tr -d '[:space:]')"
   write_detail "Episodes archived to: $episodes_out"
   write_detail "Episode line count: $episode_count"
+  write_detail "Rollouts archived to: $rollouts_out"
+  write_detail "Rollout line count: $rollout_count"
   write_detail "Replay file count: $replay_file_count"
 else
   write_stage "Skip run"

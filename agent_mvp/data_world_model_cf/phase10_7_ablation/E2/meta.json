@@ -1,0 +1,342 @@
+{
+  "seed": 2026,
+  "epochs": 0,
+  "batch_size": 32,
+  "lr": 0.00025,
+  "device": "cpu",
+  "best_val_loss": Infinity,
+  "train_samples": 205080,
+  "val_samples": 38505,
+  "test_samples": 45180,
+  "ood_samples": 0,
+  "counterfactual_pair_summary": {},
+  "counterfactual_epochs": 0,
+  "counterfactual_lr": 0.0002,
+  "counterfactual_loss_weight": 4.0,
+  "stage2_epochs": 1,
+  "stage2_lr": 0.00015,
+  "loss_config_path": null,
+  "stage2_loss_config_path": "agent_mvp\\data_world_model_cf\\phase10_7_ablation\\configs\\E2_stage2_loss.json",
+  "effective_loss_config": {
+    "consistency_weight": 0.2,
+    "event_weight": 0.5,
+    "reward_weight": 0.25,
+    "event_group_weights": {
+      "contact_warning_group": 1.0,
+      "tactical_transition_group": 1.2,
+      "critical_first_kill_group": 2.4,
+      "critical_objective_group": 2.2,
+      "critical_termination_group": 3.0
+    },
+    "termination_extra_weight": 2.5,
+    "event_count_weight": 0.4,
+    "critical_hard_positive_weight": 1.0
+  },
+  "effective_stage2_loss_config": {
+    "consistency_weight": 0.2,
+    "event_weight": 0.5,
+    "reward_weight": 0.25,
+    "event_group_weights": {
+      "contact_warning_group": 1.0,
+      "tactical_transition_group": 1.2,
+      "critical_first_kill_group": 3.0,
+      "critical_objective_group": 3.8,
+      "critical_termination_group": 4.5
+    },
+    "termination_extra_weight": 2.5,
+    "event_count_weight": 0.4,
+    "critical_hard_positive_weight": 1.0
+  },
+  "reward_norm_stats": {
+    "red": {
+      "clip_low": -0.8500000000000001,
+      "clip_high": 29.672100000000185,
+      "mean": 2.24199827920812,
+      "std": 5.3174105949378045
+    },
+    "blue": {
+      "clip_low": -0.599999999999999,
+      "clip_high": 27.550000000000257,
+      "mean": 2.171655061439445,
+      "std": 5.0125969997278705
+    }
+  },
+  "processed_summary": {
+    "rollouts_path": "..\\data_real\\raw\\rollouts.jsonl",
+    "horizons": [
+      1,
+      5,
+      10,
+      20,
+      "terminal"
+    ],
+    "num_rollout_rows": 58521,
+    "num_episodes": 120,
+    "num_split_groups": 24,
+    "ood_axis": "none",
+    "ood_values": [
+      "_"
+    ],
+    "observed_top_level_fields": [
+      "blue_tactic_condition",
+      "done",
+      "episode_id",
+      "episode_outcome",
+      "event",
+      "next_state",
+      "red_tactic_condition",
+      "reward_cumulative",
+      "reward_step",
+      "sampling_meta",
+      "sim_time_s",
+      "split_group_key",
+      "state",
+      "step",
+      "task_id",
+      "termination_reason"
+    ],
+    "group_leak_report": {
+      "train__val": [],
+      "train__test": [],
+      "train__ood": [],
+      "val__test": [],
+      "val__ood": [],
+      "test__ood": [],
+      "group_leak_detected": false
+    },
+    "splits": {
+      "train": {
+        "groups": 16,
+        "split_group_keys": [
+          "si_cf_group_0005",
+          "si_cf_group_0018",
+          "si_cf_group_0022",
+          "si_cf_group_0015",
+          "si_cf_group_0007",
+          "si_cf_group_0014",
+          "si_cf_group_0023",
+          "si_cf_group_0021",
+          "si_cf_group_0006",
+          "si_cf_group_0019",
+          "si_cf_group_0013",
+          "si_cf_group_0016",
+          "si_cf_group_0008",
+          "si_cf_group_0000",
+          "si_cf_group_0009",
+          "si_cf_group_0011"
+        ],
+        "episodes": 80,
+        "episode_ids": [
+          "sim_task_00001",
+          "sim_task_00002",
+          "sim_task_00003",
+          "sim_task_00004",
+          "sim_task_00005",
+          "sim_task_00026",
+          "sim_task_00027",
+          "sim_task_00028",
+          "sim_task_00029",
+          "sim_task_00030",
+          "sim_task_00031",
+          "sim_task_00032",
+          "sim_task_00033",
+          "sim_task_00034",
+          "sim_task_00035",
+          "sim_task_00036",
+          "sim_task_00037",
+          "sim_task_00038",
+          "sim_task_00039",
+          "sim_task_00040",
+          "sim_task_00041",
+          "sim_task_00042",
+          "sim_task_00043",
+          "sim_task_00044",
+          "sim_task_00045",
+          "sim_task_00046",
+          "sim_task_00047",
+          "sim_task_00048",
+          "sim_task_00049",
+          "sim_task_00050",
+          "sim_task_00056",
+          "sim_task_00057",
+          "sim_task_00058",
+          "sim_task_00059",
+          "sim_task_00060",
+          "sim_task_00066",
+          "sim_task_00067",
+          "sim_task_00068",
+          "sim_task_00069",
+          "sim_task_00070",
+          "sim_task_00071",
+          "sim_task_00072",
+          "sim_task_00073",
+          "sim_task_00074",
+          "sim_task_00075",
+          "sim_task_00076",
+          "sim_task_00077",
+          "sim_task_00078",
+          "sim_task_00079",
+          "sim_task_00080",
+          "sim_task_00081",
+          "sim_task_00082",
+          "sim_task_00083",
+          "sim_task_00084",
+          "sim_task_00085",
+          "sim_task_00091",
+          "sim_task_00092",
+          "sim_task_00093",
+          "sim_task_00094",
+          "sim_task_00095",
+          "sim_task_00096",
+          "sim_task_00097",
+          "sim_task_00098",
+          "sim_task_00099",
+          "sim_task_00100",
+          "sim_task_00106",
+          "sim_task_00107",
+          "sim_task_00108",
+          "sim_task_00109",
+          "sim_task_00110",
+          "sim_task_00111",
+          "sim_task_00112",
+          "sim_task_00113",
+          "sim_task_00114",
+          "sim_task_00115",
+          "sim_task_00116",
+          "sim_task_00117",
+          "sim_task_00118",
+          "sim_task_00119",
+          "sim_task_00120"
+        ],
+        "samples": 205080,
+        "skipped_episodes": 0,
+        "tactic_pair_keys": [
+          "rule-rule"
+        ],
+        "force_size_keys": [
+          "2v1"
+        ],
+        "red_attr_buckets": [
+          "same_initial_balanced"
+        ],
+        "blue_attr_buckets": [
+          "same_initial_balanced"
+        ],
+        "attr_bucket_pairs": [
+          "same_initial_balanced__same_initial_balanced"
+        ]
+      },
+      "val": {
+        "groups": 3,
+        "split_group_keys": [
+          "si_cf_group_0003",
+          "si_cf_group_0017",
+          "si_cf_group_0002"
+        ],
+        "episodes": 15,
+        "episode_ids": [
+          "sim_task_00011",
+          "sim_task_00012",
+          "sim_task_00013",
+          "sim_task_00014",
+          "sim_task_00015",
+          "sim_task_00016",
+          "sim_task_00017",
+          "sim_task_00018",
+          "sim_task_00019",
+          "sim_task_00020",
+          "sim_task_00086",
+          "sim_task_00087",
+          "sim_task_00088",
+          "sim_task_00089",
+          "sim_task_00090"
+        ],
+        "samples": 38505,
+        "skipped_episodes": 0,
+        "tactic_pair_keys": [
+          "rule-rule"
+        ],
+        "force_size_keys": [
+          "2v1"
+        ],
+        "red_attr_buckets": [
+          "same_initial_balanced"
+        ],
+        "blue_attr_buckets": [
+          "same_initial_balanced"
+        ],
+        "attr_bucket_pairs": [
+          "same_initial_balanced__same_initial_balanced"
+        ]
+      },
+      "test": {
+        "groups": 5,
+        "split_group_keys": [
+          "si_cf_group_0001",
+          "si_cf_group_0020",
+          "si_cf_group_0012",
+          "si_cf_group_0004",
+          "si_cf_group_0010"
+        ],
+        "episodes": 25,
+        "episode_ids": [
+          "sim_task_00006",
+          "sim_task_00007",
+          "sim_task_00008",
+          "sim_task_00009",
+          "sim_task_00010",
+          "sim_task_00021",
+          "sim_task_00022",
+          "sim_task_00023",
+          "sim_task_00024",
+          "sim_task_00025",
+          "sim_task_00051",
+          "sim_task_00052",
+          "sim_task_00053",
+          "sim_task_00054",
+          "sim_task_00055",
+          "sim_task_00061",
+          "sim_task_00062",
+          "sim_task_00063",
+          "sim_task_00064",
+          "sim_task_00065",
+          "sim_task_00101",
+          "sim_task_00102",
+          "sim_task_00103",
+          "sim_task_00104",
+          "sim_task_00105"
+        ],
+        "samples": 45180,
+        "skipped_episodes": 0,
+        "tactic_pair_keys": [
+          "rule-rule"
+        ],
+        "force_size_keys": [
+          "2v1"
+        ],
+        "red_attr_buckets": [
+          "same_initial_balanced"
+        ],
+        "blue_attr_buckets": [
+          "same_initial_balanced"
+        ],
+        "attr_bucket_pairs": [
+          "same_initial_balanced__same_initial_balanced"
+        ]
+      },
+      "ood": {
+        "groups": 0,
+        "split_group_keys": [],
+        "episodes": 0,
+        "episode_ids": [],
+        "samples": 0,
+        "skipped_episodes": 0,
+        "tactic_pair_keys": [],
+        "force_size_keys": [],
+        "red_attr_buckets": [],
+        "blue_attr_buckets": [],
+        "attr_bucket_pairs": []
+      }
+    }
+  }
+}

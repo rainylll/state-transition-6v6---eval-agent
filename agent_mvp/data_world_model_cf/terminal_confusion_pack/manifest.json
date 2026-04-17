@@ -1,0 +1,159 @@
+{
+  "baseline_model": "phase10_8_firstkill_fix",
+  "source_pack": "agent_mvp\\data_world_model_cf\\heldout_pack",
+  "source_split": "heldout_cf",
+  "source_files": {
+    "heldout_path": "agent_mvp\\data_world_model_cf\\heldout_pack\\processed\\heldout_cf.jsonl",
+    "diagnosis_json": "agent_mvp\\data_world_model_cf\\phaseA_blue_fp_diagnosis.json",
+    "cases_json": "agent_mvp\\data_world_model_cf\\phaseA_blue_fp_cases.json"
+  },
+  "focus_buckets": [
+    "terminal_red_first_kill_outcome_confusion",
+    "terminal_blue_objective_without_first_kill"
+  ],
+  "focus_bucket_counts": {
+    "terminal_blue_objective_without_first_kill": 15,
+    "terminal_red_first_kill_outcome_confusion": 15
+  },
+  "extended_bucket_counts": {
+    "terminal_blue_objective_without_first_kill": 15,
+    "terminal_or_late_window_without_any_first_kill_remaining": 3,
+    "terminal_red_first_kill_outcome_confusion": 15
+  },
+  "primary_pack": {
+    "num_records": 30,
+    "num_episodes": 30,
+    "episodes": [
+      "sim_task_00016",
+      "sim_task_00018",
+      "sim_task_00019",
+      "sim_task_00020",
+      "sim_task_00036",
+      "sim_task_00038",
+      "sim_task_00048",
+      "sim_task_00049",
+      "sim_task_00050",
+      "sim_task_00052",
+      "sim_task_00053",
+      "sim_task_00054",
+      "sim_task_00055",
+      "sim_task_00066",
+      "sim_task_00067",
+      "sim_task_00068",
+      "sim_task_00069",
+      "sim_task_00070",
+      "sim_task_00088",
+      "sim_task_00089",
+      "sim_task_00096",
+      "sim_task_00097",
+      "sim_task_00098",
+      "sim_task_00099",
+      "sim_task_00100",
+      "sim_task_00106",
+      "sim_task_00107",
+      "sim_task_00108",
+      "sim_task_00109",
+      "sim_task_00110"
+    ],
+    "horizons": [
+      "terminal"
+    ],
+    "num_tactic_combos": 5,
+    "tactic_combos": [
+      "tactic_1__tactic_1",
+      "tactic_1__tactic_2",
+      "tactic_2__tactic_1",
+      "tactic_2__tactic_2",
+      "tactic_3__tactic_2"
+    ],
+    "bucket_counts": {
+      "terminal_blue_objective_without_first_kill": 15,
+      "terminal_red_first_kill_outcome_confusion": 15
+    },
+    "path": "agent_mvp\\data_world_model_cf\\terminal_confusion_pack\\processed\\terminal_confusion_primary_cf.jsonl"
+  },
+  "extended_pack": {
+    "num_records": 33,
+    "num_episodes": 33,
+    "episodes": [
+      "sim_task_00016",
+      "sim_task_00017",
+      "sim_task_00018",
+      "sim_task_00019",
+      "sim_task_00020",
+      "sim_task_00036",
+      "sim_task_00038",
+      "sim_task_00047",
+      "sim_task_00048",
+      "sim_task_00049",
+      "sim_task_00050",
+      "sim_task_00052",
+      "sim_task_00053",
+      "sim_task_00054",
+      "sim_task_00055",
+      "sim_task_00066",
+      "sim_task_00067",
+      "sim_task_00068",
+      "sim_task_00069",
+      "sim_task_00070",
+      "sim_task_00087",
+      "sim_task_00088",
+      "sim_task_00089",
+      "sim_task_00096",
+      "sim_task_00097",
+      "sim_task_00098",
+      "sim_task_00099",
+      "sim_task_00100",
+      "sim_task_00106",
+      "sim_task_00107",
+      "sim_task_00108",
+      "sim_task_00109",
+      "sim_task_00110"
+    ],
+    "horizons": [
+      "terminal"
+    ],
+    "num_tactic_combos": 5,
+    "tactic_combos": [
+      "tactic_1__tactic_1",
+      "tactic_1__tactic_2",
+      "tactic_2__tactic_1",
+      "tactic_2__tactic_2",
+      "tactic_3__tactic_2"
+    ],
+    "bucket_counts": {
+      "terminal_blue_objective_without_first_kill": 15,
+      "terminal_or_late_window_without_any_first_kill_remaining": 3,
+      "terminal_red_first_kill_outcome_confusion": 15
+    },
+    "path": "agent_mvp\\data_world_model_cf\\terminal_confusion_pack\\processed\\terminal_confusion_extended_cf.jsonl"
+  },
+  "diagnosis_references": {
+    "blue_false_positive_count": 23,
+    "primary_bucket_distribution": {
+      "terminal_red_first_kill_outcome_confusion": {
+        "count": 12,
+        "share_of_blue_false_positives": 0.5217391304347826
+      },
+      "terminal_blue_objective_without_first_kill": {
+        "count": 9,
+        "share_of_blue_false_positives": 0.391304347826087
+      },
+      "terminal_or_late_window_without_any_first_kill_remaining": {
+        "count": 2,
+        "share_of_blue_false_positives": 0.08695652173913043
+      }
+    },
+    "example_cases_by_bucket": {
+      "terminal_red_first_kill_outcome_confusion": 5,
+      "terminal_blue_objective_without_first_kill": 5,
+      "terminal_or_late_window_without_any_first_kill_remaining": 2
+    }
+  },
+  "consumption_rules": {
+    "use_for_training": false,
+    "use_for_eval": true,
+    "primary_use": "terminal blue-side false-positive regression",
+    "comparison_rule": "future target-definition variants should reduce terminal confusion without degrading 10.8 strict calibration"
+  }
+}

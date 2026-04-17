@@ -1,0 +1,143 @@
+{
+  "rollouts_path": "D:\\sky\\Projects\\state-transition 6v6 + eval agent\\agent_mvp\\data_world_model\\raw\\rollouts_phase6_same_init.jsonl",
+  "horizons": [
+    1,
+    5,
+    10,
+    20,
+    "terminal"
+  ],
+  "num_rollout_rows": 3226,
+  "num_episodes": 4,
+  "num_split_groups": 4,
+  "ood_axis": "none",
+  "ood_values": [
+    "6v6"
+  ],
+  "observed_top_level_fields": [
+    "blue_tactic_condition",
+    "done",
+    "episode_id",
+    "episode_outcome",
+    "event",
+    "next_state",
+    "red_tactic_condition",
+    "reward_cumulative",
+    "reward_step",
+    "sampling_meta",
+    "sim_time_s",
+    "split_group_key",
+    "state",
+    "step",
+    "task_id",
+    "termination_reason"
+  ],
+  "group_leak_report": {
+    "train__val": [],
+    "train__test": [],
+    "train__ood": [],
+    "val__test": [],
+    "val__ood": [],
+    "test__ood": [],
+    "group_leak_detected": false
+  },
+  "splits": {
+    "train": {
+      "groups": 2,
+      "split_group_keys": [
+        "phase4_same_init__rule_3__rule_1",
+        "phase4_same_init__rl_4__rule_1"
+      ],
+      "episodes": 2,
+      "episode_ids": [
+        "phase4_rl_4_vs_rule_1",
+        "phase4_rule_3_vs_rule_1"
+      ],
+      "samples": 7066,
+      "skipped_episodes": 0,
+      "tactic_pair_keys": [
+        "rl-rule",
+        "rule-rule"
+      ],
+      "force_size_keys": [
+        "2v2"
+      ],
+      "red_attr_buckets": [
+        "phase4_fixed_red"
+      ],
+      "blue_attr_buckets": [
+        "phase4_fixed_blue"
+      ],
+      "attr_bucket_pairs": [
+        "phase4_fixed_red__phase4_fixed_blue"
+      ]
+    },
+    "val": {
+      "groups": 1,
+      "split_group_keys": [
+        "phase4_same_init__rl_2__rule_1"
+      ],
+      "episodes": 1,
+      "episode_ids": [
+        "phase4_rl_2_vs_rule_1"
+      ],
+      "samples": 4468,
+      "skipped_episodes": 0,
+      "tactic_pair_keys": [
+        "rl-rule"
+      ],
+      "force_size_keys": [
+        "2v2"
+      ],
+      "red_attr_buckets": [
+        "phase4_fixed_red"
+      ],
+      "blue_attr_buckets": [
+        "phase4_fixed_blue"
+      ],
+      "attr_bucket_pairs": [
+        "phase4_fixed_red__phase4_fixed_blue"
+      ]
+    },
+    "test": {
+      "groups": 1,
+      "split_group_keys": [
+        "phase4_same_init__rule_1__rule_1"
+      ],
+      "episodes": 1,
+      "episode_ids": [
+        "phase4_rule_1_vs_rule_1"
+      ],
+      "samples": 4468,
+      "skipped_episodes": 0,
+      "tactic_pair_keys": [
+        "rule-rule"
+      ],
+      "force_size_keys": [
+        "2v2"
+      ],
+      "red_attr_buckets": [
+        "phase4_fixed_red"
+      ],
+      "blue_attr_buckets": [
+        "phase4_fixed_blue"
+      ],
+      "attr_bucket_pairs": [
+        "phase4_fixed_red__phase4_fixed_blue"
+      ]
+    },
+    "ood": {
+      "groups": 0,
+      "split_group_keys": [],
+      "episodes": 0,
+      "episode_ids": [],
+      "samples": 0,
+      "skipped_episodes": 0,
+      "tactic_pair_keys": [],
+      "force_size_keys": [],
+      "red_attr_buckets": [],
+      "blue_attr_buckets": [],
+      "attr_bucket_pairs": []
+    }
+  }
+}

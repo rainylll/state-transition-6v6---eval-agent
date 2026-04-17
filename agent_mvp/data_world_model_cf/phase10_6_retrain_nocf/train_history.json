@@ -1,0 +1,103 @@
+{
+  "history": [
+    {
+      "epoch": 1,
+      "train_loss": 10.2150089263916,
+      "loss_total": 0.0,
+      "loss_trajectory": 0.0,
+      "loss_terminal": 0.0,
+      "loss_consistency": 0.0,
+      "loss_event": 0.0,
+      "loss_reward": 0.0,
+      "win_accuracy": 0.0,
+      "num_samples": 0
+    },
+    {
+      "epoch": 2,
+      "train_loss": 8.129046630859374,
+      "loss_total": 0.0,
+      "loss_trajectory": 0.0,
+      "loss_terminal": 0.0,
+      "loss_consistency": 0.0,
+      "loss_event": 0.0,
+      "loss_reward": 0.0,
+      "win_accuracy": 0.0,
+      "num_samples": 0
+    },
+    {
+      "epoch": 3,
+      "train_loss": 5.799670124053955,
+      "loss_total": 0.0,
+      "loss_trajectory": 0.0,
+      "loss_terminal": 0.0,
+      "loss_consistency": 0.0,
+      "loss_event": 0.0,
+      "loss_reward": 0.0,
+      "win_accuracy": 0.0,
+      "num_samples": 0
+    },
+    {
+      "epoch": 4,
+      "train_loss": 4.517103862762451,
+      "loss_total": 0.0,
+      "loss_trajectory": 0.0,
+      "loss_terminal": 0.0,
+      "loss_consistency": 0.0,
+      "loss_event": 0.0,
+      "loss_reward": 0.0,
+      "win_accuracy": 0.0,
+      "num_samples": 0
+    },
+    {
+      "epoch": 5,
+      "train_loss": 3.809386396408081,
+      "loss_total": 0.0,
+      "loss_trajectory": 0.0,
+      "loss_terminal": 0.0,
+      "loss_consistency": 0.0,
+      "loss_event": 0.0,
+      "loss_reward": 0.0,
+      "win_accuracy": 0.0,
+      "num_samples": 0
+    },
+    {
+      "epoch": 6,
+      "train_loss": 3.030585289001465,
+      "loss_total": 0.0,
+      "loss_trajectory": 0.0,
+      "loss_terminal": 0.0,
+      "loss_consistency": 0.0,
+      "loss_event": 0.0,
+      "loss_reward": 0.0,
+      "win_accuracy": 0.0,
+      "num_samples": 0
+    },
+    {
+      "phase": "stage2_event_reward",
+      "epoch": 1,
+      "train_loss": 4.920198059082031,
+      "loss_total": 0.0,
+      "loss_trajectory": 0.0,
+      "loss_terminal": 0.0,
+      "loss_consistency": 0.0,
+      "loss_event": 0.0,
+      "loss_reward": 0.0,
+      "win_accuracy": 0.0,
+      "num_samples": 0
+    },
+    {
+      "phase": "stage2_event_reward",
+      "epoch": 2,
+      "train_loss": 4.5473676204681395,
+      "loss_total": 0.0,
+      "loss_trajectory": 0.0,
+      "loss_terminal": 0.0,
+      "loss_consistency": 0.0,
+      "loss_event": 0.0,
+      "loss_reward": 0.0,
+      "win_accuracy": 0.0,
+      "num_samples": 0
+    }
+  ],
+  "counterfactual_history": []
+}
