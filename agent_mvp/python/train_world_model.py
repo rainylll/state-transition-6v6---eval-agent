@@ -18,6 +18,7 @@ from world_model_dataset import (
     EVENT_COUNT_KEYS,
     EVENT_FLAG_KEYS,
     REWARD_KEYS,
+    TERMINAL_CRITICAL_ROLE_LABELS,
     WorldModelDataset,
     build_reward_target_tensor,
     collate_world_model,
@@ -89,6 +90,7 @@ SUMMARY_METRIC_KEYS = (
     "reward_blue_delta_scale",
     "reward_red_true_delta_scale",
     "reward_blue_true_delta_scale",
+    "terminal_critical_role_accuracy",
 )
 
 MISSILE_SCALE = 8.0
@@ -167,6 +169,7 @@ DEFAULT_LOSS_CONFIG = {
     "termination_extra_weight": 2.5,
     "event_count_weight": 0.4,
     "critical_hard_positive_weight": 1.0,
+    "terminal_role_weight": 0.5,
 }
 
 
@@ -184,6 +187,7 @@ STAGE2_LOSS_CONFIG = {
     "termination_extra_weight": 4.0,
     "event_count_weight": 0.6,
     "critical_hard_positive_weight": 1.8,
+    "terminal_role_weight": 0.5,
 }
 
 
@@ -379,6 +383,7 @@ def _build_loss_config(overrides: Dict[str, Any] = None) -> Dict[str, Any]:
         "termination_extra_weight": float(DEFAULT_LOSS_CONFIG["termination_extra_weight"]),
         "event_count_weight": float(DEFAULT_LOSS_CONFIG["event_count_weight"]),
         "critical_hard_positive_weight": float(DEFAULT_LOSS_CONFIG["critical_hard_positive_weight"]),
+        "terminal_role_weight": float(DEFAULT_LOSS_CONFIG["terminal_role_weight"]),
     }
     if isinstance(overrides, dict):
         for key, value in overrides.items():
@@ -1037,6 +1042,16 @@ def compute_losses(
     )
     event_loss = event_flag_loss + float(cfg["event_count_weight"]) * event_count_loss
     reward_loss = F.smooth_l1_loss(outputs["reward_pred"], batch["reward_target"])
+    role_mask = batch["terminal_critical_role_mask"]
+    if float(role_mask.sum().item()) > 0.0:
+        role_losses = F.cross_entropy(
+            outputs["terminal_critical_role_logits"],
+            batch["terminal_critical_role_id"],
+            reduction="none",
+        )
+        terminal_role_loss = (role_losses * role_mask).sum() / role_mask.sum().clamp(min=1.0)
+    else:
+        terminal_role_loss = torch.zeros((), device=batch["terminal_red_win"].device)
 
     total_loss = (
         trajectory_loss
@@ -1044,6 +1059,7 @@ def compute_losses(
         + float(cfg["consistency_weight"]) * consistency_loss
         + float(cfg["event_weight"]) * event_loss
         + float(cfg["reward_weight"]) * reward_loss
+        + float(cfg["terminal_role_weight"]) * terminal_role_loss
     )
     return outputs, {
         "total": total_loss,
@@ -1063,6 +1079,7 @@ def compute_losses(
         "event_termination": event_group_losses.get("termination_flag", torch.zeros_like(event_flag_loss)),
         "event_critical_hard_positive": event_group_losses.get("critical_hard_positive", torch.zeros_like(event_flag_loss)),
         "reward": reward_loss,
+        "terminal_role": terminal_role_loss,
     }
 
 
@@ -1166,6 +1183,10 @@ def _build_prediction_records_for_batch(
     pred_reward = outputs["reward_pred"].detach().cpu()
     pred_reward_denorm = denormalize_reward_tensor(pred_reward, reward_norm_stats)
     reward_targets_denorm = denormalize_reward_tensor(reward_targets, reward_norm_stats)
+    pred_terminal_role_logits = outputs["terminal_critical_role_logits"].detach().cpu()
+    pred_terminal_role_ids = torch.argmax(pred_terminal_role_logits, dim=1)
+    target_terminal_role_ids = batch["terminal_critical_role_id"].detach().cpu()
+    target_terminal_role_masks = batch["terminal_critical_role_mask"].detach().cpu()
 
     event_flag_index = {key: idx for idx, key in enumerate(EVENT_FLAG_KEYS)}
     event_count_index = {key: idx for idx, key in enumerate(EVENT_COUNT_KEYS)}
@@ -1336,6 +1357,16 @@ def _build_prediction_records_for_batch(
             tactic_combo_key = f"{red_cond.get('id', 'red_unknown')}__{blue_cond.get('id', 'blue_unknown')}"
 
         state_signature = canonical_signature_from_record(raw_record)
+        terminal_role_mask = float(target_terminal_role_masks[index].item())
+        pred_terminal_role_id = int(pred_terminal_role_ids[index].item())
+        true_terminal_role_id = int(target_terminal_role_ids[index].item())
+        pred_terminal_role = TERMINAL_CRITICAL_ROLE_LABELS[pred_terminal_role_id]
+        true_terminal_role = TERMINAL_CRITICAL_ROLE_LABELS[true_terminal_role_id]
+        terminal_role_accuracy = (
+            1.0 if (terminal_role_mask > 0.5 and pred_terminal_role_id == true_terminal_role_id) else 0.0
+            if terminal_role_mask > 0.5
+            else None
+        )
 
         sample_records.append(
             {
@@ -1454,6 +1485,11 @@ def _build_prediction_records_for_batch(
                 "reward_blue_delta_scale": reward_blue_delta_scale,
                 "reward_red_true_delta_scale": reward_red_true_delta_scale,
                 "reward_blue_true_delta_scale": reward_blue_true_delta_scale,
+                "pred_terminal_critical_role_id": pred_terminal_role_id,
+                "true_terminal_critical_role_id": true_terminal_role_id,
+                "pred_terminal_critical_role": pred_terminal_role,
+                "true_terminal_critical_role": true_terminal_role,
+                "terminal_critical_role_accuracy": terminal_role_accuracy,
                 "pred_target_red_alive_ratio": red_summary["pred_alive_ratio"],
                 "true_target_red_alive_ratio": red_summary["true_alive_ratio"],
                 "pred_target_blue_alive_ratio": blue_summary["pred_alive_ratio"],
@@ -1730,6 +1766,7 @@ def evaluate(
         "loss_consistency": 0.0,
         "loss_event": 0.0,
         "loss_reward": 0.0,
+        "loss_terminal_role": 0.0,
     }
     win_correct = 0
 
@@ -1745,12 +1782,21 @@ def evaluate(
             total_metrics["loss_consistency"] += float(losses["consistency"].item()) * batch_size
             total_metrics["loss_event"] += float(losses["event"].item()) * batch_size
             total_metrics["loss_reward"] += float(losses["reward"].item()) * batch_size
+            total_metrics["loss_terminal_role"] += float(losses["terminal_role"].item()) * batch_size
             win_correct += int(((outputs["red_win_logit"] >= 0.0).float() == batch["terminal_red_win"]).sum().item())
 
     denom = max(total_samples, 1)
     total_metrics["win_accuracy"] = win_correct / denom
     total_metrics["num_samples"] = total_samples
-    for key in ("loss_total", "loss_trajectory", "loss_terminal", "loss_consistency", "loss_event", "loss_reward"):
+    for key in (
+        "loss_total",
+        "loss_trajectory",
+        "loss_terminal",
+        "loss_consistency",
+        "loss_event",
+        "loss_reward",
+        "loss_terminal_role",
+    ):
         total_metrics[key] /= denom
     return total_metrics
 
@@ -1986,7 +2032,7 @@ def main() -> None:
 
     model = WorldModelNet().to(device)
     if args.init_model_path is not None:
-        model.load_state_dict(torch.load(args.init_model_path, map_location=device))
+        model.load_state_dict(torch.load(args.init_model_path, map_location=device), strict=False)
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
 
     history = []
@@ -2038,7 +2084,7 @@ def main() -> None:
             best_val = val_metrics["loss_total"]
             torch.save(model.state_dict(), args.out_dir / "model.pt")
 
-    model.load_state_dict(torch.load(args.out_dir / "model.pt", map_location=device))
+    model.load_state_dict(torch.load(args.out_dir / "model.pt", map_location=device), strict=False)
 
     if args.stage2_epochs > 0:
         stage2_records = train_records

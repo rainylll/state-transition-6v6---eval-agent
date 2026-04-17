@@ -8,6 +8,7 @@ from world_model_dataset import (
     EVENT_FLAG_DIM,
     REWARD_DIM,
     TACTIC_FEATURE_DIM,
+    TERMINAL_CRITICAL_ROLE_DIM,
     UNIT_FEATURE_DIM,
 )
 
@@ -104,6 +105,11 @@ class WorldModelNet(nn.Module):
             nn.ReLU(),
             nn.Linear(hidden_dim, REWARD_DIM),
         )
+        self.terminal_role_head = nn.Sequential(
+            nn.Linear(hidden_dim, hidden_dim),
+            nn.ReLU(),
+            nn.Linear(hidden_dim, TERMINAL_CRITICAL_ROLE_DIM),
+        )
 
     def forward(self, batch: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
         red_entities = self.unit_encoder(batch["red_units"], batch["red_unit_types"])
@@ -140,4 +146,5 @@ class WorldModelNet(nn.Module):
             "event_flag_logits": self.event_flag_head(joint_context),
             "event_count_pred": self.event_count_head(joint_context),
             "reward_pred": self.reward_head(joint_context),
+            "terminal_critical_role_logits": self.terminal_role_head(joint_context),
         }

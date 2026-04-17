@@ -1,0 +1,62 @@
+{
+  "aggregate_terminal_role_accuracy": 0.5,
+  "role_confusion_matrix": {
+    "blue_first_kill": {
+      "blue_first_kill": 0,
+      "red_first_kill": 0,
+      "blue_objective_only": 0,
+      "no_first_kill_remaining": 0,
+      "other_terminal": 0
+    },
+    "red_first_kill": {
+      "blue_first_kill": 0,
+      "red_first_kill": 15,
+      "blue_objective_only": 0,
+      "no_first_kill_remaining": 0,
+      "other_terminal": 0
+    },
+    "blue_objective_only": {
+      "blue_first_kill": 0,
+      "red_first_kill": 15,
+      "blue_objective_only": 0,
+      "no_first_kill_remaining": 0,
+      "other_terminal": 0
+    },
+    "no_first_kill_remaining": {
+      "blue_first_kill": 0,
+      "red_first_kill": 0,
+      "blue_objective_only": 0,
+      "no_first_kill_remaining": 0,
+      "other_terminal": 0
+    },
+    "other_terminal": {
+      "blue_first_kill": 0,
+      "red_first_kill": 0,
+      "blue_objective_only": 0,
+      "no_first_kill_remaining": 0,
+      "other_terminal": 0
+    }
+  },
+  "predicted_role_blue_prob_summary": {
+    "blue_first_kill": {
+      "count": 0,
+      "mean_blue_prob": 0.0
+    },
+    "red_first_kill": {
+      "count": 30,
+      "mean_blue_prob": 0.6906122078498205
+    },
+    "blue_objective_only": {
+      "count": 0,
+      "mean_blue_prob": 0.0
+    },
+    "no_first_kill_remaining": {
+      "count": 0,
+      "mean_blue_prob": 0.0
+    },
+    "other_terminal": {
+      "count": 0,
+      "mean_blue_prob": 0.0
+    }
+  }
+}

@@ -309,7 +309,7 @@ def main() -> None:
         raise RuntimeError(f"No processed records found in {args.data_dir} for splits: {split_names}")
 
     model = WorldModelNet().to(device)
-    model.load_state_dict(torch.load(args.model_path, map_location=device))
+    model.load_state_dict(torch.load(args.model_path, map_location=device), strict=False)
 
     reward_source_records = load_split_records(args.data_dir, "train")
     if not reward_source_records:

@@ -51,6 +51,16 @@ EVENT_COUNT_KEYS = (
     "red_dodge_trigger_count",
     "blue_dodge_trigger_count",
 )
+TERMINAL_CRITICAL_ROLE_LABELS = (
+    "blue_first_kill",
+    "red_first_kill",
+    "blue_objective_only",
+    "no_first_kill_remaining",
+    "other_terminal",
+)
+TERMINAL_CRITICAL_ROLE_TO_ID = {
+    label: idx for idx, label in enumerate(TERMINAL_CRITICAL_ROLE_LABELS)
+}
 REWARD_KEYS = ("red", "blue")
 UNIT_FEATURE_KEYS = (
     "alive",
@@ -66,6 +76,7 @@ TACTIC_FEATURE_DIM = 3
 EVENT_FLAG_DIM = len(EVENT_FLAG_KEYS)
 EVENT_COUNT_DIM = len(EVENT_COUNT_KEYS)
 REWARD_DIM = len(REWARD_KEYS)
+TERMINAL_CRITICAL_ROLE_DIM = len(TERMINAL_CRITICAL_ROLE_LABELS)
 _NUMERIC_ID_RE = re.compile(r"-?\d+")
 TARGET_CONTRACTS = ("baseline", "phaseA_v1", "phaseC_v1")
 PHASEA_BLUE_TERMINAL_CONFLICT_WEIGHT = 2.5
@@ -243,6 +254,21 @@ def _build_terminal_scalars(target_terminal: Dict) -> Dict[str, torch.Tensor]:
         "terminal_blue_alive_ratio": torch.tensor(_safe_mean(blue_alive), dtype=torch.float32),
         "terminal_red_mean_missile": torch.tensor(_safe_mean(red_missiles), dtype=torch.float32),
         "terminal_blue_mean_missile": torch.tensor(_safe_mean(blue_missiles), dtype=torch.float32),
+    }
+
+
+def _build_terminal_role_targets(record: Dict) -> Dict[str, torch.Tensor]:
+    contract = record.get("target_event_contract", {})
+    if not isinstance(contract, dict):
+        contract = {}
+    horizon = str(record.get("horizon", "terminal"))
+    role_label = str(contract.get("terminal_critical_role", "other_terminal"))
+    if role_label not in TERMINAL_CRITICAL_ROLE_TO_ID:
+        role_label = "other_terminal"
+    mask = 1.0 if horizon == "terminal" else 0.0
+    return {
+        "terminal_critical_role_id": torch.tensor(TERMINAL_CRITICAL_ROLE_TO_ID[role_label], dtype=torch.long),
+        "terminal_critical_role_mask": torch.tensor(mask, dtype=torch.float32),
     }
 
 
@@ -438,6 +464,7 @@ class WorldModelDataset(Dataset):
             "meta": record.get("meta", {}),
         }
         sample.update(terminal_scalars)
+        sample.update(_build_terminal_role_targets(record))
         sample.update(_build_event_targets(record, target_contract=self.target_contract))
         sample.update({
             "reward_target": build_reward_target_tensor(record.get("target_reward", {}), self.reward_norm_stats)
@@ -529,6 +556,8 @@ def collate_world_model(batch: List[Dict]) -> Dict:
         "terminal_blue_alive_ratio": torch.stack([item["terminal_blue_alive_ratio"] for item in batch], dim=0),
         "terminal_red_mean_missile": torch.stack([item["terminal_red_mean_missile"] for item in batch], dim=0),
         "terminal_blue_mean_missile": torch.stack([item["terminal_blue_mean_missile"] for item in batch], dim=0),
+        "terminal_critical_role_id": torch.stack([item["terminal_critical_role_id"] for item in batch], dim=0),
+        "terminal_critical_role_mask": torch.stack([item["terminal_critical_role_mask"] for item in batch], dim=0),
         "event_flags": torch.stack([item["event_flags"] for item in batch], dim=0),
         "event_flag_weights": torch.stack([item["event_flag_weights"] for item in batch], dim=0),
         "event_counts": torch.stack([item["event_counts"] for item in batch], dim=0),

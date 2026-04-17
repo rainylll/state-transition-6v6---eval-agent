@@ -92,7 +92,7 @@ def main() -> None:
     reward_norm_stats = compute_reward_norm_stats(reward_source_records)
 
     model = WorldModelNet().to(device)
-    model.load_state_dict(torch.load(args.model_path, map_location=device))
+    model.load_state_dict(torch.load(args.model_path, map_location=device), strict=False)
 
     metrics = run_strict_split_evaluation(
         model,

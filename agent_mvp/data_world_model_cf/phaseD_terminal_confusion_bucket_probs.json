@@ -1,0 +1,10 @@
+{
+  "A": {
+    "terminal_red_first_kill_outcome_confusion": 0.7268585503101349,
+    "terminal_blue_objective_without_first_kill": 0.6225520074367523
+  },
+  "D": {
+    "terminal_red_first_kill_outcome_confusion": 0.7404542823632558,
+    "terminal_blue_objective_without_first_kill": 0.6407701333363851
+  }
+}

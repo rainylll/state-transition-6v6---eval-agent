@@ -1,0 +1,19 @@
+{
+  "history": [
+    {
+      "phase": "stage2_event_reward",
+      "epoch": 1,
+      "train_loss": 5.82000021501021,
+      "stage2_sampling_mode": "first_kill_focus",
+      "loss_total": 0.0,
+      "loss_trajectory": 0.0,
+      "loss_terminal": 0.0,
+      "loss_consistency": 0.0,
+      "loss_event": 0.0,
+      "loss_reward": 0.0,
+      "win_accuracy": 0.0,
+      "num_samples": 0
+    }
+  ],
+  "counterfactual_history": []
+}
