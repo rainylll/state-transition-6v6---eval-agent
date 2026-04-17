@@ -1,0 +1,700 @@
+{
+  "phase": "C",
+  "title": "Terminal-only target-rule rewrite comparison (A/C)",
+  "contract": {
+    "name": "phaseC_v1",
+    "terminal_critical_role_values": [
+      "blue_first_kill",
+      "red_first_kill",
+      "blue_objective_only",
+      "no_first_kill_remaining",
+      "non_decisive"
+    ],
+    "blue_first_kill_supervision_mask": {
+      "1": "supervised",
+      "0": "excluded"
+    },
+    "terminal_confusion_primary_role_counts": {
+      "blue_objective_only": 15,
+      "red_first_kill": 15
+    },
+    "terminal_confusion_primary_mask_counts": {
+      "0": 30
+    }
+  },
+  "commands": {
+    "train_C": "C:/Users/98466/.conda/envs/rainyll/python.exe agent_mvp/python/train_world_model.py --data-dir agent_mvp/data_world_model_cf/ab_train_visible_only --out-dir agent_mvp/data_world_model_cf/phaseC_terminal_target_rule_v1 --epochs 0 --stage2-epochs 1 --stage2-lr 0.00015 --init-model-path agent_mvp/data_world_model_cf/phase10_6_ft_nocf/model.pt --stage2-firstkill-focus --stage2-firstkill-positive-repeat 6 --stage2-firstkill-hard-negative-repeat 3 --target-contract phaseC_v1 --device cuda --seed 7",
+    "strict_eval_A_heldout": "C:/Users/98466/.conda/envs/rainyll/python.exe agent_mvp/python/eval_world_model.py --data-dir agent_mvp/data_world_model_cf/heldout_pack --model-path agent_mvp/data_world_model_cf/phase10_8_firstkill_fix/model.pt --out-path agent_mvp/data_world_model_cf/phaseB_A_10_8_heldout_strict.json --splits heldout_cf --device cuda",
+    "strict_eval_C_heldout": "C:/Users/98466/.conda/envs/rainyll/python.exe agent_mvp/python/eval_world_model.py --data-dir agent_mvp/data_world_model_cf/heldout_pack --model-path agent_mvp/data_world_model_cf/phaseC_terminal_target_rule_v1/model.pt --out-path agent_mvp/data_world_model_cf/phaseC_terminal_target_rule_v1_heldout_strict.json --splits heldout_cf --device cuda",
+    "terminal_confusion_eval_A": "C:/Users/98466/.conda/envs/rainyll/python.exe agent_mvp/python/eval_world_model.py --data-dir agent_mvp/data_world_model_cf/terminal_confusion_pack --model-path agent_mvp/data_world_model_cf/phase10_8_firstkill_fix/model.pt --out-path agent_mvp/data_world_model_cf/phaseB_A_10_8_terminal_confusion.json --splits terminal_confusion_primary_cf --device cuda",
+    "terminal_confusion_eval_C": "C:/Users/98466/.conda/envs/rainyll/python.exe agent_mvp/python/eval_world_model.py --data-dir agent_mvp/data_world_model_cf/terminal_confusion_pack --model-path agent_mvp/data_world_model_cf/phaseC_terminal_target_rule_v1/model.pt --out-path agent_mvp/data_world_model_cf/phaseC_terminal_target_rule_v1_terminal_confusion.json --splits terminal_confusion_primary_cf --device cuda",
+    "counterfactual_eval_A": "C:/Users/98466/.conda/envs/rainyll/python.exe agent_mvp/python/counterfactual_eval_world_model.py --data-dir agent_mvp/data_world_model_cf/heldout_pack --model-path agent_mvp/data_world_model_cf/phase10_8_firstkill_fix/model.pt --out-path agent_mvp/data_world_model_cf/phase10_8_firstkill_fix_counterfactual_eval.json --splits heldout_cf --horizons 20,terminal --state-step 0 --min-groups 8 --min-pairs 100 --device cuda",
+    "counterfactual_eval_C": "C:/Users/98466/.conda/envs/rainyll/python.exe agent_mvp/python/counterfactual_eval_world_model.py --data-dir agent_mvp/data_world_model_cf/heldout_pack --model-path agent_mvp/data_world_model_cf/phaseC_terminal_target_rule_v1/model.pt --out-path agent_mvp/data_world_model_cf/phaseC_terminal_target_rule_v1_counterfactual_eval.json --splits heldout_cf --horizons 20,terminal --state-step 0 --min-groups 8 --min-pairs 100 --device cuda"
+  },
+  "heldout_pack": {
+    "A": {
+      "num_samples": 80,
+      "num_episodes": 40,
+      "num_split_groups": 8,
+      "num_terminal_horizon_samples": 40,
+      "horizon_counts": {
+        "20": 40,
+        "terminal": 40
+      },
+      "loss_total": 2.3720016479492188,
+      "loss_trajectory": 0.5664374589920044,
+      "loss_terminal": 1.0383759975433349,
+      "loss_consistency": 0.006423173286020756,
+      "loss_event": 1.4492499828338623,
+      "loss_reward": 0.1651141822338104,
+      "trajectory_alive_accuracy": 0.9083333333333332,
+      "trajectory_missile_mae": 0.7912123471498488,
+      "trajectory_missile_mse": 1.252550717379321,
+      "trajectory_position_error_m": 248127.8647298178,
+      "trajectory_alt_mae_m": 1135.0389607747404,
+      "trajectory_speed_mae_mps": 43.3156800587972,
+      "trajectory_heading_mae_deg": 57.778243192036975,
+      "terminal_win_accuracy": 0.5375,
+      "terminal_red_alive_ratio_mae": 0.16544919461011887,
+      "terminal_blue_alive_ratio_mae": 0.48278271555900576,
+      "terminal_red_mean_missile_mae": 0.8639067992568016,
+      "terminal_blue_mean_missile_mae": 1.3152006570249797,
+      "consistency_alive_ratio_mae": 0.047129783779382706,
+      "consistency_missile_mae": 0.08892272785305977,
+      "consistency_total_mae": 0.06802625581622124,
+      "event_flag_accuracy": 0.8966666728258132,
+      "event_first_contact_accuracy": 1.0,
+      "event_first_fire_accuracy": 0.85625,
+      "event_warning_accuracy": 1.0,
+      "event_retarget_accuracy": 0.95625,
+      "event_first_kill_accuracy": 0.7,
+      "red_first_kill_accuracy": 0.6875,
+      "blue_first_kill_accuracy": 0.7125,
+      "red_first_kill_positive_recall": 1.0,
+      "blue_first_kill_positive_recall": 1.0,
+      "red_first_kill_precision": 0.375,
+      "blue_first_kill_precision": 0.23333333333333334,
+      "red_first_kill_high_conf_hit_rate": 1.0,
+      "blue_first_kill_high_conf_hit_rate": 1.0,
+      "blue_first_kill_pred_positive_rate": 0.375,
+      "blue_first_kill_false_positive_rate": 0.3150684931506849,
+      "blue_first_kill_terminal_false_positive_rate": 0.696969696969697,
+      "blue_first_kill_eligible_subset_accuracy": 1.0,
+      "blue_first_kill_eligible_subset_precision": 1.0,
+      "terminal_red_outcome_confusion_rate": 0.8,
+      "terminal_blue_objective_confusion_rate": 0.6,
+      "event_objective_accuracy": 0.73125,
+      "event_termination_accuracy": 0.9625,
+      "critical_event_accuracy": 0.7650000086054206,
+      "termination_flag_accuracy": 0.9625,
+      "termination_flag_high_conf_hit_rate": 1.0,
+      "first_kill_accuracy": 0.7,
+      "objective_complete_accuracy": 0.73125,
+      "event_fire_count_mae": 0.8436105867382139,
+      "event_kill_count_mae": 0.20139554960187525,
+      "event_dodge_count_mae": 0.7008900463348254,
+      "reward_red_mae": 3.1467823445796967,
+      "reward_blue_mae": 3.0019747853279113,
+      "reward_total_mae": 3.074378564953804,
+      "reward_red_delta_scale": 6.187628275156021,
+      "reward_blue_delta_scale": 6.491082829236984,
+      "reward_red_true_delta_scale": 6.953462612628937,
+      "reward_blue_true_delta_scale": 6.919793635606766
+    },
+    "C": {
+      "num_samples": 80,
+      "num_episodes": 40,
+      "num_split_groups": 8,
+      "num_terminal_horizon_samples": 40,
+      "horizon_counts": {
+        "20": 40,
+        "terminal": 40
+      },
+      "loss_total": 2.3921087265014647,
+      "loss_trajectory": 0.5732110023498536,
+      "loss_terminal": 1.0413114309310914,
+      "loss_consistency": 0.00629945769906044,
+      "loss_event": 1.4701255083084106,
+      "loss_reward": 0.1650547742843628,
+      "trajectory_alive_accuracy": 0.9083333333333332,
+      "trajectory_missile_mae": 0.7881981094678244,
+      "trajectory_missile_mse": 1.2528396586227855,
+      "trajectory_position_error_m": 251114.53691406254,
+      "trajectory_alt_mae_m": 1142.9277140299475,
+      "trajectory_speed_mae_mps": 42.75354270935058,
+      "trajectory_heading_mae_deg": 57.781668281555184,
+      "terminal_win_accuracy": 0.5375,
+      "terminal_red_alive_ratio_mae": 0.16815115809440612,
+      "terminal_blue_alive_ratio_mae": 0.4827111713588238,
+      "terminal_red_mean_missile_mae": 0.8666816711425781,
+      "terminal_blue_mean_missile_mae": 1.323771671205759,
+      "consistency_alive_ratio_mae": 0.04705255851149559,
+      "consistency_missile_mae": 0.08336226567626,
+      "consistency_total_mae": 0.06520741209387779,
+      "event_flag_accuracy": 0.8925000064074993,
+      "event_first_contact_accuracy": 1.0,
+      "event_first_fire_accuracy": 0.85625,
+      "event_warning_accuracy": 1.0,
+      "event_retarget_accuracy": 0.95625,
+      "event_first_kill_accuracy": 0.66875,
+      "red_first_kill_accuracy": 0.6875,
+      "blue_first_kill_accuracy": 0.65,
+      "red_first_kill_positive_recall": 1.0,
+      "blue_first_kill_positive_recall": 1.0,
+      "red_first_kill_precision": 0.375,
+      "blue_first_kill_precision": 0.2,
+      "red_first_kill_high_conf_hit_rate": 1.0,
+      "blue_first_kill_high_conf_hit_rate": 1.0,
+      "blue_first_kill_pred_positive_rate": 0.4375,
+      "blue_first_kill_false_positive_rate": 0.3835616438356164,
+      "blue_first_kill_terminal_false_positive_rate": 0.8484848484848485,
+      "blue_first_kill_eligible_subset_accuracy": 1.0,
+      "blue_first_kill_eligible_subset_precision": 1.0,
+      "terminal_red_outcome_confusion_rate": 0.8666666666666667,
+      "terminal_blue_objective_confusion_rate": 0.8,
+      "event_objective_accuracy": 0.73125,
+      "event_termination_accuracy": 0.9625,
+      "critical_event_accuracy": 0.7525000080466271,
+      "termination_flag_accuracy": 0.9625,
+      "termination_flag_high_conf_hit_rate": 1.0,
+      "first_kill_accuracy": 0.66875,
+      "objective_complete_accuracy": 0.73125,
+      "event_fire_count_mae": 0.832303746510297,
+      "event_kill_count_mae": 0.2024078523973003,
+      "event_dodge_count_mae": 0.7011171922087669,
+      "reward_red_mae": 3.1211633741855622,
+      "reward_blue_mae": 3.008308333158493,
+      "reward_total_mae": 3.0647358536720275,
+      "reward_red_delta_scale": 6.171256726980209,
+      "reward_blue_delta_scale": 6.549065685272216,
+      "reward_red_true_delta_scale": 6.953462612628937,
+      "reward_blue_true_delta_scale": 6.919793635606766
+    }
+  },
+  "terminal_confusion_primary_cf": {
+    "A_aggregate": {
+      "num_samples": 30,
+      "num_episodes": 30,
+      "num_split_groups": 8,
+      "num_terminal_horizon_samples": 30,
+      "horizon_counts": {
+        "terminal": 30
+      },
+      "loss_total": 3.057149887084961,
+      "loss_trajectory": 1.0973950624465942,
+      "loss_terminal": 1.1586434841156006,
+      "loss_consistency": 0.00606952840462327,
+      "loss_event": 1.3107962608337402,
+      "loss_reward": 0.5779975056648254,
+      "trajectory_alive_accuracy": 0.8333333333333335,
+      "trajectory_missile_mae": 1.4731872035397424,
+      "trajectory_missile_mse": 2.8466718100114834,
+      "trajectory_position_error_m": 230995.2212673611,
+      "trajectory_alt_mae_m": 1677.9656955295136,
+      "trajectory_speed_mae_mps": 68.47958679199219,
+      "trajectory_heading_mae_deg": 80.79865256415472,
+      "terminal_win_accuracy": 0.4666666666666667,
+      "terminal_red_alive_ratio_mae": 0.17935711940129598,
+      "terminal_blue_alive_ratio_mae": 0.5212571909030278,
+      "terminal_red_mean_missile_mae": 0.9502155343691508,
+      "terminal_blue_mean_missile_mae": 1.354048067331314,
+      "consistency_alive_ratio_mae": 0.04724260618289312,
+      "consistency_missile_mae": 0.08748463690280914,
+      "consistency_total_mae": 0.06736362154285112,
+      "event_flag_accuracy": 0.8133333444595336,
+      "event_first_contact_accuracy": 1.0,
+      "event_first_fire_accuracy": 0.7,
+      "event_warning_accuracy": 1.0,
+      "event_retarget_accuracy": 1.0,
+      "event_first_kill_accuracy": 0.4,
+      "red_first_kill_accuracy": 0.5,
+      "blue_first_kill_accuracy": 0.3,
+      "red_first_kill_positive_recall": 1.0,
+      "blue_first_kill_positive_recall": null,
+      "red_first_kill_precision": 0.5,
+      "blue_first_kill_precision": 0.0,
+      "red_first_kill_high_conf_hit_rate": 1.0,
+      "blue_first_kill_high_conf_hit_rate": null,
+      "blue_first_kill_pred_positive_rate": 0.7,
+      "blue_first_kill_false_positive_rate": 0.7,
+      "blue_first_kill_terminal_false_positive_rate": 0.7,
+      "blue_first_kill_eligible_subset_accuracy": null,
+      "blue_first_kill_eligible_subset_precision": null,
+      "terminal_red_outcome_confusion_rate": 0.8,
+      "terminal_blue_objective_confusion_rate": 0.6,
+      "event_objective_accuracy": 0.5,
+      "event_termination_accuracy": 1.0,
+      "critical_event_accuracy": 0.560000017285347,
+      "termination_flag_accuracy": 1.0,
+      "termination_flag_high_conf_hit_rate": 1.0,
+      "first_kill_accuracy": 0.4,
+      "objective_complete_accuracy": 0.5,
+      "event_fire_count_mae": 1.8925354450941085,
+      "event_kill_count_mae": 0.3912707140048345,
+      "event_dodge_count_mae": 1.7381158158183099,
+      "reward_red_mae": 6.505421352386475,
+      "reward_blue_mae": 6.06618021329244,
+      "reward_total_mae": 6.285800782839457,
+      "reward_red_delta_scale": 16.445577335357665,
+      "reward_blue_delta_scale": 14.82125031153361,
+      "reward_red_true_delta_scale": 12.925453122456869,
+      "reward_blue_true_delta_scale": 11.17631630897522
+    },
+    "C_aggregate": {
+      "num_samples": 30,
+      "num_episodes": 30,
+      "num_split_groups": 8,
+      "num_terminal_horizon_samples": 30,
+      "horizon_counts": {
+        "terminal": 30
+      },
+      "loss_total": 3.0934081077575684,
+      "loss_trajectory": 1.1179229021072388,
+      "loss_terminal": 1.166419267654419,
+      "loss_consistency": 0.005775409750640392,
+      "loss_event": 1.324631690979004,
+      "loss_reward": 0.582379162311554,
+      "trajectory_alive_accuracy": 0.8333333333333335,
+      "trajectory_missile_mae": 1.4696327620082428,
+      "trajectory_missile_mse": 2.856034972642859,
+      "trajectory_position_error_m": 233260.62725694446,
+      "trajectory_alt_mae_m": 1669.915380859375,
+      "trajectory_speed_mae_mps": 68.6788113064236,
+      "trajectory_heading_mae_deg": 80.72377243041993,
+      "terminal_win_accuracy": 0.4666666666666667,
+      "terminal_red_alive_ratio_mae": 0.18443892200787862,
+      "terminal_blue_alive_ratio_mae": 0.521683410803477,
+      "terminal_red_mean_missile_mae": 0.9566193381945293,
+      "terminal_blue_mean_missile_mae": 1.3524050732453665,
+      "consistency_alive_ratio_mae": 0.04639613429705302,
+      "consistency_missile_mae": 0.08266808191935221,
+      "consistency_total_mae": 0.06453210810820262,
+      "event_flag_accuracy": 0.8044444561004639,
+      "event_first_contact_accuracy": 1.0,
+      "event_first_fire_accuracy": 0.7,
+      "event_warning_accuracy": 1.0,
+      "event_retarget_accuracy": 1.0,
+      "event_first_kill_accuracy": 0.3333333333333333,
+      "red_first_kill_accuracy": 0.5,
+      "blue_first_kill_accuracy": 0.16666666666666666,
+      "red_first_kill_positive_recall": 1.0,
+      "blue_first_kill_positive_recall": null,
+      "red_first_kill_precision": 0.5,
+      "blue_first_kill_precision": 0.0,
+      "red_first_kill_high_conf_hit_rate": 1.0,
+      "blue_first_kill_high_conf_hit_rate": null,
+      "blue_first_kill_pred_positive_rate": 0.8333333333333334,
+      "blue_first_kill_false_positive_rate": 0.8333333333333334,
+      "blue_first_kill_terminal_false_positive_rate": 0.8333333333333334,
+      "blue_first_kill_eligible_subset_accuracy": null,
+      "blue_first_kill_eligible_subset_precision": null,
+      "terminal_red_outcome_confusion_rate": 0.8666666666666667,
+      "terminal_blue_objective_confusion_rate": 0.8,
+      "event_objective_accuracy": 0.5,
+      "event_termination_accuracy": 1.0,
+      "critical_event_accuracy": 0.5333333492279053,
+      "termination_flag_accuracy": 1.0,
+      "termination_flag_high_conf_hit_rate": 1.0,
+      "first_kill_accuracy": 0.3333333333333333,
+      "objective_complete_accuracy": 0.5,
+      "event_fire_count_mae": 1.8786742587884266,
+      "event_kill_count_mae": 0.39839532872041067,
+      "event_dodge_count_mae": 1.7386992832024892,
+      "reward_red_mae": 6.524235852559408,
+      "reward_blue_mae": 6.108041461308797,
+      "reward_total_mae": 6.316138656934102,
+      "reward_red_delta_scale": 16.4663569132487,
+      "reward_blue_delta_scale": 14.901961135864259,
+      "reward_red_true_delta_scale": 12.925453122456869,
+      "reward_blue_true_delta_scale": 11.17631630897522
+    },
+    "bucket_compare": {
+      "terminal_red_first_kill_outcome_confusion": {
+        "A": {
+          "num_samples": 15,
+          "blue_first_kill_pred_positive_rate": 0.8,
+          "blue_first_kill_false_positive_rate": 0.8,
+          "mean_pred_event_blue_first_kill_prob": 0.7268585503101349
+        },
+        "C": {
+          "num_samples": 15,
+          "blue_first_kill_pred_positive_rate": 0.8666666666666667,
+          "blue_first_kill_false_positive_rate": 0.8666666666666667,
+          "mean_pred_event_blue_first_kill_prob": 0.7586602727572124
+        }
+      },
+      "terminal_blue_objective_without_first_kill": {
+        "A": {
+          "num_samples": 15,
+          "blue_first_kill_pred_positive_rate": 0.6,
+          "blue_first_kill_false_positive_rate": 0.6,
+          "mean_pred_event_blue_first_kill_prob": 0.6225520074367523
+        },
+        "C": {
+          "num_samples": 15,
+          "blue_first_kill_pred_positive_rate": 0.8,
+          "blue_first_kill_false_positive_rate": 0.8,
+          "mean_pred_event_blue_first_kill_prob": 0.6680120865503947
+        }
+      }
+    }
+  },
+  "counterfactual": {
+    "A": {
+      "event_red_first_contact_prob": {
+        "num_pairs": 160,
+        "num_signal_pairs": 0,
+        "delta_mae": 5.890679358344642e-06,
+        "mean_true_abs_delta": 0.0,
+        "mean_pred_abs_delta": 5.890679358344642e-06,
+        "sign_accuracy_on_signal_pairs": null
+      },
+      "event_blue_first_contact_prob": {
+        "num_pairs": 160,
+        "num_signal_pairs": 0,
+        "delta_mae": 6.439935759772197e-06,
+        "mean_true_abs_delta": 0.0,
+        "mean_pred_abs_delta": 6.439935759772197e-06,
+        "sign_accuracy_on_signal_pairs": null
+      },
+      "event_red_first_fire_prob": {
+        "num_pairs": 160,
+        "num_signal_pairs": 32,
+        "delta_mae": 0.20018958891014335,
+        "mean_true_abs_delta": 0.2,
+        "mean_pred_abs_delta": 0.0002955600080895238,
+        "sign_accuracy_on_signal_pairs": 0.53125
+      },
+      "event_blue_first_fire_prob": {
+        "num_pairs": 160,
+        "num_signal_pairs": 36,
+        "delta_mae": 0.22519222163855374,
+        "mean_true_abs_delta": 0.225,
+        "mean_pred_abs_delta": 0.00021802523433507305,
+        "sign_accuracy_on_signal_pairs": 0.3055555555555556
+      },
+      "event_red_fire_count": {
+        "num_pairs": 160,
+        "num_signal_pairs": 61,
+        "delta_mae": 1.0255395568907262,
+        "mean_true_abs_delta": 1.025,
+        "mean_pred_abs_delta": 0.003265925124287605,
+        "sign_accuracy_on_signal_pairs": 0.5573770491803278
+      },
+      "event_blue_fire_count": {
+        "num_pairs": 160,
+        "num_signal_pairs": 42,
+        "delta_mae": 0.8121256837621331,
+        "mean_true_abs_delta": 0.8125,
+        "mean_pred_abs_delta": 0.0026231417432427406,
+        "sign_accuracy_on_signal_pairs": 0.6904761904761905
+      },
+      "event_red_kill_count": {
+        "num_pairs": 160,
+        "num_signal_pairs": 44,
+        "delta_mae": 0.27516448879614475,
+        "mean_true_abs_delta": 0.275,
+        "mean_pred_abs_delta": 0.00025156671181321145,
+        "sign_accuracy_on_signal_pairs": 0.3409090909090909
+      },
+      "event_blue_kill_count": {
+        "num_pairs": 160,
+        "num_signal_pairs": 20,
+        "delta_mae": 0.12557864389382303,
+        "mean_true_abs_delta": 0.125,
+        "mean_pred_abs_delta": 0.0007222091313451529,
+        "sign_accuracy_on_signal_pairs": 0.45
+      },
+      "event_red_first_kill_prob": {
+        "num_pairs": 160,
+        "num_signal_pairs": 44,
+        "delta_mae": 0.2750183632611879,
+        "mean_true_abs_delta": 0.275,
+        "mean_pred_abs_delta": 0.0003038300215848722,
+        "sign_accuracy_on_signal_pairs": 0.6363636363636364
+      },
+      "event_blue_first_kill_prob": {
+        "num_pairs": 160,
+        "num_signal_pairs": 20,
+        "delta_mae": 0.1252025414013133,
+        "mean_true_abs_delta": 0.125,
+        "mean_pred_abs_delta": 0.000248352041171529,
+        "sign_accuracy_on_signal_pairs": 0.4
+      },
+      "termination_flag": {
+        "num_pairs": 160,
+        "num_signal_pairs": 12,
+        "delta_mae": 0.07500086683007226,
+        "mean_true_abs_delta": 0.075,
+        "mean_pred_abs_delta": 1.0337230776258366e-06,
+        "sign_accuracy_on_signal_pairs": 0.4166666666666667
+      },
+      "reward_red": {
+        "num_pairs": 160,
+        "num_signal_pairs": 59,
+        "delta_mae": 0.45898618185892703,
+        "mean_true_abs_delta": 0.4585757934488356,
+        "mean_pred_abs_delta": 0.0012095913290977478,
+        "sign_accuracy_on_signal_pairs": 0.6101694915254238
+      },
+      "reward_blue": {
+        "num_pairs": 160,
+        "num_signal_pairs": 60,
+        "delta_mae": 0.4650876035913825,
+        "mean_true_abs_delta": 0.46426137778908017,
+        "mean_pred_abs_delta": 0.0011042077094316483,
+        "sign_accuracy_on_signal_pairs": 0.45
+      },
+      "trajectory_red_alive_ratio": {
+        "num_pairs": 160,
+        "num_signal_pairs": 20,
+        "delta_mae": 0.06266466230154037,
+        "mean_true_abs_delta": 0.0625,
+        "mean_pred_abs_delta": 0.00018407776951789856,
+        "sign_accuracy_on_signal_pairs": 0.15
+      },
+      "trajectory_blue_alive_ratio": {
+        "num_pairs": 160,
+        "num_signal_pairs": 44,
+        "delta_mae": 0.2749835319817066,
+        "mean_true_abs_delta": 0.275,
+        "mean_pred_abs_delta": 0.00032012835144996644,
+        "sign_accuracy_on_signal_pairs": 0.8181818181818182
+      },
+      "trajectory_red_mean_missile": {
+        "num_pairs": 160,
+        "num_signal_pairs": 61,
+        "delta_mae": 0.5139215752482414,
+        "mean_true_abs_delta": 0.5125,
+        "mean_pred_abs_delta": 0.005677564442157746,
+        "sign_accuracy_on_signal_pairs": 0.639344262295082
+      },
+      "trajectory_blue_mean_missile": {
+        "num_pairs": 160,
+        "num_signal_pairs": 42,
+        "delta_mae": 0.8134132288396358,
+        "mean_true_abs_delta": 0.8125,
+        "mean_pred_abs_delta": 0.0010273136198520661,
+        "sign_accuracy_on_signal_pairs": 0.3333333333333333
+      },
+      "terminal_red_win_prob": {
+        "num_pairs": 160,
+        "num_signal_pairs": 88,
+        "delta_mae": 0.5500929433852434,
+        "mean_true_abs_delta": 0.55,
+        "mean_pred_abs_delta": 0.0008214801549911499,
+        "sign_accuracy_on_signal_pairs": 0.6704545454545454
+      },
+      "terminal_red_alive_ratio": {
+        "num_pairs": 160,
+        "num_signal_pairs": 40,
+        "delta_mae": 0.12572784423828126,
+        "mean_true_abs_delta": 0.125,
+        "mean_pred_abs_delta": 0.0008153833448886871,
+        "sign_accuracy_on_signal_pairs": 0.325
+      },
+      "terminal_blue_alive_ratio": {
+        "num_pairs": 160,
+        "num_signal_pairs": 88,
+        "delta_mae": 0.549931300058961,
+        "mean_true_abs_delta": 0.55,
+        "mean_pred_abs_delta": 0.0011052507907152176,
+        "sign_accuracy_on_signal_pairs": 0.8181818181818182
+      },
+      "terminal_red_mean_missile": {
+        "num_pairs": 160,
+        "num_signal_pairs": 122,
+        "delta_mae": 1.0253303974866868,
+        "mean_true_abs_delta": 1.025,
+        "mean_pred_abs_delta": 0.006883043050765991,
+        "sign_accuracy_on_signal_pairs": 0.639344262295082
+      },
+      "terminal_blue_mean_missile": {
+        "num_pairs": 160,
+        "num_signal_pairs": 84,
+        "delta_mae": 1.631289690732956,
+        "mean_true_abs_delta": 1.625,
+        "mean_pred_abs_delta": 0.006754185631871223,
+        "sign_accuracy_on_signal_pairs": 0.09523809523809523
+      }
+    },
+    "C": {
+      "event_red_first_contact_prob": {
+        "num_pairs": 160,
+        "num_signal_pairs": 0,
+        "delta_mae": 4.769363113155123e-06,
+        "mean_true_abs_delta": 0.0,
+        "mean_pred_abs_delta": 4.769363113155123e-06,
+        "sign_accuracy_on_signal_pairs": null
+      },
+      "event_blue_first_contact_prob": {
+        "num_pairs": 160,
+        "num_signal_pairs": 0,
+        "delta_mae": 4.94840560349985e-06,
+        "mean_true_abs_delta": 0.0,
+        "mean_pred_abs_delta": 4.94840560349985e-06,
+        "sign_accuracy_on_signal_pairs": null
+      },
+      "event_red_first_fire_prob": {
+        "num_pairs": 160,
+        "num_signal_pairs": 32,
+        "delta_mae": 0.20018138636969524,
+        "mean_true_abs_delta": 0.2,
+        "mean_pred_abs_delta": 0.0002900948109527235,
+        "sign_accuracy_on_signal_pairs": 0.53125
+      },
+      "event_blue_first_fire_prob": {
+        "num_pairs": 160,
+        "num_signal_pairs": 36,
+        "delta_mae": 0.22517568843868502,
+        "mean_true_abs_delta": 0.225,
+        "mean_pred_abs_delta": 0.00019818025139102248,
+        "sign_accuracy_on_signal_pairs": 0.3333333333333333
+      },
+      "event_red_fire_count": {
+        "num_pairs": 160,
+        "num_signal_pairs": 61,
+        "delta_mae": 1.0254746104590595,
+        "mean_true_abs_delta": 1.025,
+        "mean_pred_abs_delta": 0.003100525867193937,
+        "sign_accuracy_on_signal_pairs": 0.5573770491803278
+      },
+      "event_blue_fire_count": {
+        "num_pairs": 160,
+        "num_signal_pairs": 42,
+        "delta_mae": 0.8120739858597517,
+        "mean_true_abs_delta": 0.8125,
+        "mean_pred_abs_delta": 0.0027034591883420946,
+        "sign_accuracy_on_signal_pairs": 0.8095238095238095
+      },
+      "event_red_kill_count": {
+        "num_pairs": 160,
+        "num_signal_pairs": 44,
+        "delta_mae": 0.27514303689822556,
+        "mean_true_abs_delta": 0.275,
+        "mean_pred_abs_delta": 0.0002582221291959286,
+        "sign_accuracy_on_signal_pairs": 0.38636363636363635
+      },
+      "event_blue_kill_count": {
+        "num_pairs": 160,
+        "num_signal_pairs": 20,
+        "delta_mae": 0.1255640562158078,
+        "mean_true_abs_delta": 0.125,
+        "mean_pred_abs_delta": 0.0006921395193785429,
+        "sign_accuracy_on_signal_pairs": 0.5
+      },
+      "event_red_first_kill_prob": {
+        "num_pairs": 160,
+        "num_signal_pairs": 44,
+        "delta_mae": 0.27500590603085584,
+        "mean_true_abs_delta": 0.275,
+        "mean_pred_abs_delta": 0.0002967901084048208,
+        "sign_accuracy_on_signal_pairs": 0.6363636363636364
+      },
+      "event_blue_first_kill_prob": {
+        "num_pairs": 160,
+        "num_signal_pairs": 20,
+        "delta_mae": 0.12521034015114196,
+        "mean_true_abs_delta": 0.125,
+        "mean_pred_abs_delta": 0.0002514047711599687,
+        "sign_accuracy_on_signal_pairs": 0.5
+      },
+      "termination_flag": {
+        "num_pairs": 160,
+        "num_signal_pairs": 12,
+        "delta_mae": 0.07500067473831393,
+        "mean_true_abs_delta": 0.075,
+        "mean_pred_abs_delta": 7.760662100508853e-07,
+        "sign_accuracy_on_signal_pairs": 0.25
+      },
+      "reward_red": {
+        "num_pairs": 160,
+        "num_signal_pairs": 59,
+        "delta_mae": 0.45896977530792354,
+        "mean_true_abs_delta": 0.4585757934488356,
+        "mean_pred_abs_delta": 0.0011238068342208861,
+        "sign_accuracy_on_signal_pairs": 0.6101694915254238
+      },
+      "reward_blue": {
+        "num_pairs": 160,
+        "num_signal_pairs": 60,
+        "delta_mae": 0.4650137672200799,
+        "mean_true_abs_delta": 0.46426137778908017,
+        "mean_pred_abs_delta": 0.001129470020532608,
+        "sign_accuracy_on_signal_pairs": 0.65
+      },
+      "trajectory_red_alive_ratio": {
+        "num_pairs": 160,
+        "num_signal_pairs": 20,
+        "delta_mae": 0.06269662603735923,
+        "mean_true_abs_delta": 0.0625,
+        "mean_pred_abs_delta": 0.00021804943680763244,
+        "sign_accuracy_on_signal_pairs": 0.15
+      },
+      "trajectory_blue_alive_ratio": {
+        "num_pairs": 160,
+        "num_signal_pairs": 44,
+        "delta_mae": 0.274963441491127,
+        "mean_true_abs_delta": 0.275,
+        "mean_pred_abs_delta": 0.0003256089985370636,
+        "sign_accuracy_on_signal_pairs": 0.8181818181818182
+      },
+      "trajectory_red_mean_missile": {
+        "num_pairs": 160,
+        "num_signal_pairs": 61,
+        "delta_mae": 0.514004297554493,
+        "mean_true_abs_delta": 0.5125,
+        "mean_pred_abs_delta": 0.005404545366764069,
+        "sign_accuracy_on_signal_pairs": 0.639344262295082
+      },
+      "trajectory_blue_mean_missile": {
+        "num_pairs": 160,
+        "num_signal_pairs": 42,
+        "delta_mae": 0.81311239823699,
+        "mean_true_abs_delta": 0.8125,
+        "mean_pred_abs_delta": 0.0006598897278308868,
+        "sign_accuracy_on_signal_pairs": 0.09523809523809523
+      },
+      "terminal_red_win_prob": {
+        "num_pairs": 160,
+        "num_signal_pairs": 88,
+        "delta_mae": 0.5500908009707928,
+        "mean_true_abs_delta": 0.55,
+        "mean_pred_abs_delta": 0.0008181829005479812,
+        "sign_accuracy_on_signal_pairs": 0.6704545454545454
+      },
+      "terminal_red_alive_ratio": {
+        "num_pairs": 160,
+        "num_signal_pairs": 40,
+        "delta_mae": 0.12575521394610406,
+        "mean_true_abs_delta": 0.125,
+        "mean_pred_abs_delta": 0.0008495092391967773,
+        "sign_accuracy_on_signal_pairs": 0.325
+      },
+      "terminal_blue_alive_ratio": {
+        "num_pairs": 160,
+        "num_signal_pairs": 88,
+        "delta_mae": 0.5499117448925972,
+        "mean_true_abs_delta": 0.55,
+        "mean_pred_abs_delta": 0.0011001653969287873,
+        "sign_accuracy_on_signal_pairs": 0.8181818181818182
+      },
+      "terminal_red_mean_missile": {
+        "num_pairs": 160,
+        "num_signal_pairs": 122,
+        "delta_mae": 1.0254338681697845,
+        "mean_true_abs_delta": 1.025,
+        "mean_pred_abs_delta": 0.0069716677069664,
+        "sign_accuracy_on_signal_pairs": 0.639344262295082
+      },
+      "terminal_blue_mean_missile": {
+        "num_pairs": 160,
+        "num_signal_pairs": 84,
+        "delta_mae": 1.63128247782588,
+        "mean_true_abs_delta": 1.625,
+        "mean_pred_abs_delta": 0.0067172821611166,
+        "sign_accuracy_on_signal_pairs": 0.09523809523809523
+      }
+    }
+  }
+}

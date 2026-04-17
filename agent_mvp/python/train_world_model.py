@@ -1932,7 +1932,7 @@ def main() -> None:
         "--target-contract",
         type=str,
         default="baseline",
-        choices=["baseline", "phaseA_v1"],
+        choices=["baseline", "phaseA_v1", "phaseC_v1"],
         help="Target-consumption contract used by the training dataset.",
     )
     parser.add_argument(

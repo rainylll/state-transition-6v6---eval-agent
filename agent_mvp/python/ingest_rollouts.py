@@ -86,6 +86,59 @@ EVENT_COUNT_KEYS = (
     "red_dodge_trigger_count",
     "blue_dodge_trigger_count",
 )
+NON_DECISIVE_TERMINATION_REASONS = {
+    "none",
+    "safety_limit",
+    "timeout",
+    "time_limit",
+}
+
+
+def derive_effective_terminal_reason(meta: Dict, target_terminal: Dict) -> str:
+    reason = str(meta.get("target_termination_reason", "")).strip().lower()
+    if reason:
+        return reason
+    outcome = target_terminal.get("episode_outcome", {}) if isinstance(target_terminal, dict) else {}
+    return str(outcome.get("termination_reason", "none")).strip().lower()
+
+
+def build_target_event_contract(sample: Dict) -> Dict:
+    horizon = str(sample.get("horizon"))
+    target_event = sample.get("target_event", {}) if isinstance(sample.get("target_event", {}), dict) else {}
+    meta = sample.get("meta", {}) if isinstance(sample.get("meta", {}), dict) else {}
+    target_terminal = sample.get("target_terminal", {}) if isinstance(sample.get("target_terminal", {}), dict) else {}
+
+    red_first_kill = bool(target_event.get("red_first_kill_flag", False))
+    blue_first_kill = bool(target_event.get("blue_first_kill_flag", False))
+    red_objective = bool(target_event.get("red_objective_complete_flag", False))
+    blue_objective = bool(target_event.get("blue_objective_complete_flag", False))
+    effective_reason = derive_effective_terminal_reason(meta, target_terminal)
+    effective_terminal = bool(horizon == "terminal" and effective_reason not in NON_DECISIVE_TERMINATION_REASONS and effective_reason)
+
+    terminal_role = "non_terminal"
+    blue_supervision_mask = 1
+    if horizon == "terminal":
+        if blue_first_kill:
+            terminal_role = "blue_first_kill"
+            blue_supervision_mask = 1
+        elif red_first_kill:
+            terminal_role = "red_first_kill"
+            blue_supervision_mask = 0
+        elif blue_objective:
+            terminal_role = "blue_objective_only"
+            blue_supervision_mask = 0
+        elif not red_first_kill and not blue_first_kill and not red_objective and not blue_objective:
+            terminal_role = "no_first_kill_remaining" if not effective_terminal else "non_decisive"
+            blue_supervision_mask = 0
+        else:
+            terminal_role = "non_decisive"
+            blue_supervision_mask = 1
+
+    return {
+        "blue_first_kill_flag": 1 if blue_first_kill else 0,
+        "blue_first_kill_supervision_mask": int(blue_supervision_mask),
+        "terminal_critical_role": terminal_role,
+    }
 
 
 def _try_parse_tactic_id(raw: object) -> Union[int, None]:
@@ -460,7 +513,7 @@ def make_sample(
     sampling_meta = dict(episode_info["sampling_meta"])
     event_window_rows = rows[t_index:target_index]
 
-    return {
+    sample = {
         "state_t": states[t_index],
         "red_tactic_condition": row_meta["red_tactic_condition"],
         "blue_tactic_condition": row_meta["blue_tactic_condition"],
@@ -489,6 +542,8 @@ def make_sample(
             "horizon_unit": "export_view",
         },
     }
+    sample["target_event_contract"] = build_target_event_contract(sample)
+    return sample
 
 
 def expand_episode(rows: List[Dict], horizons: Sequence[HorizonValue], episode_info: Dict, split_name: str) -> List[Dict]:

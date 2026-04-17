@@ -67,7 +67,7 @@ EVENT_FLAG_DIM = len(EVENT_FLAG_KEYS)
 EVENT_COUNT_DIM = len(EVENT_COUNT_KEYS)
 REWARD_DIM = len(REWARD_KEYS)
 _NUMERIC_ID_RE = re.compile(r"-?\d+")
-TARGET_CONTRACTS = ("baseline", "phaseA_v1")
+TARGET_CONTRACTS = ("baseline", "phaseA_v1", "phaseC_v1")
 PHASEA_BLUE_TERMINAL_CONFLICT_WEIGHT = 2.5
 
 
@@ -288,6 +288,13 @@ def _build_event_targets(record: Dict, target_contract: str = "baseline") -> Dic
         blue_terminal_conflict = bool(meta.get("blue_first_kill_terminal_conflict", False))
         if blue_terminal_conflict and blue_first_kill_target < 0.5:
             event_flag_weights[blue_first_kill_idx] = float(PHASEA_BLUE_TERMINAL_CONFLICT_WEIGHT)
+    elif target_contract == "phaseC_v1":
+        contract = record.get("target_event_contract", {}) if isinstance(record.get("target_event_contract", {}), dict) else {}
+        blue_first_kill_idx = EVENT_FLAG_KEYS.index("blue_first_kill_flag")
+        contract_blue_flag = float(contract.get("blue_first_kill_flag", float(event_flags[blue_first_kill_idx].item())))
+        contract_blue_mask = float(contract.get("blue_first_kill_supervision_mask", 1.0))
+        event_flags[blue_first_kill_idx] = contract_blue_flag
+        event_flag_weights[blue_first_kill_idx] = contract_blue_mask
     event_counts = torch.tensor(
         [float(target_event.get(key, 0.0)) for key in EVENT_COUNT_KEYS],
         dtype=torch.float32,
