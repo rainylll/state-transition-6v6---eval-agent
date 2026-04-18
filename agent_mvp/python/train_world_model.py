@@ -178,6 +178,8 @@ DEFAULT_LOSS_CONFIG = {
     "self_gate_stability_weight": 0.0,
     "self_gate_positive_margin": 0.65,
     "self_gate_negative_margin": 0.35,
+    "self_gate_positive_scale": 1.0,
+    "self_gate_negative_scale": 1.0,
 }
 
 
@@ -199,6 +201,8 @@ STAGE2_LOSS_CONFIG = {
     "self_gate_stability_weight": 0.0,
     "self_gate_positive_margin": 0.65,
     "self_gate_negative_margin": 0.35,
+    "self_gate_positive_scale": 1.0,
+    "self_gate_negative_scale": 1.0,
 }
 
 
@@ -398,6 +402,8 @@ def _build_loss_config(overrides: Dict[str, Any] = None) -> Dict[str, Any]:
         "self_gate_stability_weight": float(DEFAULT_LOSS_CONFIG["self_gate_stability_weight"]),
         "self_gate_positive_margin": float(DEFAULT_LOSS_CONFIG["self_gate_positive_margin"]),
         "self_gate_negative_margin": float(DEFAULT_LOSS_CONFIG["self_gate_negative_margin"]),
+        "self_gate_positive_scale": float(DEFAULT_LOSS_CONFIG["self_gate_positive_scale"]),
+        "self_gate_negative_scale": float(DEFAULT_LOSS_CONFIG["self_gate_negative_scale"]),
     }
     if isinstance(overrides, dict):
         for key, value in overrides.items():
@@ -1075,8 +1081,10 @@ def compute_losses(
             self_role_targets = batch["terminal_self_role_ids"] == 0
             positive_margin = float(cfg["self_gate_positive_margin"])
             negative_margin = float(cfg["self_gate_negative_margin"])
-            positive_push = torch.relu(positive_margin - self_role_probs) ** 2
-            negative_push = torch.relu(self_role_probs - negative_margin) ** 2
+            positive_scale = float(cfg["self_gate_positive_scale"])
+            negative_scale = float(cfg["self_gate_negative_scale"])
+            positive_push = positive_scale * (torch.relu(positive_margin - self_role_probs) ** 2)
+            negative_push = negative_scale * (torch.relu(self_role_probs - negative_margin) ** 2)
             gate_penalty = torch.where(self_role_targets, positive_push, negative_push)
             self_gate_stability_loss = (
                 gate_penalty * self_role_mask
@@ -2376,6 +2384,18 @@ def main() -> None:
         default=None,
         help="Optional upper margin for non-self terminal samples.",
     )
+    parser.add_argument(
+        "--self-gate-positive-scale",
+        type=float,
+        default=None,
+        help="Optional multiplier for positive-side safe-band penalty only.",
+    )
+    parser.add_argument(
+        "--self-gate-negative-scale",
+        type=float,
+        default=None,
+        help="Optional multiplier for negative-side safe-band penalty only.",
+    )
     args = parser.parse_args()
 
     set_seed(args.seed)
@@ -2401,6 +2421,12 @@ def main() -> None:
     if args.self_gate_negative_margin is not None:
         train_loss_config["self_gate_negative_margin"] = float(args.self_gate_negative_margin)
         stage2_loss_config["self_gate_negative_margin"] = float(args.self_gate_negative_margin)
+    if args.self_gate_positive_scale is not None:
+        train_loss_config["self_gate_positive_scale"] = float(args.self_gate_positive_scale)
+        stage2_loss_config["self_gate_positive_scale"] = float(args.self_gate_positive_scale)
+    if args.self_gate_negative_scale is not None:
+        train_loss_config["self_gate_negative_scale"] = float(args.self_gate_negative_scale)
+        stage2_loss_config["self_gate_negative_scale"] = float(args.self_gate_negative_scale)
 
     train_records = load_split_records(args.data_dir, "train")
     val_records = load_split_records(args.data_dir, "val")
@@ -2642,6 +2668,8 @@ def main() -> None:
             "self_gate_stability_weight": args.self_gate_stability_weight,
             "self_gate_positive_margin": args.self_gate_positive_margin,
             "self_gate_negative_margin": args.self_gate_negative_margin,
+            "self_gate_positive_scale": args.self_gate_positive_scale,
+            "self_gate_negative_scale": args.self_gate_negative_scale,
             "reward_norm_stats": reward_norm_stats,
             "processed_summary": processed_summary,
         },

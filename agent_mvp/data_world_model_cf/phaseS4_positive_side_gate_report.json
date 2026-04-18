@@ -1,0 +1,212 @@
+{
+  "phase": "S.4",
+  "title": "Positive-side protection gate calibration",
+  "files_modified": [
+    "agent_mvp/python/train_world_model.py",
+    "agent_mvp/data_world_model_cf/phaseS4_positive_side_gate_report.md",
+    "agent_mvp/data_world_model_cf/phaseS4_positive_side_gate_report.json"
+  ],
+  "implementation": {
+    "change": "Add positive-side and negative-side safe-band scales so the gate loss can protect self-side positives without changing negative-side suppression.",
+    "new_cli_args": [
+      "--self-gate-positive-scale",
+      "--self-gate-negative-scale"
+    ],
+    "invariant": [
+      "backbone unchanged",
+      "self/non-self target unchanged",
+      "self_derived projection unchanged",
+      "negative margin left at 0.35 in all S4 runs"
+    ]
+  },
+  "commands": {
+    "A_seed_template": "python agent_mvp/python/train_world_model.py --data-dir agent_mvp/data_world_model_cf/ab_train_visible_only --out-dir <out_dir> --epochs 0 --stage2-epochs 1 --stage2-lr 0.00015 --init-model-path agent_mvp/data_world_model_cf/phase10_8_firstkill_fix/model.pt --stage2-firstkill-focus --stage2-firstkill-positive-repeat 6 --stage2-firstkill-hard-negative-repeat 3 --device cpu --seed <seed> --terminal-self-master-mode self_derived --self-gate-stability-weight 80 --self-gate-positive-margin 0.65 --self-gate-negative-margin 0.35",
+    "S4_ps075_template": "python agent_mvp/python/train_world_model.py --data-dir agent_mvp/data_world_model_cf/ab_train_visible_only --out-dir <out_dir> --epochs 0 --stage2-epochs 1 --stage2-lr 0.00015 --init-model-path agent_mvp/data_world_model_cf/phase10_8_firstkill_fix/model.pt --stage2-firstkill-focus --stage2-firstkill-positive-repeat 6 --stage2-firstkill-hard-negative-repeat 3 --device cpu --seed <seed> --terminal-self-master-mode self_derived --self-gate-stability-weight 80 --self-gate-positive-margin 0.65 --self-gate-negative-margin 0.35 --self-gate-positive-scale 0.75 --self-gate-negative-scale 1.0",
+    "S4_ps125_template": "python agent_mvp/python/train_world_model.py --data-dir agent_mvp/data_world_model_cf/ab_train_visible_only --out-dir <out_dir> --epochs 0 --stage2-epochs 1 --stage2-lr 0.00015 --init-model-path agent_mvp/data_world_model_cf/phase10_8_firstkill_fix/model.pt --stage2-firstkill-focus --stage2-firstkill-positive-repeat 6 --stage2-firstkill-hard-negative-repeat 3 --device cpu --seed <seed> --terminal-self-master-mode self_derived --self-gate-stability-weight 80 --self-gate-positive-margin 0.65 --self-gate-negative-margin 0.35 --self-gate-positive-scale 1.25 --self-gate-negative-scale 1.0",
+    "heldout_eval_template": "python agent_mvp/python/eval_world_model.py --data-dir agent_mvp/data_world_model_cf/heldout_pack --model-path <model.pt> --out-path <heldout.json> --splits heldout_cf --device cpu --terminal-self-master-mode self_derived",
+    "terminal_confusion_eval_template": "python agent_mvp/python/eval_world_model.py --data-dir agent_mvp/data_world_model_cf/terminal_confusion_pack --model-path <model.pt> --out-path <terminal_confusion.json> --splits terminal_confusion_primary_cf --device cpu --terminal-self-master-mode self_derived"
+  },
+  "primary_experiments": {
+    "A": {
+      "label": "S3_w80_6535",
+      "positive_scale": 1.0,
+      "negative_scale": 1.0
+    },
+    "S4_ps075": {
+      "label": "positive-side relief",
+      "positive_scale": 0.75,
+      "negative_scale": 1.0
+    },
+    "S4_ps125": {
+      "label": "positive-side protection",
+      "positive_scale": 1.25,
+      "negative_scale": 1.0
+    }
+  },
+  "results": {
+    "A": {
+      "seed7": {
+        "heldout": {
+          "event_first_kill_accuracy": 0.83125,
+          "critical_event_accuracy": 0.8175000071525573,
+          "blue_first_kill_accuracy": 0.925,
+          "blue_first_kill_precision": 0.6,
+          "blue_first_kill_pred_positive_rate": 0.0625
+        },
+        "terminal": {
+          "blue_first_kill_false_positive_rate": 0.06666666666666667,
+          "blue_nonself_mean": 0.48238634566466015,
+          "blue_nonself_variance": 0.00018447453449658272,
+          "blue_self_mean_heldout": 0.49857857823371887,
+          "blue_self_variance_heldout": 5.6254742548286375e-05
+        }
+      },
+      "seed11": {
+        "heldout": {
+          "event_first_kill_accuracy": 0.83125,
+          "critical_event_accuracy": 0.817500009573996,
+          "blue_first_kill_accuracy": 0.9125,
+          "blue_first_kill_precision": null,
+          "blue_first_kill_pred_positive_rate": 0.0
+        },
+        "terminal": {
+          "blue_first_kill_false_positive_rate": 0.0,
+          "blue_nonself_mean": 0.4715121040741603,
+          "blue_nonself_variance": 0.00013997827949765947,
+          "blue_self_mean_heldout": 0.48499464988708496,
+          "blue_self_variance_heldout": 0.0001630783913085005
+        }
+      },
+      "seed19": {
+        "heldout": {
+          "event_first_kill_accuracy": 0.8125,
+          "critical_event_accuracy": 0.8100000074133277,
+          "blue_first_kill_accuracy": 0.925,
+          "blue_first_kill_precision": 0.6,
+          "blue_first_kill_pred_positive_rate": 0.0625
+        },
+        "terminal": {
+          "blue_first_kill_false_positive_rate": 0.06666666666666667,
+          "blue_nonself_mean": 0.4832107384999593,
+          "blue_nonself_variance": 0.0002939531226469051,
+          "blue_self_mean_heldout": 0.5030075992856707,
+          "blue_self_variance_heldout": 0.00029894886334062533
+        }
+      }
+    },
+    "S4_ps075": {
+      "seed7": {
+        "heldout": {
+          "event_first_kill_accuracy": 0.85625,
+          "critical_event_accuracy": 0.8275000074878335,
+          "blue_first_kill_accuracy": 0.925,
+          "blue_first_kill_precision": 0.6,
+          "blue_first_kill_pred_positive_rate": 0.0625
+        },
+        "terminal": {
+          "blue_first_kill_false_positive_rate": 0.06666666666666667,
+          "blue_nonself_mean": 0.4761853814125061,
+          "blue_nonself_variance": 0.00018529224997223536,
+          "blue_self_mean_heldout": 0.49229906286512104,
+          "blue_self_variance_heldout": 5.413455620379211e-05
+        }
+      },
+      "seed11": {
+        "heldout": {
+          "event_first_kill_accuracy": 0.83125,
+          "critical_event_accuracy": 0.817500009573996,
+          "blue_first_kill_accuracy": 0.9125,
+          "blue_first_kill_precision": null,
+          "blue_first_kill_pred_positive_rate": 0.0
+        },
+        "terminal": {
+          "blue_first_kill_false_positive_rate": 0.0,
+          "blue_nonself_mean": 0.46612992187341057,
+          "blue_nonself_variance": 0.00013505420488931012,
+          "blue_self_mean_heldout": 0.4794300241129739,
+          "blue_self_variance_heldout": 0.00015641667950952624
+        }
+      },
+      "seed19": {
+        "heldout": {
+          "event_first_kill_accuracy": 0.8375,
+          "critical_event_accuracy": 0.8200000086799264,
+          "blue_first_kill_accuracy": 0.925,
+          "blue_first_kill_precision": 0.6,
+          "blue_first_kill_pred_positive_rate": 0.0625
+        },
+        "terminal": {
+          "blue_first_kill_false_positive_rate": 0.06666666666666667,
+          "blue_nonself_mean": 0.469239134589831,
+          "blue_nonself_variance": 0.00028815197810247895,
+          "blue_self_mean_heldout": 0.4886153255190168,
+          "blue_self_variance_heldout": 0.0003080529267241756
+        }
+      }
+    },
+    "S4_ps125": {
+      "seed7": {
+        "heldout": {
+          "event_first_kill_accuracy": 0.83125,
+          "critical_event_accuracy": 0.817500009573996,
+          "blue_first_kill_accuracy": 0.925,
+          "blue_first_kill_precision": 0.6,
+          "blue_first_kill_pred_positive_rate": 0.0625
+        },
+        "terminal": {
+          "blue_first_kill_false_positive_rate": 0.06666666666666667,
+          "blue_nonself_mean": 0.487012110153834,
+          "blue_nonself_variance": 0.00019209377249690698,
+          "blue_self_mean_heldout": 0.50332824247224,
+          "blue_self_variance_heldout": 5.923587135266714e-05
+        }
+      },
+      "seed11": {
+        "heldout": {
+          "event_first_kill_accuracy": 0.8375,
+          "critical_event_accuracy": 0.8200000086799264,
+          "blue_first_kill_accuracy": 0.925,
+          "blue_first_kill_precision": 0.6,
+          "blue_first_kill_pred_positive_rate": 0.0625
+        },
+        "terminal": {
+          "blue_first_kill_false_positive_rate": 0.06666666666666667,
+          "blue_nonself_mean": 0.47576937079429626,
+          "blue_nonself_variance": 0.00014513697492494282,
+          "blue_self_mean_heldout": 0.48929162110601154,
+          "blue_self_variance_heldout": 0.00016733243386252553
+        }
+      },
+      "seed19": {
+        "heldout": {
+          "event_first_kill_accuracy": 0.74375,
+          "critical_event_accuracy": 0.7825000071898103,
+          "blue_first_kill_accuracy": 0.7875,
+          "blue_first_kill_precision": 0.25,
+          "blue_first_kill_pred_positive_rate": 0.25
+        },
+        "terminal": {
+          "blue_first_kill_false_positive_rate": 0.43333333333333335,
+          "blue_nonself_mean": 0.4940932184457779,
+          "blue_nonself_variance": 0.0002964380097225265,
+          "blue_self_mean_heldout": 0.5142359350408826,
+          "blue_self_variance_heldout": 0.00033277334361286103
+        }
+      }
+    }
+  },
+  "verdict": {
+    "seed11_rescued": {
+      "A": false,
+      "S4_ps075": false,
+      "S4_ps125": true
+    },
+    "seed19_stable": {
+      "A": true,
+      "S4_ps075": true,
+      "S4_ps125": false
+    },
+    "promotion_ready": false,
+    "summary": "Positive-side relief does not revive seed11. Positive-side protection can revive seed11, but the first working setting re-opens seed19 terminal confusion. Phase S is still the main route, but S.4 does not yet produce a promotion-safe candidate."
+  }
+}

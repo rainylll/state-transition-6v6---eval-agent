@@ -1,0 +1,130 @@
+{
+  "phase": "S.4.1",
+  "title": "Midpoint operating-point check",
+  "files_modified": [
+    "agent_mvp/data_world_model_cf/phaseS4_1_midpoint_report.md",
+    "agent_mvp/data_world_model_cf/phaseS4_1_midpoint_report.json"
+  ],
+  "baseline": {
+    "label": "S3_w80_6535",
+    "self_gate_stability_weight": 80.0,
+    "self_gate_positive_margin": 0.65,
+    "self_gate_negative_margin": 0.35,
+    "self_gate_positive_scale": 1.0,
+    "self_gate_negative_scale": 1.0
+  },
+  "step_a": {
+    "tried": true,
+    "positive_scale": 1.10,
+    "negative_scale": 1.0,
+    "seeds": {
+      "7": {
+        "heldout": {
+          "event_first_kill_accuracy": 0.83125,
+          "critical_event_accuracy": 0.8175000071525573,
+          "blue_first_kill_accuracy": 0.925,
+          "blue_first_kill_precision": 0.6,
+          "blue_first_kill_pred_positive_rate": 0.0625,
+          "termination_flag_accuracy": 0.9625,
+          "reward_red_mae": 3.1643711507320402,
+          "reward_total_mae": 3.1363979667425155
+        },
+        "terminal": {
+          "blue_first_kill_false_positive_rate": 0.06666666666666667,
+          "terminal_red_first_kill_outcome_confusion": {
+            "pred_positive_rate": 0.13333333333333333,
+            "false_positive_rate": 0.13333333333333333,
+            "mean_predicted_blue_prob": 0.48870659867922467
+          },
+          "terminal_blue_objective_without_first_kill": {
+            "pred_positive_rate": 0.0,
+            "false_positive_rate": 0.0,
+            "mean_predicted_blue_prob": 0.4800173123677572
+          }
+        },
+        "gate": {
+          "terminal_blue_nonself_mean": 0.48436195254325864,
+          "terminal_blue_nonself_variance": 0.0001852389148235763,
+          "heldout_blue_self_mean": 0.5005919166973659,
+          "heldout_blue_self_variance": 5.608658907056838e-05
+        }
+      },
+      "11": {
+        "heldout": {
+          "event_first_kill_accuracy": 0.8375,
+          "critical_event_accuracy": 0.8200000086799264,
+          "blue_first_kill_accuracy": 0.925,
+          "blue_first_kill_precision": 0.6,
+          "blue_first_kill_pred_positive_rate": 0.0625,
+          "termination_flag_accuracy": 0.9625,
+          "reward_red_mae": 3.1163239240646363,
+          "reward_total_mae": 3.061641752719879
+        },
+        "terminal": {
+          "blue_first_kill_false_positive_rate": 0.06666666666666667,
+          "terminal_red_first_kill_outcome_confusion": {
+            "pred_positive_rate": 0.13333333333333333,
+            "false_positive_rate": 0.13333333333333333,
+            "mean_predicted_blue_prob": 0.4756662686665853
+          },
+          "terminal_blue_objective_without_first_kill": {
+            "pred_positive_rate": 0.0,
+            "false_positive_rate": 0.0,
+            "mean_predicted_blue_prob": 0.47098103562990823
+          }
+        },
+        "gate": {
+          "terminal_blue_nonself_mean": 0.47332364817460376,
+          "terminal_blue_nonself_variance": 0.00014111384948029858,
+          "heldout_blue_self_mean": 0.4868128427437374,
+          "heldout_blue_self_variance": 0.00016382588289379162
+        }
+      },
+      "19": {
+        "heldout": {
+          "event_first_kill_accuracy": 0.8125,
+          "critical_event_accuracy": 0.8100000074133277,
+          "blue_first_kill_accuracy": 0.925,
+          "blue_first_kill_precision": 0.6,
+          "blue_first_kill_pred_positive_rate": 0.0625,
+          "termination_flag_accuracy": 0.9625,
+          "reward_red_mae": 3.1040005326271056,
+          "reward_total_mae": 3.0660919427871702
+        },
+        "terminal": {
+          "blue_first_kill_false_positive_rate": 0.06666666666666667,
+          "terminal_red_first_kill_outcome_confusion": {
+            "pred_positive_rate": 0.13333333333333333,
+            "false_positive_rate": 0.13333333333333333,
+            "mean_predicted_blue_prob": 0.49162583947181704
+          },
+          "terminal_blue_objective_without_first_kill": {
+            "pred_positive_rate": 0.0,
+            "false_positive_rate": 0.0,
+            "mean_predicted_blue_prob": 0.48425887028376263
+          }
+        },
+        "gate": {
+          "terminal_blue_nonself_mean": 0.4879423548777898,
+          "terminal_blue_nonself_variance": 0.0002952290734163585,
+          "heldout_blue_self_mean": 0.5078458445412772,
+          "heldout_blue_self_variance": 0.00029510258223360773
+        }
+      }
+    },
+    "ranges": {
+      "terminal_blue_nonself_mean_range": 0.014618706703186046,
+      "heldout_blue_self_mean_range": 0.021033001797539863
+    },
+    "meets_success_standard": true
+  },
+  "step_b": {
+    "tried": false,
+    "reason": "Step A already satisfied the midpoint success standard; 1.15 was intentionally skipped."
+  },
+  "verdict": {
+    "found_midpoint_operating_point": true,
+    "promotion_review_ready": true,
+    "summary": "positive_scale=1.10 is the first midpoint that rescues seed11 without reopening seed19. All three seeds stay far below the 10.8 terminal blue FPR baseline, and terminal blue non-self means remain below 0.49."
+  }
+}
