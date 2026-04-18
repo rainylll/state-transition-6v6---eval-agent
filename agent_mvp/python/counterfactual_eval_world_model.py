@@ -269,6 +269,13 @@ def main() -> None:
     parser.add_argument("--batch-size", type=int, default=32)
     parser.add_argument("--device", type=str, default="cpu", choices=["cpu", "cuda"])
     parser.add_argument(
+        "--terminal-self-master-mode",
+        type=str,
+        default="none",
+        choices=["none", "self_head_only", "self_derived"],
+        help="Must match the checkpoint's terminal master-interface mode.",
+    )
+    parser.add_argument(
         "--splits",
         type=str,
         default="train,val,test,ood",
@@ -308,7 +315,7 @@ def main() -> None:
     if not records:
         raise RuntimeError(f"No processed records found in {args.data_dir} for splits: {split_names}")
 
-    model = WorldModelNet().to(device)
+    model = WorldModelNet(terminal_self_master_mode=args.terminal_self_master_mode).to(device)
     model.load_state_dict(torch.load(args.model_path, map_location=device), strict=False)
 
     reward_source_records = load_split_records(args.data_dir, "train")

@@ -19,6 +19,8 @@ from world_model_dataset import (
     EVENT_FLAG_KEYS,
     REWARD_KEYS,
     TERMINAL_CRITICAL_ROLE_LABELS,
+    TERMINAL_SELF_ROLE_LABELS,
+    VIEW_SIDE_LABELS,
     WorldModelDataset,
     build_reward_target_tensor,
     collate_world_model,
@@ -91,6 +93,9 @@ SUMMARY_METRIC_KEYS = (
     "reward_red_true_delta_scale",
     "reward_blue_true_delta_scale",
     "terminal_critical_role_accuracy",
+    "terminal_self_role_accuracy",
+    "terminal_self_role_red_view_accuracy",
+    "terminal_self_role_blue_view_accuracy",
 )
 
 MISSILE_SCALE = 8.0
@@ -170,6 +175,9 @@ DEFAULT_LOSS_CONFIG = {
     "event_count_weight": 0.4,
     "critical_hard_positive_weight": 1.0,
     "terminal_role_weight": 0.5,
+    "self_gate_stability_weight": 0.0,
+    "self_gate_positive_margin": 0.65,
+    "self_gate_negative_margin": 0.35,
 }
 
 
@@ -188,6 +196,9 @@ STAGE2_LOSS_CONFIG = {
     "event_count_weight": 0.6,
     "critical_hard_positive_weight": 1.8,
     "terminal_role_weight": 0.5,
+    "self_gate_stability_weight": 0.0,
+    "self_gate_positive_margin": 0.65,
+    "self_gate_negative_margin": 0.35,
 }
 
 
@@ -384,6 +395,9 @@ def _build_loss_config(overrides: Dict[str, Any] = None) -> Dict[str, Any]:
         "event_count_weight": float(DEFAULT_LOSS_CONFIG["event_count_weight"]),
         "critical_hard_positive_weight": float(DEFAULT_LOSS_CONFIG["critical_hard_positive_weight"]),
         "terminal_role_weight": float(DEFAULT_LOSS_CONFIG["terminal_role_weight"]),
+        "self_gate_stability_weight": float(DEFAULT_LOSS_CONFIG["self_gate_stability_weight"]),
+        "self_gate_positive_margin": float(DEFAULT_LOSS_CONFIG["self_gate_positive_margin"]),
+        "self_gate_negative_margin": float(DEFAULT_LOSS_CONFIG["self_gate_negative_margin"]),
     }
     if isinstance(overrides, dict):
         for key, value in overrides.items():
@@ -979,6 +993,7 @@ def compute_losses(
 ) -> Tuple[Dict[str, torch.Tensor], Dict[str, torch.Tensor]]:
     cfg = _build_loss_config(loss_config)
     outputs = model(batch)
+    terminal_self_master_mode = getattr(model, "terminal_self_master_mode", "none")
 
     red_valid = batch["red_mask"].float()
     blue_valid = batch["blue_mask"].float()
@@ -1042,16 +1057,39 @@ def compute_losses(
     )
     event_loss = event_flag_loss + float(cfg["event_count_weight"]) * event_count_loss
     reward_loss = F.smooth_l1_loss(outputs["reward_pred"], batch["reward_target"])
-    role_mask = batch["terminal_critical_role_mask"]
-    if float(role_mask.sum().item()) > 0.0:
-        role_losses = F.cross_entropy(
-            outputs["terminal_critical_role_logits"],
-            batch["terminal_critical_role_id"],
-            reduction="none",
-        )
-        terminal_role_loss = (role_losses * role_mask).sum() / role_mask.sum().clamp(min=1.0)
+    terminal_role_loss = torch.zeros((), device=batch["terminal_red_win"].device)
+    terminal_self_role_loss = torch.zeros((), device=batch["terminal_red_win"].device)
+    self_gate_stability_loss = torch.zeros((), device=batch["terminal_red_win"].device)
+    if terminal_self_master_mode in {"self_head_only", "self_derived"}:
+        self_role_mask = batch["terminal_self_role_mask"]
+        if float(self_role_mask.sum().item()) > 0.0:
+            self_role_losses = F.cross_entropy(
+                outputs["terminal_self_role_logits"].reshape(-1, outputs["terminal_self_role_logits"].shape[-1]),
+                batch["terminal_self_role_ids"].reshape(-1),
+                reduction="none",
+            ).reshape_as(self_role_mask)
+            terminal_self_role_loss = (
+                self_role_losses * self_role_mask
+            ).sum() / self_role_mask.sum().clamp(min=1.0)
+            self_role_probs = torch.softmax(outputs["terminal_self_role_logits"], dim=-1)[..., 0]
+            self_role_targets = batch["terminal_self_role_ids"] == 0
+            positive_margin = float(cfg["self_gate_positive_margin"])
+            negative_margin = float(cfg["self_gate_negative_margin"])
+            positive_push = torch.relu(positive_margin - self_role_probs) ** 2
+            negative_push = torch.relu(self_role_probs - negative_margin) ** 2
+            gate_penalty = torch.where(self_role_targets, positive_push, negative_push)
+            self_gate_stability_loss = (
+                gate_penalty * self_role_mask
+            ).sum() / self_role_mask.sum().clamp(min=1.0)
     else:
-        terminal_role_loss = torch.zeros((), device=batch["terminal_red_win"].device)
+        role_mask = batch["terminal_critical_role_mask"]
+        if float(role_mask.sum().item()) > 0.0:
+            role_losses = F.cross_entropy(
+                outputs["terminal_critical_role_logits"],
+                batch["terminal_critical_role_id"],
+                reduction="none",
+            )
+            terminal_role_loss = (role_losses * role_mask).sum() / role_mask.sum().clamp(min=1.0)
 
     total_loss = (
         trajectory_loss
@@ -1059,7 +1097,12 @@ def compute_losses(
         + float(cfg["consistency_weight"]) * consistency_loss
         + float(cfg["event_weight"]) * event_loss
         + float(cfg["reward_weight"]) * reward_loss
-        + float(cfg["terminal_role_weight"]) * terminal_role_loss
+        + float(cfg["terminal_role_weight"]) * (
+            terminal_self_role_loss
+            if terminal_self_master_mode in {"self_head_only", "self_derived"}
+            else terminal_role_loss
+        )
+        + float(cfg["self_gate_stability_weight"]) * self_gate_stability_loss
     )
     return outputs, {
         "total": total_loss,
@@ -1079,7 +1122,13 @@ def compute_losses(
         "event_termination": event_group_losses.get("termination_flag", torch.zeros_like(event_flag_loss)),
         "event_critical_hard_positive": event_group_losses.get("critical_hard_positive", torch.zeros_like(event_flag_loss)),
         "reward": reward_loss,
-        "terminal_role": terminal_role_loss,
+        "terminal_role": (
+            terminal_self_role_loss
+            if terminal_self_master_mode in {"self_head_only", "self_derived"}
+            else terminal_role_loss
+        ),
+        "terminal_self_role": terminal_self_role_loss,
+        "self_gate_stability": self_gate_stability_loss,
     }
 
 
@@ -1152,6 +1201,7 @@ def _build_prediction_records_for_batch(
     raw_records: Sequence[Dict[str, Any]],
     reward_norm_stats: Dict[str, Dict[str, float]],
 ) -> List[Dict[str, Any]]:
+    terminal_self_master_active = bool(outputs.get("terminal_self_master_active", False))
     red_alive_logit = outputs["red_alive_logit"].detach().cpu()
     blue_alive_logit = outputs["blue_alive_logit"].detach().cpu()
     red_reg = outputs["red_traj_reg"].detach().cpu()
@@ -1187,6 +1237,11 @@ def _build_prediction_records_for_batch(
     pred_terminal_role_ids = torch.argmax(pred_terminal_role_logits, dim=1)
     target_terminal_role_ids = batch["terminal_critical_role_id"].detach().cpu()
     target_terminal_role_masks = batch["terminal_critical_role_mask"].detach().cpu()
+    pred_terminal_self_role_logits = outputs["terminal_self_role_logits"].detach().cpu()
+    pred_terminal_self_role_probs = torch.softmax(pred_terminal_self_role_logits, dim=-1)
+    pred_terminal_self_role_ids = torch.argmax(pred_terminal_self_role_logits, dim=-1)
+    target_terminal_self_role_ids = batch["terminal_self_role_ids"].detach().cpu()
+    target_terminal_self_role_masks = batch["terminal_self_role_mask"].detach().cpu()
 
     event_flag_index = {key: idx for idx, key in enumerate(EVENT_FLAG_KEYS)}
     event_count_index = {key: idx for idx, key in enumerate(EVENT_COUNT_KEYS)}
@@ -1367,6 +1422,39 @@ def _build_prediction_records_for_batch(
             if terminal_role_mask > 0.5
             else None
         )
+        pred_terminal_self_roles: Dict[str, str | None] = {}
+        true_terminal_self_roles: Dict[str, str | None] = {}
+        terminal_self_role_view_accuracy: Dict[str, float | None] = {}
+        terminal_self_first_kill_prob_by_view: Dict[str, float | None] = {}
+        terminal_self_role_accuracy = None
+        if terminal_self_master_active:
+            self_role_mask_values = target_terminal_self_role_masks[index]
+            active_self_role_accuracies: List[float] = []
+            for view_idx, view_side in enumerate(VIEW_SIDE_LABELS):
+                pred_self_role_id = int(pred_terminal_self_role_ids[index, view_idx].item())
+                true_self_role_id = int(target_terminal_self_role_ids[index, view_idx].item())
+                pred_terminal_self_roles[view_side] = TERMINAL_SELF_ROLE_LABELS[pred_self_role_id]
+                true_terminal_self_roles[view_side] = TERMINAL_SELF_ROLE_LABELS[true_self_role_id]
+                terminal_self_first_kill_prob_by_view[view_side] = float(
+                    pred_terminal_self_role_probs[index, view_idx, 0].item()
+                )
+                if float(self_role_mask_values[view_idx].item()) > 0.5:
+                    view_acc = 1.0 if pred_self_role_id == true_self_role_id else 0.0
+                    terminal_self_role_view_accuracy[view_side] = view_acc
+                    active_self_role_accuracies.append(view_acc)
+                else:
+                    terminal_self_role_view_accuracy[view_side] = None
+            terminal_self_role_accuracy = (
+                sum(active_self_role_accuracies) / len(active_self_role_accuracies)
+                if active_self_role_accuracies
+                else None
+            )
+        else:
+            for view_side in VIEW_SIDE_LABELS:
+                pred_terminal_self_roles[view_side] = None
+                true_terminal_self_roles[view_side] = None
+                terminal_self_role_view_accuracy[view_side] = None
+                terminal_self_first_kill_prob_by_view[view_side] = None
 
         sample_records.append(
             {
@@ -1490,6 +1578,15 @@ def _build_prediction_records_for_batch(
                 "pred_terminal_critical_role": pred_terminal_role,
                 "true_terminal_critical_role": true_terminal_role,
                 "terminal_critical_role_accuracy": terminal_role_accuracy,
+                "pred_terminal_self_role_red": pred_terminal_self_roles["red"],
+                "true_terminal_self_role_red": true_terminal_self_roles["red"],
+                "pred_terminal_self_role_blue": pred_terminal_self_roles["blue"],
+                "true_terminal_self_role_blue": true_terminal_self_roles["blue"],
+                "terminal_self_role_accuracy": terminal_self_role_accuracy,
+                "terminal_self_role_red_view_accuracy": terminal_self_role_view_accuracy["red"],
+                "terminal_self_role_blue_view_accuracy": terminal_self_role_view_accuracy["blue"],
+                "pred_terminal_red_self_first_kill_prob": terminal_self_first_kill_prob_by_view["red"],
+                "pred_terminal_blue_self_first_kill_prob": terminal_self_first_kill_prob_by_view["blue"],
                 "pred_target_red_alive_ratio": red_summary["pred_alive_ratio"],
                 "true_target_red_alive_ratio": red_summary["true_alive_ratio"],
                 "pred_target_blue_alive_ratio": blue_summary["pred_alive_ratio"],
@@ -1645,6 +1742,266 @@ def summarize_prediction_records_without_losses(sample_records: Sequence[Dict[st
     return summary
 
 
+def _build_label_confusion(
+    records: Sequence[Dict[str, Any]],
+    pred_key: str,
+    true_key: str,
+    labels: Sequence[str],
+) -> Dict[str, Any]:
+    counts = {true_label: {pred_label: 0 for pred_label in labels} for true_label in labels}
+    total = 0
+    correct = 0
+    for record in records:
+        pred_label = record.get(pred_key)
+        true_label = record.get(true_key)
+        if pred_label not in labels or true_label not in labels:
+            continue
+        counts[true_label][pred_label] += 1
+        total += 1
+        if pred_label == true_label:
+            correct += 1
+    return {
+        "num_items": total,
+        "accuracy": (correct / total) if total > 0 else None,
+        "counts": counts,
+    }
+
+
+def _blue_first_kill_prob_summary(records: Sequence[Dict[str, Any]]) -> Dict[str, Any]:
+    probs = [
+        float(record["pred_event_blue_first_kill_prob"])
+        for record in records
+        if record.get("pred_event_blue_first_kill_prob") is not None
+    ]
+    negative_probs = [
+        float(record["pred_event_blue_first_kill_prob"])
+        for record in records
+        if record.get("pred_event_blue_first_kill_prob") is not None
+        and float(record.get("true_event_blue_first_kill", 0.0)) < 0.5
+    ]
+    return {
+        "num_samples": len(probs),
+        "mean_predicted_blue_prob": ((sum(probs) / len(probs)) if probs else None),
+        "pred_positive_rate": (
+            sum(1.0 for value in probs if value >= 0.5) / len(probs)
+            if probs
+            else None
+        ),
+        "false_positive_rate": (
+            sum(1.0 for value in negative_probs if value >= 0.5) / len(negative_probs)
+            if negative_probs
+            else None
+        ),
+    }
+
+
+def _single_event_prob_summary(
+    records: Sequence[Dict[str, Any]],
+    pred_key: str,
+    true_key: str,
+) -> Dict[str, Any]:
+    probs = [
+        float(record[pred_key])
+        for record in records
+        if record.get(pred_key) is not None
+    ]
+    negative_probs = [
+        float(record[pred_key])
+        for record in records
+        if record.get(pred_key) is not None
+        and float(record.get(true_key, 0.0)) < 0.5
+    ]
+    return {
+        "num_samples": len(probs),
+        "mean_predicted_prob": ((sum(probs) / len(probs)) if probs else None),
+        "pred_positive_rate": (
+            sum(1.0 for value in probs if value >= 0.5) / len(probs)
+            if probs
+            else None
+        ),
+        "false_positive_rate": (
+            sum(1.0 for value in negative_probs if value >= 0.5) / len(negative_probs)
+            if negative_probs
+            else None
+        ),
+    }
+
+
+def _scalar_distribution_summary(records: Sequence[Dict[str, Any]], value_key: str) -> Dict[str, Any]:
+    values = [
+        float(record[value_key])
+        for record in records
+        if record.get(value_key) is not None
+    ]
+    if not values:
+        return {
+            "num_samples": 0,
+            "mean": None,
+            "variance": None,
+            "min": None,
+            "max": None,
+        }
+    mean_value = sum(values) / len(values)
+    variance = sum((value - mean_value) ** 2 for value in values) / len(values)
+    return {
+        "num_samples": len(values),
+        "mean": mean_value,
+        "variance": variance,
+        "min": min(values),
+        "max": max(values),
+    }
+
+
+def build_terminal_self_role_diagnostics(prediction_records: Sequence[Dict[str, Any]]) -> Dict[str, Any]:
+    terminal_records = [
+        record for record in prediction_records
+        if bool(record.get("is_terminal_horizon", False))
+    ]
+    diagnostics: Dict[str, Any] = {
+        "labels": list(TERMINAL_SELF_ROLE_LABELS),
+        "red_view": _build_label_confusion(
+            terminal_records,
+            pred_key="pred_terminal_self_role_red",
+            true_key="true_terminal_self_role_red",
+            labels=TERMINAL_SELF_ROLE_LABELS,
+        ),
+        "blue_view": _build_label_confusion(
+            terminal_records,
+            pred_key="pred_terminal_self_role_blue",
+            true_key="true_terminal_self_role_blue",
+            labels=TERMINAL_SELF_ROLE_LABELS,
+        ),
+    }
+    diagnostics["overall"] = {
+        "num_items": diagnostics["red_view"]["num_items"] + diagnostics["blue_view"]["num_items"],
+        "accuracy": (
+            (
+                (diagnostics["red_view"]["accuracy"] or 0.0) * diagnostics["red_view"]["num_items"]
+                + (diagnostics["blue_view"]["accuracy"] or 0.0) * diagnostics["blue_view"]["num_items"]
+            )
+            / max(diagnostics["red_view"]["num_items"] + diagnostics["blue_view"]["num_items"], 1)
+        )
+        if (diagnostics["red_view"]["num_items"] + diagnostics["blue_view"]["num_items"]) > 0
+        else None,
+    }
+
+    true_not_self_records = [
+        record for record in terminal_records
+        if record.get("true_terminal_self_role_blue") != "self_first_kill_terminal"
+    ]
+    pred_not_self_records = [
+        record for record in terminal_records
+        if record.get("pred_terminal_self_role_blue") != "self_first_kill_terminal"
+    ]
+    red_true_not_self_records = [
+        record for record in terminal_records
+        if record.get("true_terminal_self_role_red") != "self_first_kill_terminal"
+    ]
+    red_pred_not_self_records = [
+        record for record in terminal_records
+        if record.get("pred_terminal_self_role_red") != "self_first_kill_terminal"
+    ]
+    diagnostics["blue_view_control"] = {
+        "when_true_role_not_self_first_kill": _blue_first_kill_prob_summary(true_not_self_records),
+        "when_pred_role_not_self_first_kill": _blue_first_kill_prob_summary(pred_not_self_records),
+    }
+    diagnostics["red_view_control"] = {
+        "when_true_role_not_self_first_kill": _single_event_prob_summary(
+            red_true_not_self_records,
+            pred_key="pred_event_red_first_kill_prob",
+            true_key="true_event_red_first_kill",
+        ),
+        "when_pred_role_not_self_first_kill": _single_event_prob_summary(
+            red_pred_not_self_records,
+            pred_key="pred_event_red_first_kill_prob",
+            true_key="true_event_red_first_kill",
+        ),
+    }
+    blue_true_self_records = [
+        record for record in terminal_records
+        if record.get("true_terminal_self_role_blue") == "self_first_kill_terminal"
+    ]
+    red_true_self_records = [
+        record for record in terminal_records
+        if record.get("true_terminal_self_role_red") == "self_first_kill_terminal"
+    ]
+    diagnostics["self_prob_distribution"] = {
+        "blue_view": {
+            "true_self_first_kill_terminal": _scalar_distribution_summary(
+                blue_true_self_records,
+                value_key="pred_terminal_blue_self_first_kill_prob",
+            ),
+            "true_not_self_first_kill_terminal": _scalar_distribution_summary(
+                true_not_self_records,
+                value_key="pred_terminal_blue_self_first_kill_prob",
+            ),
+            "true_non_self_terminal_critical": _scalar_distribution_summary(
+                [
+                    record for record in terminal_records
+                    if record.get("true_terminal_self_role_blue") == "non_self_terminal_critical"
+                ],
+                value_key="pred_terminal_blue_self_first_kill_prob",
+            ),
+            "true_other_terminal": _scalar_distribution_summary(
+                [
+                    record for record in terminal_records
+                    if record.get("true_terminal_self_role_blue") == "other_terminal"
+                ],
+                value_key="pred_terminal_blue_self_first_kill_prob",
+            ),
+        },
+        "red_view": {
+            "true_self_first_kill_terminal": _scalar_distribution_summary(
+                red_true_self_records,
+                value_key="pred_terminal_red_self_first_kill_prob",
+            ),
+            "true_not_self_first_kill_terminal": _scalar_distribution_summary(
+                red_true_not_self_records,
+                value_key="pred_terminal_red_self_first_kill_prob",
+            ),
+            "true_non_self_terminal_critical": _scalar_distribution_summary(
+                [
+                    record for record in terminal_records
+                    if record.get("true_terminal_self_role_red") == "non_self_terminal_critical"
+                ],
+                value_key="pred_terminal_red_self_first_kill_prob",
+            ),
+            "true_other_terminal": _scalar_distribution_summary(
+                [
+                    record for record in terminal_records
+                    if record.get("true_terminal_self_role_red") == "other_terminal"
+                ],
+                value_key="pred_terminal_red_self_first_kill_prob",
+            ),
+        },
+    }
+
+    bucket_diagnostics: Dict[str, Any] = {}
+    for bucket_name in sorted({str(record.get("terminal_confusion_bucket", "none")) for record in terminal_records}):
+        bucket_records = [
+            record for record in terminal_records
+            if str(record.get("terminal_confusion_bucket", "none")) == bucket_name
+        ]
+        bucket_diagnostics[bucket_name] = {
+            "num_samples": len(bucket_records),
+            "red_view_confusion": _build_label_confusion(
+                bucket_records,
+                pred_key="pred_terminal_self_role_red",
+                true_key="true_terminal_self_role_red",
+                labels=TERMINAL_SELF_ROLE_LABELS,
+            ),
+            "blue_view_confusion": _build_label_confusion(
+                bucket_records,
+                pred_key="pred_terminal_self_role_blue",
+                true_key="true_terminal_self_role_blue",
+                labels=TERMINAL_SELF_ROLE_LABELS,
+            ),
+            "blue_first_kill_summary": _blue_first_kill_prob_summary(bucket_records),
+        }
+    diagnostics["by_terminal_confusion_bucket"] = bucket_diagnostics
+    return diagnostics
+
+
 def aggregate_bucket_metrics(
     sample_records: Sequence[Dict[str, Any]],
     bucket_keys: Sequence[str] = DEFAULT_BUCKET_KEYS,
@@ -1748,6 +2105,7 @@ def evaluate_records(
     return {
         "aggregate": aggregate,
         "bucket_metrics": aggregate_bucket_metrics(prediction_records, bucket_keys),
+        "terminal_self_role_diagnostics": build_terminal_self_role_diagnostics(prediction_records),
     }
 
 
@@ -1993,6 +2351,31 @@ def main() -> None:
         default=None,
         help="Optional JSON file to override STAGE2_LOSS_CONFIG fields.",
     )
+    parser.add_argument(
+        "--terminal-self-master-mode",
+        type=str,
+        default="none",
+        choices=["none", "self_head_only", "self_derived"],
+        help="Enable self/non-self terminal master supervision, optionally with terminal first-kill derived from it.",
+    )
+    parser.add_argument(
+        "--self-gate-stability-weight",
+        type=float,
+        default=0.0,
+        help="Extra safe-band stabilization weight on P(self_first_kill_terminal).",
+    )
+    parser.add_argument(
+        "--self-gate-positive-margin",
+        type=float,
+        default=None,
+        help="Optional lower margin for true self_first_kill_terminal samples.",
+    )
+    parser.add_argument(
+        "--self-gate-negative-margin",
+        type=float,
+        default=None,
+        help="Optional upper margin for non-self terminal samples.",
+    )
     args = parser.parse_args()
 
     set_seed(args.seed)
@@ -2010,6 +2393,14 @@ def main() -> None:
         if args.stage2_loss_config_path
         else _build_loss_config(STAGE2_LOSS_CONFIG)
     )
+    train_loss_config["self_gate_stability_weight"] = float(args.self_gate_stability_weight)
+    stage2_loss_config["self_gate_stability_weight"] = float(args.self_gate_stability_weight)
+    if args.self_gate_positive_margin is not None:
+        train_loss_config["self_gate_positive_margin"] = float(args.self_gate_positive_margin)
+        stage2_loss_config["self_gate_positive_margin"] = float(args.self_gate_positive_margin)
+    if args.self_gate_negative_margin is not None:
+        train_loss_config["self_gate_negative_margin"] = float(args.self_gate_negative_margin)
+        stage2_loss_config["self_gate_negative_margin"] = float(args.self_gate_negative_margin)
 
     train_records = load_split_records(args.data_dir, "train")
     val_records = load_split_records(args.data_dir, "val")
@@ -2030,7 +2421,7 @@ def main() -> None:
     train_loader = DataLoader(train_ds, batch_size=args.batch_size, shuffle=True, collate_fn=collate_world_model)
     val_loader = DataLoader(val_ds, batch_size=args.batch_size, shuffle=False, collate_fn=collate_world_model)
 
-    model = WorldModelNet().to(device)
+    model = WorldModelNet(terminal_self_master_mode=args.terminal_self_master_mode).to(device)
     if args.init_model_path is not None:
         model.load_state_dict(torch.load(args.init_model_path, map_location=device), strict=False)
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
@@ -2247,6 +2638,10 @@ def main() -> None:
             "effective_stage2_loss_config": stage2_loss_config,
             "stage2_sampling_summary": stage2_sampling_summary,
             "target_contract": args.target_contract,
+            "terminal_self_master_mode": args.terminal_self_master_mode,
+            "self_gate_stability_weight": args.self_gate_stability_weight,
+            "self_gate_positive_margin": args.self_gate_positive_margin,
+            "self_gate_negative_margin": args.self_gate_negative_margin,
             "reward_norm_stats": reward_norm_stats,
             "processed_summary": processed_summary,
         },

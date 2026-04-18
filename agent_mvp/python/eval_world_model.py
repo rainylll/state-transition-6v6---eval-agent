@@ -59,7 +59,9 @@ def _print_split_summary(name: str, metrics: Dict[str, Any]) -> None:
         f"reward_red_delta_scale={_v('reward_red_delta_scale'):.4f} | "
         f"reward_blue_delta_scale={_v('reward_blue_delta_scale'):.4f} | "
         f"win_acc={_v('terminal_win_accuracy'):.4f} | "
-        f"consistency_mae={_v('consistency_total_mae'):.4f}"
+        f"consistency_mae={_v('consistency_total_mae'):.4f} | "
+        f"self_role_acc={_v('terminal_self_role_accuracy'):.4f} | "
+        f"blue_view_self_role_acc={_v('terminal_self_role_blue_view_accuracy'):.4f}"
     )
 
 
@@ -70,6 +72,13 @@ def main() -> None:
     parser.add_argument("--out-path", type=Path, required=True)
     parser.add_argument("--batch-size", type=int, default=32)
     parser.add_argument("--device", type=str, default="cpu", choices=["cpu", "cuda"])
+    parser.add_argument(
+        "--terminal-self-master-mode",
+        type=str,
+        default="none",
+        choices=["none", "self_head_only", "self_derived"],
+        help="Must match the checkpoint's terminal master-interface mode.",
+    )
     parser.add_argument(
         "--splits",
         type=str,
@@ -91,7 +100,7 @@ def main() -> None:
             reward_source_records.extend(load_split_records(args.data_dir, split_name))
     reward_norm_stats = compute_reward_norm_stats(reward_source_records)
 
-    model = WorldModelNet().to(device)
+    model = WorldModelNet(terminal_self_master_mode=args.terminal_self_master_mode).to(device)
     model.load_state_dict(torch.load(args.model_path, map_location=device), strict=False)
 
     metrics = run_strict_split_evaluation(

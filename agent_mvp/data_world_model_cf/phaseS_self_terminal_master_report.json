@@ -1,0 +1,860 @@
+{
+  "title": "Phase S self/non-self terminal master interface report",
+  "comparison": {
+    "A": "phase10_8 frozen baseline, evaluated with terminal_self_master_mode=none",
+    "S": "phaseS_self_terminal_master_v1, initialized from phase10_8 and trained for 1 stage2 epoch with terminal_self_master_mode=self_derived"
+  },
+  "commands": {
+    "A_reference_train_10_8": "python agent_mvp/python/train_world_model.py --data-dir agent_mvp/data_world_model_cf/ab_train_visible_only --out-dir agent_mvp/data_world_model_cf/phase10_8_firstkill_fix --epochs 0 --stage2-epochs 1 --stage2-lr 0.00015 --init-model-path agent_mvp/data_world_model_cf/phase10_6_ft_nocf/model.pt --stage2-firstkill-focus --stage2-firstkill-positive-repeat 6 --stage2-firstkill-hard-negative-repeat 3 --device cpu --seed 7 --terminal-self-master-mode none",
+    "A_strict_eval": "python agent_mvp/python/eval_world_model.py --data-dir agent_mvp/data_world_model_cf/heldout_pack --model-path agent_mvp/data_world_model_cf/phase10_8_firstkill_fix/model.pt --out-path agent_mvp/data_world_model_cf/phaseS_A_10_8_heldout_strict.json --splits heldout_cf --device cpu --terminal-self-master-mode none",
+    "A_terminal_confusion_eval": "python agent_mvp/python/eval_world_model.py --data-dir agent_mvp/data_world_model_cf/terminal_confusion_pack --model-path agent_mvp/data_world_model_cf/phase10_8_firstkill_fix/model.pt --out-path agent_mvp/data_world_model_cf/phaseS_A_10_8_terminal_confusion.json --splits terminal_confusion_primary_cf --device cpu --terminal-self-master-mode none",
+    "A_counterfactual_eval": "python agent_mvp/python/counterfactual_eval_world_model.py --data-dir agent_mvp/data_world_model_cf/heldout_pack --model-path agent_mvp/data_world_model_cf/phase10_8_firstkill_fix/model.pt --out-path agent_mvp/data_world_model_cf/phaseS_A_10_8_counterfactual_eval.json --splits heldout_cf --horizons 20,terminal --state-step 0 --min-groups 8 --min-pairs 100 --device cpu --terminal-self-master-mode none",
+    "S_prepare_output_dir": "New-Item -ItemType Directory -Force -Path agent_mvp/data_world_model_cf/phaseS_self_terminal_master_v1 | Out-Null",
+    "S_prepare_checkpoint_copy": "Copy-Item -Force agent_mvp/data_world_model_cf/phase10_8_firstkill_fix/model.pt agent_mvp/data_world_model_cf/phaseS_self_terminal_master_v1/model.pt",
+    "S_train": "python agent_mvp/python/train_world_model.py --data-dir agent_mvp/data_world_model_cf/ab_train_visible_only --out-dir agent_mvp/data_world_model_cf/phaseS_self_terminal_master_v1 --epochs 0 --stage2-epochs 1 --stage2-lr 0.00015 --init-model-path agent_mvp/data_world_model_cf/phase10_8_firstkill_fix/model.pt --stage2-firstkill-focus --stage2-firstkill-positive-repeat 6 --stage2-firstkill-hard-negative-repeat 3 --device cpu --seed 7 --terminal-self-master-mode self_derived",
+    "S_strict_eval": "python agent_mvp/python/eval_world_model.py --data-dir agent_mvp/data_world_model_cf/heldout_pack --model-path agent_mvp/data_world_model_cf/phaseS_self_terminal_master_v1/model.pt --out-path agent_mvp/data_world_model_cf/phaseS_self_terminal_master_v1_heldout_strict.json --splits heldout_cf --device cpu --terminal-self-master-mode self_derived",
+    "S_terminal_confusion_eval": "python agent_mvp/python/eval_world_model.py --data-dir agent_mvp/data_world_model_cf/terminal_confusion_pack --model-path agent_mvp/data_world_model_cf/phaseS_self_terminal_master_v1/model.pt --out-path agent_mvp/data_world_model_cf/phaseS_self_terminal_master_v1_terminal_confusion.json --splits terminal_confusion_primary_cf --device cpu --terminal-self-master-mode self_derived",
+    "S_counterfactual_eval": "python agent_mvp/python/counterfactual_eval_world_model.py --data-dir agent_mvp/data_world_model_cf/heldout_pack --model-path agent_mvp/data_world_model_cf/phaseS_self_terminal_master_v1/model.pt --out-path agent_mvp/data_world_model_cf/phaseS_self_terminal_master_v1_counterfactual_eval.json --splits heldout_cf --horizons 20,terminal --state-step 0 --min-groups 8 --min-pairs 100 --device cpu --terminal-self-master-mode self_derived",
+    "S_master_role_eval": "python agent_mvp/python/eval_world_model.py --data-dir agent_mvp/data_world_model_cf/terminal_confusion_pack --model-path agent_mvp/data_world_model_cf/phaseS_self_terminal_master_v1/model.pt --out-path agent_mvp/data_world_model_cf/phaseS_self_terminal_master_v1_terminal_confusion.json --splits terminal_confusion_primary_cf --device cpu --terminal-self-master-mode self_derived"
+  },
+  "mapping_table": {
+    "red_first_kill": {
+      "red_view": "self_first_kill_terminal",
+      "blue_view": "non_self_terminal_critical"
+    },
+    "blue_first_kill": {
+      "red_view": "non_self_terminal_critical",
+      "blue_view": "self_first_kill_terminal"
+    },
+    "blue_objective_only": {
+      "red_view": "non_self_terminal_critical",
+      "blue_view": "non_self_terminal_critical"
+    },
+    "red_objective_only_or_decisive_non_fk": {
+      "red_view": "non_self_terminal_critical",
+      "blue_view": "non_self_terminal_critical"
+    },
+    "no_first_kill_remaining": {
+      "red_view": "other_terminal",
+      "blue_view": "other_terminal"
+    },
+    "other_terminal": {
+      "red_view": "other_terminal",
+      "blue_view": "other_terminal"
+    }
+  },
+  "heldout_pack": {
+    "A": {
+      "event_first_kill_accuracy": 0.7,
+      "critical_event_accuracy": 0.7650000086054206,
+      "blue_first_kill_accuracy": 0.7125,
+      "blue_first_kill_precision": 0.23333333333333334,
+      "termination_flag_accuracy": 0.9625,
+      "reward_red_mae": 3.1467823565006254,
+      "reward_total_mae": 3.074378550052643
+    },
+    "S": {
+      "event_first_kill_accuracy": 0.84375,
+      "critical_event_accuracy": 0.8225000068545342,
+      "blue_first_kill_accuracy": 0.925,
+      "blue_first_kill_precision": 0.6,
+      "termination_flag_accuracy": 0.9625,
+      "reward_red_mae": 3.1896230280399323,
+      "reward_total_mae": 3.1452891498804094,
+      "terminal_self_role_accuracy": 0.275,
+      "terminal_self_role_blue_view_accuracy": 0.175
+    }
+  },
+  "terminal_confusion_primary_cf": {
+    "A": {
+      "aggregate": {
+        "blue_first_kill_false_positive_rate": 0.7,
+        "blue_first_kill_pred_positive_rate": 0.7,
+        "blue_first_kill_accuracy": 0.3,
+        "blue_first_kill_precision": 0.0,
+        "event_first_kill_accuracy": 0.4,
+        "critical_event_accuracy": 0.560000017285347
+      },
+      "blue_view_control": {
+        "when_true_role_not_self_first_kill": {
+          "num_samples": 30,
+          "mean_predicted_blue_prob": 0.6747052758932114,
+          "pred_positive_rate": 0.7,
+          "false_positive_rate": 0.7
+        },
+        "when_pred_role_not_self_first_kill": {
+          "num_samples": 30,
+          "mean_predicted_blue_prob": 0.6747052758932114,
+          "pred_positive_rate": 0.7,
+          "false_positive_rate": 0.7
+        }
+      },
+      "buckets": {
+        "terminal_red_first_kill_outcome_confusion": {
+          "metrics": {
+            "blue_first_kill_pred_positive_rate": 0.8,
+            "blue_first_kill_false_positive_rate": 0.8
+          },
+          "diagnostics": {
+            "mean_predicted_blue_prob": 0.7268585364023844,
+            "blue_view_confusion": {
+              "num_items": 0,
+              "accuracy": null,
+              "counts": {
+                "self_first_kill_terminal": {
+                  "self_first_kill_terminal": 0,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                },
+                "non_self_terminal_critical": {
+                  "self_first_kill_terminal": 0,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                },
+                "other_terminal": {
+                  "self_first_kill_terminal": 0,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                }
+              }
+            },
+            "red_view_confusion": {
+              "num_items": 0,
+              "accuracy": null,
+              "counts": {
+                "self_first_kill_terminal": {
+                  "self_first_kill_terminal": 0,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                },
+                "non_self_terminal_critical": {
+                  "self_first_kill_terminal": 0,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                },
+                "other_terminal": {
+                  "self_first_kill_terminal": 0,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                }
+              }
+            }
+          }
+        },
+        "terminal_blue_objective_without_first_kill": {
+          "metrics": {
+            "blue_first_kill_pred_positive_rate": 0.6,
+            "blue_first_kill_false_positive_rate": 0.6
+          },
+          "diagnostics": {
+            "mean_predicted_blue_prob": 0.6225520153840383,
+            "blue_view_confusion": {
+              "num_items": 0,
+              "accuracy": null,
+              "counts": {
+                "self_first_kill_terminal": {
+                  "self_first_kill_terminal": 0,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                },
+                "non_self_terminal_critical": {
+                  "self_first_kill_terminal": 0,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                },
+                "other_terminal": {
+                  "self_first_kill_terminal": 0,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                }
+              }
+            },
+            "red_view_confusion": {
+              "num_items": 0,
+              "accuracy": null,
+              "counts": {
+                "self_first_kill_terminal": {
+                  "self_first_kill_terminal": 0,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                },
+                "non_self_terminal_critical": {
+                  "self_first_kill_terminal": 0,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                },
+                "other_terminal": {
+                  "self_first_kill_terminal": 0,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "S": {
+      "aggregate": {
+        "blue_first_kill_false_positive_rate": 0.06666666666666667,
+        "blue_first_kill_pred_positive_rate": 0.06666666666666667,
+        "blue_first_kill_accuracy": 0.9333333333333333,
+        "blue_first_kill_precision": 0.0,
+        "event_first_kill_accuracy": 0.75,
+        "critical_event_accuracy": 0.700000015894572,
+        "terminal_self_role_accuracy": 0.25,
+        "terminal_self_role_blue_view_accuracy": 0.0
+      },
+      "blue_view_control": {
+        "when_true_role_not_self_first_kill": {
+          "num_samples": 30,
+          "mean_predicted_blue_prob": 0.48381693263848624,
+          "pred_positive_rate": 0.06666666666666667,
+          "false_positive_rate": 0.06666666666666667
+        },
+        "when_pred_role_not_self_first_kill": {
+          "num_samples": 0,
+          "mean_predicted_blue_prob": null,
+          "pred_positive_rate": null,
+          "false_positive_rate": null
+        }
+      },
+      "buckets": {
+        "terminal_red_first_kill_outcome_confusion": {
+          "metrics": {
+            "blue_first_kill_pred_positive_rate": 0.13333333333333333,
+            "blue_first_kill_false_positive_rate": 0.13333333333333333
+          },
+          "diagnostics": {
+            "mean_predicted_blue_prob": 0.4879976590474447,
+            "blue_view_confusion": {
+              "num_items": 15,
+              "accuracy": 0.0,
+              "counts": {
+                "self_first_kill_terminal": {
+                  "self_first_kill_terminal": 0,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                },
+                "non_self_terminal_critical": {
+                  "self_first_kill_terminal": 15,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                },
+                "other_terminal": {
+                  "self_first_kill_terminal": 0,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                }
+              }
+            },
+            "red_view_confusion": {
+              "num_items": 15,
+              "accuracy": 1.0,
+              "counts": {
+                "self_first_kill_terminal": {
+                  "self_first_kill_terminal": 15,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                },
+                "non_self_terminal_critical": {
+                  "self_first_kill_terminal": 0,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                },
+                "other_terminal": {
+                  "self_first_kill_terminal": 0,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                }
+              }
+            }
+          }
+        },
+        "terminal_blue_objective_without_first_kill": {
+          "metrics": {
+            "blue_first_kill_pred_positive_rate": 0.0,
+            "blue_first_kill_false_positive_rate": 0.0
+          },
+          "diagnostics": {
+            "mean_predicted_blue_prob": 0.4796362062295278,
+            "blue_view_confusion": {
+              "num_items": 15,
+              "accuracy": 0.0,
+              "counts": {
+                "self_first_kill_terminal": {
+                  "self_first_kill_terminal": 0,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                },
+                "non_self_terminal_critical": {
+                  "self_first_kill_terminal": 15,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                },
+                "other_terminal": {
+                  "self_first_kill_terminal": 0,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                }
+              }
+            },
+            "red_view_confusion": {
+              "num_items": 15,
+              "accuracy": 0.0,
+              "counts": {
+                "self_first_kill_terminal": {
+                  "self_first_kill_terminal": 0,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                },
+                "non_self_terminal_critical": {
+                  "self_first_kill_terminal": 15,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                },
+                "other_terminal": {
+                  "self_first_kill_terminal": 0,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "counterfactual": {
+    "A": {
+      "event_blue_first_kill_prob": {
+        "num_pairs": 160,
+        "num_signal_pairs": 20,
+        "delta_mae": 0.1252025443998889,
+        "mean_true_abs_delta": 0.125,
+        "mean_pred_abs_delta": 0.00024835205951490025,
+        "sign_accuracy_on_signal_pairs": 0.4
+      },
+      "event_red_first_kill_prob": {
+        "num_pairs": 160,
+        "num_signal_pairs": 44,
+        "delta_mae": 0.2750183649135579,
+        "mean_true_abs_delta": 0.275,
+        "mean_pred_abs_delta": 0.0003038264585484285,
+        "sign_accuracy_on_signal_pairs": 0.6363636363636364
+      },
+      "termination_flag": {
+        "num_pairs": 160,
+        "num_signal_pairs": 12,
+        "delta_mae": 0.07500086683501195,
+        "mean_true_abs_delta": 0.075,
+        "mean_pred_abs_delta": 1.0337280173189357e-06,
+        "sign_accuracy_on_signal_pairs": 0.4166666666666667
+      },
+      "reward_red": {
+        "num_pairs": 160,
+        "num_signal_pairs": 59,
+        "delta_mae": 0.4589861766435206,
+        "mean_true_abs_delta": 0.4585757934488356,
+        "mean_pred_abs_delta": 0.001209578663110733,
+        "sign_accuracy_on_signal_pairs": 0.6101694915254238
+      },
+      "terminal_red_win_prob": {
+        "num_pairs": 160,
+        "num_signal_pairs": 88,
+        "delta_mae": 0.5500929437577724,
+        "mean_true_abs_delta": 0.55,
+        "mean_pred_abs_delta": 0.0008214812725782395,
+        "sign_accuracy_on_signal_pairs": 0.6704545454545454
+      }
+    },
+    "S": {
+      "event_blue_first_kill_prob": {
+        "num_pairs": 160,
+        "num_signal_pairs": 20,
+        "delta_mae": 0.12502586024786808,
+        "mean_true_abs_delta": 0.125,
+        "mean_pred_abs_delta": 3.480019952633029e-05,
+        "sign_accuracy_on_signal_pairs": 0.55
+      },
+      "event_red_first_kill_prob": {
+        "num_pairs": 160,
+        "num_signal_pairs": 44,
+        "delta_mae": 0.27505738726376877,
+        "mean_true_abs_delta": 0.275,
+        "mean_pred_abs_delta": 7.138690471037989e-05,
+        "sign_accuracy_on_signal_pairs": 0.22727272727272727
+      },
+      "termination_flag": {
+        "num_pairs": 160,
+        "num_signal_pairs": 12,
+        "delta_mae": 0.07500304126598038,
+        "mean_true_abs_delta": 0.075,
+        "mean_pred_abs_delta": 3.7565217176904753e-06,
+        "sign_accuracy_on_signal_pairs": 0.5
+      },
+      "reward_red": {
+        "num_pairs": 160,
+        "num_signal_pairs": 59,
+        "delta_mae": 0.4590647258795798,
+        "mean_true_abs_delta": 0.4585757934488356,
+        "mean_pred_abs_delta": 0.0012891069054603577,
+        "sign_accuracy_on_signal_pairs": 0.6101694915254238
+      },
+      "terminal_red_win_prob": {
+        "num_pairs": 160,
+        "num_signal_pairs": 88,
+        "delta_mae": 0.5500890653580427,
+        "mean_true_abs_delta": 0.55,
+        "mean_pred_abs_delta": 0.0008378401398658752,
+        "sign_accuracy_on_signal_pairs": 0.6704545454545454
+      }
+    }
+  },
+  "terminal_self_role": {
+    "heldout_S": {
+      "labels": [
+        "self_first_kill_terminal",
+        "non_self_terminal_critical",
+        "other_terminal"
+      ],
+      "red_view": {
+        "num_items": 40,
+        "accuracy": 0.375,
+        "counts": {
+          "self_first_kill_terminal": {
+            "self_first_kill_terminal": 15,
+            "non_self_terminal_critical": 0,
+            "other_terminal": 0
+          },
+          "non_self_terminal_critical": {
+            "self_first_kill_terminal": 22,
+            "non_self_terminal_critical": 0,
+            "other_terminal": 0
+          },
+          "other_terminal": {
+            "self_first_kill_terminal": 3,
+            "non_self_terminal_critical": 0,
+            "other_terminal": 0
+          }
+        }
+      },
+      "blue_view": {
+        "num_items": 40,
+        "accuracy": 0.175,
+        "counts": {
+          "self_first_kill_terminal": {
+            "self_first_kill_terminal": 7,
+            "non_self_terminal_critical": 0,
+            "other_terminal": 0
+          },
+          "non_self_terminal_critical": {
+            "self_first_kill_terminal": 30,
+            "non_self_terminal_critical": 0,
+            "other_terminal": 0
+          },
+          "other_terminal": {
+            "self_first_kill_terminal": 3,
+            "non_self_terminal_critical": 0,
+            "other_terminal": 0
+          }
+        }
+      },
+      "overall": {
+        "num_items": 80,
+        "accuracy": 0.275
+      },
+      "blue_view_control": {
+        "when_true_role_not_self_first_kill": {
+          "num_samples": 33,
+          "mean_predicted_blue_prob": 0.4837144839041161,
+          "pred_positive_rate": 0.06060606060606061,
+          "false_positive_rate": 0.06060606060606061
+        },
+        "when_pred_role_not_self_first_kill": {
+          "num_samples": 0,
+          "mean_predicted_blue_prob": null,
+          "pred_positive_rate": null,
+          "false_positive_rate": null
+        }
+      },
+      "by_terminal_confusion_bucket": {
+        "none": {
+          "num_samples": 7,
+          "red_view_confusion": {
+            "num_items": 7,
+            "accuracy": 0.0,
+            "counts": {
+              "self_first_kill_terminal": {
+                "self_first_kill_terminal": 0,
+                "non_self_terminal_critical": 0,
+                "other_terminal": 0
+              },
+              "non_self_terminal_critical": {
+                "self_first_kill_terminal": 7,
+                "non_self_terminal_critical": 0,
+                "other_terminal": 0
+              },
+              "other_terminal": {
+                "self_first_kill_terminal": 0,
+                "non_self_terminal_critical": 0,
+                "other_terminal": 0
+              }
+            }
+          },
+          "blue_view_confusion": {
+            "num_items": 7,
+            "accuracy": 1.0,
+            "counts": {
+              "self_first_kill_terminal": {
+                "self_first_kill_terminal": 7,
+                "non_self_terminal_critical": 0,
+                "other_terminal": 0
+              },
+              "non_self_terminal_critical": {
+                "self_first_kill_terminal": 0,
+                "non_self_terminal_critical": 0,
+                "other_terminal": 0
+              },
+              "other_terminal": {
+                "self_first_kill_terminal": 0,
+                "non_self_terminal_critical": 0,
+                "other_terminal": 0
+              }
+            }
+          },
+          "blue_first_kill_summary": {
+            "num_samples": 7,
+            "mean_predicted_blue_prob": 0.49783449513571604,
+            "pred_positive_rate": 0.42857142857142855,
+            "false_positive_rate": null
+          }
+        },
+        "terminal_blue_objective_without_first_kill": {
+          "num_samples": 15,
+          "red_view_confusion": {
+            "num_items": 15,
+            "accuracy": 0.0,
+            "counts": {
+              "self_first_kill_terminal": {
+                "self_first_kill_terminal": 0,
+                "non_self_terminal_critical": 0,
+                "other_terminal": 0
+              },
+              "non_self_terminal_critical": {
+                "self_first_kill_terminal": 15,
+                "non_self_terminal_critical": 0,
+                "other_terminal": 0
+              },
+              "other_terminal": {
+                "self_first_kill_terminal": 0,
+                "non_self_terminal_critical": 0,
+                "other_terminal": 0
+              }
+            }
+          },
+          "blue_view_confusion": {
+            "num_items": 15,
+            "accuracy": 0.0,
+            "counts": {
+              "self_first_kill_terminal": {
+                "self_first_kill_terminal": 0,
+                "non_self_terminal_critical": 0,
+                "other_terminal": 0
+              },
+              "non_self_terminal_critical": {
+                "self_first_kill_terminal": 15,
+                "non_self_terminal_critical": 0,
+                "other_terminal": 0
+              },
+              "other_terminal": {
+                "self_first_kill_terminal": 0,
+                "non_self_terminal_critical": 0,
+                "other_terminal": 0
+              }
+            }
+          },
+          "blue_first_kill_summary": {
+            "num_samples": 15,
+            "mean_predicted_blue_prob": 0.4796362062295278,
+            "pred_positive_rate": 0.0,
+            "false_positive_rate": 0.0
+          }
+        },
+        "terminal_or_late_window_without_any_first_kill_remaining": {
+          "num_samples": 3,
+          "red_view_confusion": {
+            "num_items": 3,
+            "accuracy": 0.0,
+            "counts": {
+              "self_first_kill_terminal": {
+                "self_first_kill_terminal": 0,
+                "non_self_terminal_critical": 0,
+                "other_terminal": 0
+              },
+              "non_self_terminal_critical": {
+                "self_first_kill_terminal": 0,
+                "non_self_terminal_critical": 0,
+                "other_terminal": 0
+              },
+              "other_terminal": {
+                "self_first_kill_terminal": 3,
+                "non_self_terminal_critical": 0,
+                "other_terminal": 0
+              }
+            }
+          },
+          "blue_view_confusion": {
+            "num_items": 3,
+            "accuracy": 0.0,
+            "counts": {
+              "self_first_kill_terminal": {
+                "self_first_kill_terminal": 0,
+                "non_self_terminal_critical": 0,
+                "other_terminal": 0
+              },
+              "non_self_terminal_critical": {
+                "self_first_kill_terminal": 0,
+                "non_self_terminal_critical": 0,
+                "other_terminal": 0
+              },
+              "other_terminal": {
+                "self_first_kill_terminal": 3,
+                "non_self_terminal_critical": 0,
+                "other_terminal": 0
+              }
+            }
+          },
+          "blue_first_kill_summary": {
+            "num_samples": 3,
+            "mean_predicted_blue_prob": 0.4826899965604146,
+            "pred_positive_rate": 0.0,
+            "false_positive_rate": 0.0
+          }
+        },
+        "terminal_red_first_kill_outcome_confusion": {
+          "num_samples": 15,
+          "red_view_confusion": {
+            "num_items": 15,
+            "accuracy": 1.0,
+            "counts": {
+              "self_first_kill_terminal": {
+                "self_first_kill_terminal": 15,
+                "non_self_terminal_critical": 0,
+                "other_terminal": 0
+              },
+              "non_self_terminal_critical": {
+                "self_first_kill_terminal": 0,
+                "non_self_terminal_critical": 0,
+                "other_terminal": 0
+              },
+              "other_terminal": {
+                "self_first_kill_terminal": 0,
+                "non_self_terminal_critical": 0,
+                "other_terminal": 0
+              }
+            }
+          },
+          "blue_view_confusion": {
+            "num_items": 15,
+            "accuracy": 0.0,
+            "counts": {
+              "self_first_kill_terminal": {
+                "self_first_kill_terminal": 0,
+                "non_self_terminal_critical": 0,
+                "other_terminal": 0
+              },
+              "non_self_terminal_critical": {
+                "self_first_kill_terminal": 15,
+                "non_self_terminal_critical": 0,
+                "other_terminal": 0
+              },
+              "other_terminal": {
+                "self_first_kill_terminal": 0,
+                "non_self_terminal_critical": 0,
+                "other_terminal": 0
+              }
+            }
+          },
+          "blue_first_kill_summary": {
+            "num_samples": 15,
+            "mean_predicted_blue_prob": 0.4879976590474447,
+            "pred_positive_rate": 0.13333333333333333,
+            "false_positive_rate": 0.13333333333333333
+          }
+        }
+      }
+    },
+    "terminal_confusion_S": {
+      "labels": [
+        "self_first_kill_terminal",
+        "non_self_terminal_critical",
+        "other_terminal"
+      ],
+      "red_view": {
+        "num_items": 30,
+        "accuracy": 0.5,
+        "counts": {
+          "self_first_kill_terminal": {
+            "self_first_kill_terminal": 15,
+            "non_self_terminal_critical": 0,
+            "other_terminal": 0
+          },
+          "non_self_terminal_critical": {
+            "self_first_kill_terminal": 15,
+            "non_self_terminal_critical": 0,
+            "other_terminal": 0
+          },
+          "other_terminal": {
+            "self_first_kill_terminal": 0,
+            "non_self_terminal_critical": 0,
+            "other_terminal": 0
+          }
+        }
+      },
+      "blue_view": {
+        "num_items": 30,
+        "accuracy": 0.0,
+        "counts": {
+          "self_first_kill_terminal": {
+            "self_first_kill_terminal": 0,
+            "non_self_terminal_critical": 0,
+            "other_terminal": 0
+          },
+          "non_self_terminal_critical": {
+            "self_first_kill_terminal": 30,
+            "non_self_terminal_critical": 0,
+            "other_terminal": 0
+          },
+          "other_terminal": {
+            "self_first_kill_terminal": 0,
+            "non_self_terminal_critical": 0,
+            "other_terminal": 0
+          }
+        }
+      },
+      "overall": {
+        "num_items": 60,
+        "accuracy": 0.25
+      },
+      "blue_view_control": {
+        "when_true_role_not_self_first_kill": {
+          "num_samples": 30,
+          "mean_predicted_blue_prob": 0.48381693263848624,
+          "pred_positive_rate": 0.06666666666666667,
+          "false_positive_rate": 0.06666666666666667
+        },
+        "when_pred_role_not_self_first_kill": {
+          "num_samples": 0,
+          "mean_predicted_blue_prob": null,
+          "pred_positive_rate": null,
+          "false_positive_rate": null
+        }
+      },
+      "by_terminal_confusion_bucket": {
+        "terminal_blue_objective_without_first_kill": {
+          "num_samples": 15,
+          "red_view_confusion": {
+            "num_items": 15,
+            "accuracy": 0.0,
+            "counts": {
+              "self_first_kill_terminal": {
+                "self_first_kill_terminal": 0,
+                "non_self_terminal_critical": 0,
+                "other_terminal": 0
+              },
+              "non_self_terminal_critical": {
+                "self_first_kill_terminal": 15,
+                "non_self_terminal_critical": 0,
+                "other_terminal": 0
+              },
+              "other_terminal": {
+                "self_first_kill_terminal": 0,
+                "non_self_terminal_critical": 0,
+                "other_terminal": 0
+              }
+            }
+          },
+          "blue_view_confusion": {
+            "num_items": 15,
+            "accuracy": 0.0,
+            "counts": {
+              "self_first_kill_terminal": {
+                "self_first_kill_terminal": 0,
+                "non_self_terminal_critical": 0,
+                "other_terminal": 0
+              },
+              "non_self_terminal_critical": {
+                "self_first_kill_terminal": 15,
+                "non_self_terminal_critical": 0,
+                "other_terminal": 0
+              },
+              "other_terminal": {
+                "self_first_kill_terminal": 0,
+                "non_self_terminal_critical": 0,
+                "other_terminal": 0
+              }
+            }
+          },
+          "blue_first_kill_summary": {
+            "num_samples": 15,
+            "mean_predicted_blue_prob": 0.4796362062295278,
+            "pred_positive_rate": 0.0,
+            "false_positive_rate": 0.0
+          }
+        },
+        "terminal_red_first_kill_outcome_confusion": {
+          "num_samples": 15,
+          "red_view_confusion": {
+            "num_items": 15,
+            "accuracy": 1.0,
+            "counts": {
+              "self_first_kill_terminal": {
+                "self_first_kill_terminal": 15,
+                "non_self_terminal_critical": 0,
+                "other_terminal": 0
+              },
+              "non_self_terminal_critical": {
+                "self_first_kill_terminal": 0,
+                "non_self_terminal_critical": 0,
+                "other_terminal": 0
+              },
+              "other_terminal": {
+                "self_first_kill_terminal": 0,
+                "non_self_terminal_critical": 0,
+                "other_terminal": 0
+              }
+            }
+          },
+          "blue_view_confusion": {
+            "num_items": 15,
+            "accuracy": 0.0,
+            "counts": {
+              "self_first_kill_terminal": {
+                "self_first_kill_terminal": 0,
+                "non_self_terminal_critical": 0,
+                "other_terminal": 0
+              },
+              "non_self_terminal_critical": {
+                "self_first_kill_terminal": 15,
+                "non_self_terminal_critical": 0,
+                "other_terminal": 0
+              },
+              "other_terminal": {
+                "self_first_kill_terminal": 0,
+                "non_self_terminal_critical": 0,
+                "other_terminal": 0
+              }
+            }
+          },
+          "blue_first_kill_summary": {
+            "num_samples": 15,
+            "mean_predicted_blue_prob": 0.4879976590474447,
+            "pred_positive_rate": 0.13333333333333333,
+            "false_positive_rate": 0.13333333333333333
+          }
+        }
+      }
+    }
+  }
+}

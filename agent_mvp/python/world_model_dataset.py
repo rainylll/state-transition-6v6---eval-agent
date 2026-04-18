@@ -51,6 +51,9 @@ EVENT_COUNT_KEYS = (
     "red_dodge_trigger_count",
     "blue_dodge_trigger_count",
 )
+VIEW_SIDE_LABELS = ("red", "blue")
+VIEW_SIDE_TO_ID = {label: idx for idx, label in enumerate(VIEW_SIDE_LABELS)}
+OPPOSING_VIEW_SIDE = {"red": "blue", "blue": "red"}
 TERMINAL_CRITICAL_ROLE_LABELS = (
     "blue_first_kill",
     "red_first_kill",
@@ -60,6 +63,14 @@ TERMINAL_CRITICAL_ROLE_LABELS = (
 )
 TERMINAL_CRITICAL_ROLE_TO_ID = {
     label: idx for idx, label in enumerate(TERMINAL_CRITICAL_ROLE_LABELS)
+}
+TERMINAL_SELF_ROLE_LABELS = (
+    "self_first_kill_terminal",
+    "non_self_terminal_critical",
+    "other_terminal",
+)
+TERMINAL_SELF_ROLE_TO_ID = {
+    label: idx for idx, label in enumerate(TERMINAL_SELF_ROLE_LABELS)
 }
 REWARD_KEYS = ("red", "blue")
 UNIT_FEATURE_KEYS = (
@@ -77,6 +88,7 @@ EVENT_FLAG_DIM = len(EVENT_FLAG_KEYS)
 EVENT_COUNT_DIM = len(EVENT_COUNT_KEYS)
 REWARD_DIM = len(REWARD_KEYS)
 TERMINAL_CRITICAL_ROLE_DIM = len(TERMINAL_CRITICAL_ROLE_LABELS)
+TERMINAL_SELF_ROLE_DIM = len(TERMINAL_SELF_ROLE_LABELS)
 _NUMERIC_ID_RE = re.compile(r"-?\d+")
 TARGET_CONTRACTS = ("baseline", "phaseA_v1", "phaseC_v1")
 PHASEA_BLUE_TERMINAL_CONFLICT_WEIGHT = 2.5
@@ -269,6 +281,40 @@ def _build_terminal_role_targets(record: Dict) -> Dict[str, torch.Tensor]:
     return {
         "terminal_critical_role_id": torch.tensor(TERMINAL_CRITICAL_ROLE_TO_ID[role_label], dtype=torch.long),
         "terminal_critical_role_mask": torch.tensor(mask, dtype=torch.float32),
+    }
+
+
+def derive_terminal_self_role_label(record: Dict, view_side: str) -> str:
+    side = str(view_side).strip().lower()
+    if side not in OPPOSING_VIEW_SIDE:
+        raise KeyError(f"Unsupported terminal self-role view side: {view_side}")
+
+    if str(record.get("horizon", "terminal")) != "terminal":
+        return "other_terminal"
+
+    target_event = record.get("target_event", {}) if isinstance(record.get("target_event", {}), dict) else {}
+    other_side = OPPOSING_VIEW_SIDE[side]
+    self_first_kill = bool(target_event.get(f"{side}_first_kill_flag", False))
+    other_first_kill = bool(target_event.get(f"{other_side}_first_kill_flag", False))
+    self_objective = bool(target_event.get(f"{side}_objective_complete_flag", False))
+    other_objective = bool(target_event.get(f"{other_side}_objective_complete_flag", False))
+
+    if self_first_kill:
+        return "self_first_kill_terminal"
+    if other_first_kill or self_objective or other_objective:
+        return "non_self_terminal_critical"
+    return "other_terminal"
+
+
+def _build_terminal_self_role_targets(record: Dict) -> Dict[str, torch.Tensor]:
+    mask = 1.0 if str(record.get("horizon", "terminal")) == "terminal" else 0.0
+    role_ids = [
+        TERMINAL_SELF_ROLE_TO_ID[derive_terminal_self_role_label(record, view_side)]
+        for view_side in VIEW_SIDE_LABELS
+    ]
+    return {
+        "terminal_self_role_ids": torch.tensor(role_ids, dtype=torch.long),
+        "terminal_self_role_mask": torch.tensor([mask, mask], dtype=torch.float32),
     }
 
 
@@ -465,6 +511,7 @@ class WorldModelDataset(Dataset):
         }
         sample.update(terminal_scalars)
         sample.update(_build_terminal_role_targets(record))
+        sample.update(_build_terminal_self_role_targets(record))
         sample.update(_build_event_targets(record, target_contract=self.target_contract))
         sample.update({
             "reward_target": build_reward_target_tensor(record.get("target_reward", {}), self.reward_norm_stats)
@@ -558,6 +605,8 @@ def collate_world_model(batch: List[Dict]) -> Dict:
         "terminal_blue_mean_missile": torch.stack([item["terminal_blue_mean_missile"] for item in batch], dim=0),
         "terminal_critical_role_id": torch.stack([item["terminal_critical_role_id"] for item in batch], dim=0),
         "terminal_critical_role_mask": torch.stack([item["terminal_critical_role_mask"] for item in batch], dim=0),
+        "terminal_self_role_ids": torch.stack([item["terminal_self_role_ids"] for item in batch], dim=0),
+        "terminal_self_role_mask": torch.stack([item["terminal_self_role_mask"] for item in batch], dim=0),
         "event_flags": torch.stack([item["event_flags"] for item in batch], dim=0),
         "event_flag_weights": torch.stack([item["event_flag_weights"] for item in batch], dim=0),
         "event_counts": torch.stack([item["event_counts"] for item in batch], dim=0),

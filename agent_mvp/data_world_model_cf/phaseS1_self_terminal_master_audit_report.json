@@ -1,0 +1,1545 @@
+{
+  "title": "Phase S.1 reproduction, mirror, and gate audit",
+  "commands": {
+    "A_eval_heldout": "python agent_mvp/python/eval_world_model.py --data-dir agent_mvp/data_world_model_cf/heldout_pack --model-path agent_mvp/data_world_model_cf/phase10_8_firstkill_fix/model.pt --out-path agent_mvp/data_world_model_cf/phaseS1_A_10_8_heldout_strict.json --splits heldout_cf --device cpu --terminal-self-master-mode none",
+    "A_eval_terminal_confusion": "python agent_mvp/python/eval_world_model.py --data-dir agent_mvp/data_world_model_cf/terminal_confusion_pack --model-path agent_mvp/data_world_model_cf/phase10_8_firstkill_fix/model.pt --out-path agent_mvp/data_world_model_cf/phaseS1_A_10_8_terminal_confusion.json --splits terminal_confusion_primary_cf --device cpu --terminal-self-master-mode none",
+    "S_seed7_train": "python agent_mvp/python/train_world_model.py --data-dir agent_mvp/data_world_model_cf/ab_train_visible_only --out-dir agent_mvp/data_world_model_cf/phaseS_self_terminal_master_v1 --epochs 0 --stage2-epochs 1 --stage2-lr 0.00015 --init-model-path agent_mvp/data_world_model_cf/phase10_8_firstkill_fix/model.pt --stage2-firstkill-focus --stage2-firstkill-positive-repeat 6 --stage2-firstkill-hard-negative-repeat 3 --device cpu --seed 7 --terminal-self-master-mode self_derived",
+    "S_seed11_train": "python agent_mvp/python/train_world_model.py --data-dir agent_mvp/data_world_model_cf/ab_train_visible_only --out-dir agent_mvp/data_world_model_cf/phaseS_self_terminal_master_v1_seed11 --epochs 0 --stage2-epochs 1 --stage2-lr 0.00015 --init-model-path agent_mvp/data_world_model_cf/phase10_8_firstkill_fix/model.pt --stage2-firstkill-focus --stage2-firstkill-positive-repeat 6 --stage2-firstkill-hard-negative-repeat 3 --device cpu --seed 11 --terminal-self-master-mode self_derived",
+    "S_seed19_train": "python agent_mvp/python/train_world_model.py --data-dir agent_mvp/data_world_model_cf/ab_train_visible_only --out-dir agent_mvp/data_world_model_cf/phaseS_self_terminal_master_v1_seed19 --epochs 0 --stage2-epochs 1 --stage2-lr 0.00015 --init-model-path agent_mvp/data_world_model_cf/phase10_8_firstkill_fix/model.pt --stage2-firstkill-focus --stage2-firstkill-positive-repeat 6 --stage2-firstkill-hard-negative-repeat 3 --device cpu --seed 19 --terminal-self-master-mode self_derived",
+    "ablation_head_only_seed7_train": "python agent_mvp/python/train_world_model.py --data-dir agent_mvp/data_world_model_cf/ab_train_visible_only --out-dir agent_mvp/data_world_model_cf/phaseS_self_terminal_master_head_only_seed7 --epochs 0 --stage2-epochs 1 --stage2-lr 0.00015 --init-model-path agent_mvp/data_world_model_cf/phase10_8_firstkill_fix/model.pt --stage2-firstkill-focus --stage2-firstkill-positive-repeat 6 --stage2-firstkill-hard-negative-repeat 3 --device cpu --seed 7 --terminal-self-master-mode self_head_only"
+  },
+  "runs": {
+    "A_10_8": {
+      "seed": null,
+      "mode": "none",
+      "heldout_pack": {
+        "event_first_kill_accuracy": 0.7,
+        "critical_event_accuracy": 0.7650000086054206,
+        "blue_first_kill_accuracy": 0.7125,
+        "blue_first_kill_precision": 0.23333333333333334,
+        "termination_flag_accuracy": 0.9625,
+        "reward_red_mae": 3.1467823565006254,
+        "reward_total_mae": 3.074378550052643,
+        "terminal_self_role_accuracy": null,
+        "terminal_self_role_red_view_accuracy": null,
+        "terminal_self_role_blue_view_accuracy": null
+      },
+      "terminal_confusion_primary_cf": {
+        "aggregate": {
+          "blue_first_kill_false_positive_rate": 0.7,
+          "blue_first_kill_pred_positive_rate": 0.7,
+          "blue_first_kill_accuracy": 0.3,
+          "blue_first_kill_precision": 0.0,
+          "event_first_kill_accuracy": 0.4,
+          "critical_event_accuracy": 0.560000017285347,
+          "terminal_self_role_accuracy": null,
+          "terminal_self_role_red_view_accuracy": null,
+          "terminal_self_role_blue_view_accuracy": null
+        },
+        "blue_view_control": {
+          "when_true_role_not_self_first_kill": {
+            "num_samples": 30,
+            "mean_predicted_blue_prob": 0.6747052758932114,
+            "pred_positive_rate": 0.7,
+            "false_positive_rate": 0.7
+          },
+          "when_pred_role_not_self_first_kill": {
+            "num_samples": 30,
+            "mean_predicted_blue_prob": 0.6747052758932114,
+            "pred_positive_rate": 0.7,
+            "false_positive_rate": 0.7
+          }
+        },
+        "red_view_control": {
+          "when_true_role_not_self_first_kill": {
+            "num_samples": 30,
+            "mean_predicted_prob": 0.7706266224384308,
+            "pred_positive_rate": 1.0,
+            "false_positive_rate": 1.0
+          },
+          "when_pred_role_not_self_first_kill": {
+            "num_samples": 30,
+            "mean_predicted_prob": 0.7706266224384308,
+            "pred_positive_rate": 1.0,
+            "false_positive_rate": 1.0
+          }
+        },
+        "heldout_blue_view_control": {
+          "when_true_role_not_self_first_kill": {
+            "num_samples": 40,
+            "mean_predicted_blue_prob": 0.7103544510900974,
+            "pred_positive_rate": 0.75,
+            "false_positive_rate": 0.696969696969697
+          },
+          "when_pred_role_not_self_first_kill": {
+            "num_samples": 40,
+            "mean_predicted_blue_prob": 0.7103544510900974,
+            "pred_positive_rate": 0.75,
+            "false_positive_rate": 0.696969696969697
+          }
+        },
+        "heldout_red_view_control": {
+          "when_true_role_not_self_first_kill": {
+            "num_samples": 40,
+            "mean_predicted_prob": 0.7637975737452507,
+            "pred_positive_rate": 1.0,
+            "false_positive_rate": 1.0
+          },
+          "when_pred_role_not_self_first_kill": {
+            "num_samples": 40,
+            "mean_predicted_prob": 0.7637975737452507,
+            "pred_positive_rate": 1.0,
+            "false_positive_rate": 1.0
+          }
+        },
+        "buckets": {
+          "terminal_red_first_kill_outcome_confusion": {
+            "metrics": {
+              "blue_first_kill_pred_positive_rate": 0.8,
+              "blue_first_kill_false_positive_rate": 0.8
+            },
+            "gate_audit": {
+              "num_samples": 15,
+              "mean_predicted_blue_prob": 0.7268585364023844,
+              "pred_positive_rate": 0.8,
+              "false_positive_rate": 0.8
+            },
+            "red_view_confusion": {
+              "num_items": 0,
+              "accuracy": null,
+              "counts": {
+                "self_first_kill_terminal": {
+                  "self_first_kill_terminal": 0,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                },
+                "non_self_terminal_critical": {
+                  "self_first_kill_terminal": 0,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                },
+                "other_terminal": {
+                  "self_first_kill_terminal": 0,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                }
+              }
+            },
+            "blue_view_confusion": {
+              "num_items": 0,
+              "accuracy": null,
+              "counts": {
+                "self_first_kill_terminal": {
+                  "self_first_kill_terminal": 0,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                },
+                "non_self_terminal_critical": {
+                  "self_first_kill_terminal": 0,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                },
+                "other_terminal": {
+                  "self_first_kill_terminal": 0,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                }
+              }
+            }
+          },
+          "terminal_blue_objective_without_first_kill": {
+            "metrics": {
+              "blue_first_kill_pred_positive_rate": 0.6,
+              "blue_first_kill_false_positive_rate": 0.6
+            },
+            "gate_audit": {
+              "num_samples": 15,
+              "mean_predicted_blue_prob": 0.6225520153840383,
+              "pred_positive_rate": 0.6,
+              "false_positive_rate": 0.6
+            },
+            "red_view_confusion": {
+              "num_items": 0,
+              "accuracy": null,
+              "counts": {
+                "self_first_kill_terminal": {
+                  "self_first_kill_terminal": 0,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                },
+                "non_self_terminal_critical": {
+                  "self_first_kill_terminal": 0,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                },
+                "other_terminal": {
+                  "self_first_kill_terminal": 0,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                }
+              }
+            },
+            "blue_view_confusion": {
+              "num_items": 0,
+              "accuracy": null,
+              "counts": {
+                "self_first_kill_terminal": {
+                  "self_first_kill_terminal": 0,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                },
+                "non_self_terminal_critical": {
+                  "self_first_kill_terminal": 0,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                },
+                "other_terminal": {
+                  "self_first_kill_terminal": 0,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                }
+              }
+            }
+          }
+        }
+      },
+      "heldout_role_confusion": {
+        "red_view": {
+          "num_items": 0,
+          "accuracy": null,
+          "counts": {
+            "self_first_kill_terminal": {
+              "self_first_kill_terminal": 0,
+              "non_self_terminal_critical": 0,
+              "other_terminal": 0
+            },
+            "non_self_terminal_critical": {
+              "self_first_kill_terminal": 0,
+              "non_self_terminal_critical": 0,
+              "other_terminal": 0
+            },
+            "other_terminal": {
+              "self_first_kill_terminal": 0,
+              "non_self_terminal_critical": 0,
+              "other_terminal": 0
+            }
+          }
+        },
+        "blue_view": {
+          "num_items": 0,
+          "accuracy": null,
+          "counts": {
+            "self_first_kill_terminal": {
+              "self_first_kill_terminal": 0,
+              "non_self_terminal_critical": 0,
+              "other_terminal": 0
+            },
+            "non_self_terminal_critical": {
+              "self_first_kill_terminal": 0,
+              "non_self_terminal_critical": 0,
+              "other_terminal": 0
+            },
+            "other_terminal": {
+              "self_first_kill_terminal": 0,
+              "non_self_terminal_critical": 0,
+              "other_terminal": 0
+            }
+          }
+        },
+        "overall": {
+          "num_items": 0,
+          "accuracy": null
+        }
+      },
+      "terminal_role_confusion": {
+        "red_view": {
+          "num_items": 0,
+          "accuracy": null,
+          "counts": {
+            "self_first_kill_terminal": {
+              "self_first_kill_terminal": 0,
+              "non_self_terminal_critical": 0,
+              "other_terminal": 0
+            },
+            "non_self_terminal_critical": {
+              "self_first_kill_terminal": 0,
+              "non_self_terminal_critical": 0,
+              "other_terminal": 0
+            },
+            "other_terminal": {
+              "self_first_kill_terminal": 0,
+              "non_self_terminal_critical": 0,
+              "other_terminal": 0
+            }
+          }
+        },
+        "blue_view": {
+          "num_items": 0,
+          "accuracy": null,
+          "counts": {
+            "self_first_kill_terminal": {
+              "self_first_kill_terminal": 0,
+              "non_self_terminal_critical": 0,
+              "other_terminal": 0
+            },
+            "non_self_terminal_critical": {
+              "self_first_kill_terminal": 0,
+              "non_self_terminal_critical": 0,
+              "other_terminal": 0
+            },
+            "other_terminal": {
+              "self_first_kill_terminal": 0,
+              "non_self_terminal_critical": 0,
+              "other_terminal": 0
+            }
+          }
+        },
+        "overall": {
+          "num_items": 0,
+          "accuracy": null
+        }
+      }
+    },
+    "S_seed7": {
+      "seed": 7,
+      "mode": "self_derived",
+      "heldout_pack": {
+        "event_first_kill_accuracy": 0.84375,
+        "critical_event_accuracy": 0.8225000068545342,
+        "blue_first_kill_accuracy": 0.925,
+        "blue_first_kill_precision": 0.6,
+        "termination_flag_accuracy": 0.9625,
+        "reward_red_mae": 3.1896230280399323,
+        "reward_total_mae": 3.1452891498804094,
+        "terminal_self_role_accuracy": 0.275,
+        "terminal_self_role_red_view_accuracy": 0.375,
+        "terminal_self_role_blue_view_accuracy": 0.175
+      },
+      "terminal_confusion_primary_cf": {
+        "aggregate": {
+          "blue_first_kill_false_positive_rate": 0.06666666666666667,
+          "blue_first_kill_pred_positive_rate": 0.06666666666666667,
+          "blue_first_kill_accuracy": 0.9333333333333333,
+          "blue_first_kill_precision": 0.0,
+          "event_first_kill_accuracy": 0.75,
+          "critical_event_accuracy": 0.700000015894572,
+          "terminal_self_role_accuracy": 0.25,
+          "terminal_self_role_red_view_accuracy": 0.5,
+          "terminal_self_role_blue_view_accuracy": 0.0
+        },
+        "blue_view_control": {
+          "when_true_role_not_self_first_kill": {
+            "num_samples": 30,
+            "mean_predicted_blue_prob": 0.48381693263848624,
+            "pred_positive_rate": 0.06666666666666667,
+            "false_positive_rate": 0.06666666666666667
+          },
+          "when_pred_role_not_self_first_kill": {
+            "num_samples": 0,
+            "mean_predicted_blue_prob": null,
+            "pred_positive_rate": null,
+            "false_positive_rate": null
+          }
+        },
+        "red_view_control": {
+          "when_true_role_not_self_first_kill": {
+            "num_samples": 15,
+            "mean_predicted_prob": 0.49443697134653725,
+            "pred_positive_rate": 0.4,
+            "false_positive_rate": 0.4
+          },
+          "when_pred_role_not_self_first_kill": {
+            "num_samples": 0,
+            "mean_predicted_prob": null,
+            "pred_positive_rate": null,
+            "false_positive_rate": null
+          }
+        },
+        "heldout_blue_view_control": {
+          "when_true_role_not_self_first_kill": {
+            "num_samples": 33,
+            "mean_predicted_blue_prob": 0.4837144839041161,
+            "pred_positive_rate": 0.06060606060606061,
+            "false_positive_rate": 0.06060606060606061
+          },
+          "when_pred_role_not_self_first_kill": {
+            "num_samples": 0,
+            "mean_predicted_blue_prob": null,
+            "pred_positive_rate": null,
+            "false_positive_rate": null
+          }
+        },
+        "heldout_red_view_control": {
+          "when_true_role_not_self_first_kill": {
+            "num_samples": 25,
+            "mean_predicted_prob": 0.4967298889160156,
+            "pred_positive_rate": 0.48,
+            "false_positive_rate": 0.48
+          },
+          "when_pred_role_not_self_first_kill": {
+            "num_samples": 0,
+            "mean_predicted_prob": null,
+            "pred_positive_rate": null,
+            "false_positive_rate": null
+          }
+        },
+        "buckets": {
+          "terminal_red_first_kill_outcome_confusion": {
+            "metrics": {
+              "blue_first_kill_pred_positive_rate": 0.13333333333333333,
+              "blue_first_kill_false_positive_rate": 0.13333333333333333
+            },
+            "gate_audit": {
+              "num_samples": 15,
+              "mean_predicted_blue_prob": 0.4879976590474447,
+              "pred_positive_rate": 0.13333333333333333,
+              "false_positive_rate": 0.13333333333333333
+            },
+            "red_view_confusion": {
+              "num_items": 15,
+              "accuracy": 1.0,
+              "counts": {
+                "self_first_kill_terminal": {
+                  "self_first_kill_terminal": 15,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                },
+                "non_self_terminal_critical": {
+                  "self_first_kill_terminal": 0,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                },
+                "other_terminal": {
+                  "self_first_kill_terminal": 0,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                }
+              }
+            },
+            "blue_view_confusion": {
+              "num_items": 15,
+              "accuracy": 0.0,
+              "counts": {
+                "self_first_kill_terminal": {
+                  "self_first_kill_terminal": 0,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                },
+                "non_self_terminal_critical": {
+                  "self_first_kill_terminal": 15,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                },
+                "other_terminal": {
+                  "self_first_kill_terminal": 0,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                }
+              }
+            }
+          },
+          "terminal_blue_objective_without_first_kill": {
+            "metrics": {
+              "blue_first_kill_pred_positive_rate": 0.0,
+              "blue_first_kill_false_positive_rate": 0.0
+            },
+            "gate_audit": {
+              "num_samples": 15,
+              "mean_predicted_blue_prob": 0.4796362062295278,
+              "pred_positive_rate": 0.0,
+              "false_positive_rate": 0.0
+            },
+            "red_view_confusion": {
+              "num_items": 15,
+              "accuracy": 0.0,
+              "counts": {
+                "self_first_kill_terminal": {
+                  "self_first_kill_terminal": 0,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                },
+                "non_self_terminal_critical": {
+                  "self_first_kill_terminal": 15,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                },
+                "other_terminal": {
+                  "self_first_kill_terminal": 0,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                }
+              }
+            },
+            "blue_view_confusion": {
+              "num_items": 15,
+              "accuracy": 0.0,
+              "counts": {
+                "self_first_kill_terminal": {
+                  "self_first_kill_terminal": 0,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                },
+                "non_self_terminal_critical": {
+                  "self_first_kill_terminal": 15,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                },
+                "other_terminal": {
+                  "self_first_kill_terminal": 0,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                }
+              }
+            }
+          }
+        }
+      },
+      "heldout_role_confusion": {
+        "red_view": {
+          "num_items": 40,
+          "accuracy": 0.375,
+          "counts": {
+            "self_first_kill_terminal": {
+              "self_first_kill_terminal": 15,
+              "non_self_terminal_critical": 0,
+              "other_terminal": 0
+            },
+            "non_self_terminal_critical": {
+              "self_first_kill_terminal": 22,
+              "non_self_terminal_critical": 0,
+              "other_terminal": 0
+            },
+            "other_terminal": {
+              "self_first_kill_terminal": 3,
+              "non_self_terminal_critical": 0,
+              "other_terminal": 0
+            }
+          }
+        },
+        "blue_view": {
+          "num_items": 40,
+          "accuracy": 0.175,
+          "counts": {
+            "self_first_kill_terminal": {
+              "self_first_kill_terminal": 7,
+              "non_self_terminal_critical": 0,
+              "other_terminal": 0
+            },
+            "non_self_terminal_critical": {
+              "self_first_kill_terminal": 30,
+              "non_self_terminal_critical": 0,
+              "other_terminal": 0
+            },
+            "other_terminal": {
+              "self_first_kill_terminal": 3,
+              "non_self_terminal_critical": 0,
+              "other_terminal": 0
+            }
+          }
+        },
+        "overall": {
+          "num_items": 80,
+          "accuracy": 0.275
+        }
+      },
+      "terminal_role_confusion": {
+        "red_view": {
+          "num_items": 30,
+          "accuracy": 0.5,
+          "counts": {
+            "self_first_kill_terminal": {
+              "self_first_kill_terminal": 15,
+              "non_self_terminal_critical": 0,
+              "other_terminal": 0
+            },
+            "non_self_terminal_critical": {
+              "self_first_kill_terminal": 15,
+              "non_self_terminal_critical": 0,
+              "other_terminal": 0
+            },
+            "other_terminal": {
+              "self_first_kill_terminal": 0,
+              "non_self_terminal_critical": 0,
+              "other_terminal": 0
+            }
+          }
+        },
+        "blue_view": {
+          "num_items": 30,
+          "accuracy": 0.0,
+          "counts": {
+            "self_first_kill_terminal": {
+              "self_first_kill_terminal": 0,
+              "non_self_terminal_critical": 0,
+              "other_terminal": 0
+            },
+            "non_self_terminal_critical": {
+              "self_first_kill_terminal": 30,
+              "non_self_terminal_critical": 0,
+              "other_terminal": 0
+            },
+            "other_terminal": {
+              "self_first_kill_terminal": 0,
+              "non_self_terminal_critical": 0,
+              "other_terminal": 0
+            }
+          }
+        },
+        "overall": {
+          "num_items": 60,
+          "accuracy": 0.25
+        }
+      }
+    },
+    "S_seed11": {
+      "seed": 11,
+      "mode": "self_derived",
+      "heldout_pack": {
+        "event_first_kill_accuracy": 0.8375,
+        "critical_event_accuracy": 0.8200000086799264,
+        "blue_first_kill_accuracy": 0.925,
+        "blue_first_kill_precision": 0.6,
+        "termination_flag_accuracy": 0.9625,
+        "reward_red_mae": 3.1204550087451937,
+        "reward_total_mae": 3.0700075387954713,
+        "terminal_self_role_accuracy": 0.275,
+        "terminal_self_role_red_view_accuracy": 0.375,
+        "terminal_self_role_blue_view_accuracy": 0.175
+      },
+      "terminal_confusion_primary_cf": {
+        "aggregate": {
+          "blue_first_kill_false_positive_rate": 0.06666666666666667,
+          "blue_first_kill_pred_positive_rate": 0.06666666666666667,
+          "blue_first_kill_accuracy": 0.9333333333333333,
+          "blue_first_kill_precision": 0.0,
+          "event_first_kill_accuracy": 0.65,
+          "critical_event_accuracy": 0.6600000182787578,
+          "terminal_self_role_accuracy": 0.25,
+          "terminal_self_role_red_view_accuracy": 0.5,
+          "terminal_self_role_blue_view_accuracy": 0.0
+        },
+        "blue_view_control": {
+          "when_true_role_not_self_first_kill": {
+            "num_samples": 30,
+            "mean_predicted_blue_prob": 0.48081593910853065,
+            "pred_positive_rate": 0.06666666666666667,
+            "false_positive_rate": 0.06666666666666667
+          },
+          "when_pred_role_not_self_first_kill": {
+            "num_samples": 0,
+            "mean_predicted_blue_prob": null,
+            "pred_positive_rate": null,
+            "false_positive_rate": null
+          }
+        },
+        "red_view_control": {
+          "when_true_role_not_self_first_kill": {
+            "num_samples": 15,
+            "mean_predicted_prob": 0.5147948682308197,
+            "pred_positive_rate": 0.6,
+            "false_positive_rate": 0.6
+          },
+          "when_pred_role_not_self_first_kill": {
+            "num_samples": 0,
+            "mean_predicted_prob": null,
+            "pred_positive_rate": null,
+            "false_positive_rate": null
+          }
+        },
+        "heldout_blue_view_control": {
+          "when_true_role_not_self_first_kill": {
+            "num_samples": 33,
+            "mean_predicted_blue_prob": 0.48123673417351465,
+            "pred_positive_rate": 0.06060606060606061,
+            "false_positive_rate": 0.06060606060606061
+          },
+          "when_pred_role_not_self_first_kill": {
+            "num_samples": 0,
+            "mean_predicted_blue_prob": null,
+            "pred_positive_rate": null,
+            "false_positive_rate": null
+          }
+        },
+        "heldout_red_view_control": {
+          "when_true_role_not_self_first_kill": {
+            "num_samples": 25,
+            "mean_predicted_prob": 0.5041164422035217,
+            "pred_positive_rate": 0.4,
+            "false_positive_rate": 0.4
+          },
+          "when_pred_role_not_self_first_kill": {
+            "num_samples": 0,
+            "mean_predicted_prob": null,
+            "pred_positive_rate": null,
+            "false_positive_rate": null
+          }
+        },
+        "buckets": {
+          "terminal_red_first_kill_outcome_confusion": {
+            "metrics": {
+              "blue_first_kill_pred_positive_rate": 0.13333333333333333,
+              "blue_first_kill_false_positive_rate": 0.13333333333333333
+            },
+            "gate_audit": {
+              "num_samples": 15,
+              "mean_predicted_blue_prob": 0.4830338180065155,
+              "pred_positive_rate": 0.13333333333333333,
+              "false_positive_rate": 0.13333333333333333
+            },
+            "red_view_confusion": {
+              "num_items": 15,
+              "accuracy": 1.0,
+              "counts": {
+                "self_first_kill_terminal": {
+                  "self_first_kill_terminal": 15,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                },
+                "non_self_terminal_critical": {
+                  "self_first_kill_terminal": 0,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                },
+                "other_terminal": {
+                  "self_first_kill_terminal": 0,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                }
+              }
+            },
+            "blue_view_confusion": {
+              "num_items": 15,
+              "accuracy": 0.0,
+              "counts": {
+                "self_first_kill_terminal": {
+                  "self_first_kill_terminal": 0,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                },
+                "non_self_terminal_critical": {
+                  "self_first_kill_terminal": 15,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                },
+                "other_terminal": {
+                  "self_first_kill_terminal": 0,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                }
+              }
+            }
+          },
+          "terminal_blue_objective_without_first_kill": {
+            "metrics": {
+              "blue_first_kill_pred_positive_rate": 0.0,
+              "blue_first_kill_false_positive_rate": 0.0
+            },
+            "gate_audit": {
+              "num_samples": 15,
+              "mean_predicted_blue_prob": 0.47859806021054585,
+              "pred_positive_rate": 0.0,
+              "false_positive_rate": 0.0
+            },
+            "red_view_confusion": {
+              "num_items": 15,
+              "accuracy": 0.0,
+              "counts": {
+                "self_first_kill_terminal": {
+                  "self_first_kill_terminal": 0,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                },
+                "non_self_terminal_critical": {
+                  "self_first_kill_terminal": 15,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                },
+                "other_terminal": {
+                  "self_first_kill_terminal": 0,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                }
+              }
+            },
+            "blue_view_confusion": {
+              "num_items": 15,
+              "accuracy": 0.0,
+              "counts": {
+                "self_first_kill_terminal": {
+                  "self_first_kill_terminal": 0,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                },
+                "non_self_terminal_critical": {
+                  "self_first_kill_terminal": 15,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                },
+                "other_terminal": {
+                  "self_first_kill_terminal": 0,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                }
+              }
+            }
+          }
+        }
+      },
+      "heldout_role_confusion": {
+        "red_view": {
+          "num_items": 40,
+          "accuracy": 0.375,
+          "counts": {
+            "self_first_kill_terminal": {
+              "self_first_kill_terminal": 15,
+              "non_self_terminal_critical": 0,
+              "other_terminal": 0
+            },
+            "non_self_terminal_critical": {
+              "self_first_kill_terminal": 22,
+              "non_self_terminal_critical": 0,
+              "other_terminal": 0
+            },
+            "other_terminal": {
+              "self_first_kill_terminal": 3,
+              "non_self_terminal_critical": 0,
+              "other_terminal": 0
+            }
+          }
+        },
+        "blue_view": {
+          "num_items": 40,
+          "accuracy": 0.175,
+          "counts": {
+            "self_first_kill_terminal": {
+              "self_first_kill_terminal": 7,
+              "non_self_terminal_critical": 0,
+              "other_terminal": 0
+            },
+            "non_self_terminal_critical": {
+              "self_first_kill_terminal": 30,
+              "non_self_terminal_critical": 0,
+              "other_terminal": 0
+            },
+            "other_terminal": {
+              "self_first_kill_terminal": 3,
+              "non_self_terminal_critical": 0,
+              "other_terminal": 0
+            }
+          }
+        },
+        "overall": {
+          "num_items": 80,
+          "accuracy": 0.275
+        }
+      },
+      "terminal_role_confusion": {
+        "red_view": {
+          "num_items": 30,
+          "accuracy": 0.5,
+          "counts": {
+            "self_first_kill_terminal": {
+              "self_first_kill_terminal": 15,
+              "non_self_terminal_critical": 0,
+              "other_terminal": 0
+            },
+            "non_self_terminal_critical": {
+              "self_first_kill_terminal": 15,
+              "non_self_terminal_critical": 0,
+              "other_terminal": 0
+            },
+            "other_terminal": {
+              "self_first_kill_terminal": 0,
+              "non_self_terminal_critical": 0,
+              "other_terminal": 0
+            }
+          }
+        },
+        "blue_view": {
+          "num_items": 30,
+          "accuracy": 0.0,
+          "counts": {
+            "self_first_kill_terminal": {
+              "self_first_kill_terminal": 0,
+              "non_self_terminal_critical": 0,
+              "other_terminal": 0
+            },
+            "non_self_terminal_critical": {
+              "self_first_kill_terminal": 30,
+              "non_self_terminal_critical": 0,
+              "other_terminal": 0
+            },
+            "other_terminal": {
+              "self_first_kill_terminal": 0,
+              "non_self_terminal_critical": 0,
+              "other_terminal": 0
+            }
+          }
+        },
+        "overall": {
+          "num_items": 60,
+          "accuracy": 0.25
+        }
+      }
+    },
+    "S_seed19": {
+      "seed": 19,
+      "mode": "self_derived",
+      "heldout_pack": {
+        "event_first_kill_accuracy": 0.6375,
+        "critical_event_accuracy": 0.740000007674098,
+        "blue_first_kill_accuracy": 0.5875,
+        "blue_first_kill_precision": 0.175,
+        "termination_flag_accuracy": 0.9625,
+        "reward_red_mae": 3.110897696018219,
+        "reward_total_mae": 3.0766232192516325,
+        "terminal_self_role_accuracy": 0.275,
+        "terminal_self_role_red_view_accuracy": 0.375,
+        "terminal_self_role_blue_view_accuracy": 0.175
+      },
+      "terminal_confusion_primary_cf": {
+        "aggregate": {
+          "blue_first_kill_false_positive_rate": 1.0,
+          "blue_first_kill_pred_positive_rate": 1.0,
+          "blue_first_kill_accuracy": 0.0,
+          "blue_first_kill_precision": 0.0,
+          "event_first_kill_accuracy": 0.25,
+          "critical_event_accuracy": 0.5000000149011612,
+          "terminal_self_role_accuracy": 0.25,
+          "terminal_self_role_red_view_accuracy": 0.5,
+          "terminal_self_role_blue_view_accuracy": 0.0
+        },
+        "blue_view_control": {
+          "when_true_role_not_self_first_kill": {
+            "num_samples": 30,
+            "mean_predicted_blue_prob": 0.543042020003001,
+            "pred_positive_rate": 1.0,
+            "false_positive_rate": 1.0
+          },
+          "when_pred_role_not_self_first_kill": {
+            "num_samples": 0,
+            "mean_predicted_blue_prob": null,
+            "pred_positive_rate": null,
+            "false_positive_rate": null
+          }
+        },
+        "red_view_control": {
+          "when_true_role_not_self_first_kill": {
+            "num_samples": 15,
+            "mean_predicted_prob": 0.5735767364501954,
+            "pred_positive_rate": 1.0,
+            "false_positive_rate": 1.0
+          },
+          "when_pred_role_not_self_first_kill": {
+            "num_samples": 0,
+            "mean_predicted_prob": null,
+            "pred_positive_rate": null,
+            "false_positive_rate": null
+          }
+        },
+        "heldout_blue_view_control": {
+          "when_true_role_not_self_first_kill": {
+            "num_samples": 33,
+            "mean_predicted_blue_prob": 0.5434988827416392,
+            "pred_positive_rate": 1.0,
+            "false_positive_rate": 1.0
+          },
+          "when_pred_role_not_self_first_kill": {
+            "num_samples": 0,
+            "mean_predicted_blue_prob": null,
+            "pred_positive_rate": null,
+            "false_positive_rate": null
+          }
+        },
+        "heldout_red_view_control": {
+          "when_true_role_not_self_first_kill": {
+            "num_samples": 25,
+            "mean_predicted_prob": 0.5659264612197876,
+            "pred_positive_rate": 1.0,
+            "false_positive_rate": 1.0
+          },
+          "when_pred_role_not_self_first_kill": {
+            "num_samples": 0,
+            "mean_predicted_prob": null,
+            "pred_positive_rate": null,
+            "false_positive_rate": null
+          }
+        },
+        "buckets": {
+          "terminal_red_first_kill_outcome_confusion": {
+            "metrics": {
+              "blue_first_kill_pred_positive_rate": 1.0,
+              "blue_first_kill_false_positive_rate": 1.0
+            },
+            "gate_audit": {
+              "num_samples": 15,
+              "mean_predicted_blue_prob": 0.5467285513877869,
+              "pred_positive_rate": 1.0,
+              "false_positive_rate": 1.0
+            },
+            "red_view_confusion": {
+              "num_items": 15,
+              "accuracy": 1.0,
+              "counts": {
+                "self_first_kill_terminal": {
+                  "self_first_kill_terminal": 15,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                },
+                "non_self_terminal_critical": {
+                  "self_first_kill_terminal": 0,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                },
+                "other_terminal": {
+                  "self_first_kill_terminal": 0,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                }
+              }
+            },
+            "blue_view_confusion": {
+              "num_items": 15,
+              "accuracy": 0.0,
+              "counts": {
+                "self_first_kill_terminal": {
+                  "self_first_kill_terminal": 0,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                },
+                "non_self_terminal_critical": {
+                  "self_first_kill_terminal": 15,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                },
+                "other_terminal": {
+                  "self_first_kill_terminal": 0,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                }
+              }
+            }
+          },
+          "terminal_blue_objective_without_first_kill": {
+            "metrics": {
+              "blue_first_kill_pred_positive_rate": 1.0,
+              "blue_first_kill_false_positive_rate": 1.0
+            },
+            "gate_audit": {
+              "num_samples": 15,
+              "mean_predicted_blue_prob": 0.5393554886182149,
+              "pred_positive_rate": 1.0,
+              "false_positive_rate": 1.0
+            },
+            "red_view_confusion": {
+              "num_items": 15,
+              "accuracy": 0.0,
+              "counts": {
+                "self_first_kill_terminal": {
+                  "self_first_kill_terminal": 0,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                },
+                "non_self_terminal_critical": {
+                  "self_first_kill_terminal": 15,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                },
+                "other_terminal": {
+                  "self_first_kill_terminal": 0,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                }
+              }
+            },
+            "blue_view_confusion": {
+              "num_items": 15,
+              "accuracy": 0.0,
+              "counts": {
+                "self_first_kill_terminal": {
+                  "self_first_kill_terminal": 0,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                },
+                "non_self_terminal_critical": {
+                  "self_first_kill_terminal": 15,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                },
+                "other_terminal": {
+                  "self_first_kill_terminal": 0,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                }
+              }
+            }
+          }
+        }
+      },
+      "heldout_role_confusion": {
+        "red_view": {
+          "num_items": 40,
+          "accuracy": 0.375,
+          "counts": {
+            "self_first_kill_terminal": {
+              "self_first_kill_terminal": 15,
+              "non_self_terminal_critical": 0,
+              "other_terminal": 0
+            },
+            "non_self_terminal_critical": {
+              "self_first_kill_terminal": 22,
+              "non_self_terminal_critical": 0,
+              "other_terminal": 0
+            },
+            "other_terminal": {
+              "self_first_kill_terminal": 3,
+              "non_self_terminal_critical": 0,
+              "other_terminal": 0
+            }
+          }
+        },
+        "blue_view": {
+          "num_items": 40,
+          "accuracy": 0.175,
+          "counts": {
+            "self_first_kill_terminal": {
+              "self_first_kill_terminal": 7,
+              "non_self_terminal_critical": 0,
+              "other_terminal": 0
+            },
+            "non_self_terminal_critical": {
+              "self_first_kill_terminal": 30,
+              "non_self_terminal_critical": 0,
+              "other_terminal": 0
+            },
+            "other_terminal": {
+              "self_first_kill_terminal": 3,
+              "non_self_terminal_critical": 0,
+              "other_terminal": 0
+            }
+          }
+        },
+        "overall": {
+          "num_items": 80,
+          "accuracy": 0.275
+        }
+      },
+      "terminal_role_confusion": {
+        "red_view": {
+          "num_items": 30,
+          "accuracy": 0.5,
+          "counts": {
+            "self_first_kill_terminal": {
+              "self_first_kill_terminal": 15,
+              "non_self_terminal_critical": 0,
+              "other_terminal": 0
+            },
+            "non_self_terminal_critical": {
+              "self_first_kill_terminal": 15,
+              "non_self_terminal_critical": 0,
+              "other_terminal": 0
+            },
+            "other_terminal": {
+              "self_first_kill_terminal": 0,
+              "non_self_terminal_critical": 0,
+              "other_terminal": 0
+            }
+          }
+        },
+        "blue_view": {
+          "num_items": 30,
+          "accuracy": 0.0,
+          "counts": {
+            "self_first_kill_terminal": {
+              "self_first_kill_terminal": 0,
+              "non_self_terminal_critical": 0,
+              "other_terminal": 0
+            },
+            "non_self_terminal_critical": {
+              "self_first_kill_terminal": 30,
+              "non_self_terminal_critical": 0,
+              "other_terminal": 0
+            },
+            "other_terminal": {
+              "self_first_kill_terminal": 0,
+              "non_self_terminal_critical": 0,
+              "other_terminal": 0
+            }
+          }
+        },
+        "overall": {
+          "num_items": 60,
+          "accuracy": 0.25
+        }
+      }
+    },
+    "ablation_head_only_seed7": {
+      "seed": 7,
+      "mode": "self_head_only",
+      "heldout_pack": {
+        "event_first_kill_accuracy": 0.66875,
+        "critical_event_accuracy": 0.7525000080466271,
+        "blue_first_kill_accuracy": 0.65,
+        "blue_first_kill_precision": 0.2,
+        "termination_flag_accuracy": 0.9625,
+        "reward_red_mae": 3.1529337227344514,
+        "reward_total_mae": 3.122140383720398,
+        "terminal_self_role_accuracy": 0.65,
+        "terminal_self_role_red_view_accuracy": 0.55,
+        "terminal_self_role_blue_view_accuracy": 0.75
+      },
+      "terminal_confusion_primary_cf": {
+        "aggregate": {
+          "blue_first_kill_false_positive_rate": 0.8333333333333334,
+          "blue_first_kill_pred_positive_rate": 0.8333333333333334,
+          "blue_first_kill_accuracy": 0.16666666666666666,
+          "blue_first_kill_precision": 0.0,
+          "event_first_kill_accuracy": 0.3333333333333333,
+          "critical_event_accuracy": 0.5333333492279053,
+          "terminal_self_role_accuracy": 0.75,
+          "terminal_self_role_red_view_accuracy": 0.5,
+          "terminal_self_role_blue_view_accuracy": 1.0
+        },
+        "blue_view_control": {
+          "when_true_role_not_self_first_kill": {
+            "num_samples": 30,
+            "mean_predicted_blue_prob": 0.7129706660906474,
+            "pred_positive_rate": 0.8333333333333334,
+            "false_positive_rate": 0.8333333333333334
+          },
+          "when_pred_role_not_self_first_kill": {
+            "num_samples": 30,
+            "mean_predicted_blue_prob": 0.7129706660906474,
+            "pred_positive_rate": 0.8333333333333334,
+            "false_positive_rate": 0.8333333333333334
+          }
+        },
+        "red_view_control": {
+          "when_true_role_not_self_first_kill": {
+            "num_samples": 15,
+            "mean_predicted_prob": 0.7895008166631062,
+            "pred_positive_rate": 1.0,
+            "false_positive_rate": 1.0
+          },
+          "when_pred_role_not_self_first_kill": {
+            "num_samples": 30,
+            "mean_predicted_prob": 0.7816561142603556,
+            "pred_positive_rate": 1.0,
+            "false_positive_rate": 1.0
+          }
+        },
+        "heldout_blue_view_control": {
+          "when_true_role_not_self_first_kill": {
+            "num_samples": 33,
+            "mean_predicted_blue_prob": 0.7164586674083363,
+            "pred_positive_rate": 0.8484848484848485,
+            "false_positive_rate": 0.8484848484848485
+          },
+          "when_pred_role_not_self_first_kill": {
+            "num_samples": 40,
+            "mean_predicted_blue_prob": 0.7430986151099205,
+            "pred_positive_rate": 0.875,
+            "false_positive_rate": 0.8484848484848485
+          }
+        },
+        "heldout_red_view_control": {
+          "when_true_role_not_self_first_kill": {
+            "num_samples": 25,
+            "mean_predicted_prob": 0.7763688731193542,
+            "pred_positive_rate": 1.0,
+            "false_positive_rate": 1.0
+          },
+          "when_pred_role_not_self_first_kill": {
+            "num_samples": 40,
+            "mean_predicted_prob": 0.7754098251461983,
+            "pred_positive_rate": 1.0,
+            "false_positive_rate": 1.0
+          }
+        },
+        "buckets": {
+          "terminal_red_first_kill_outcome_confusion": {
+            "metrics": {
+              "blue_first_kill_pred_positive_rate": 0.8666666666666667,
+              "blue_first_kill_false_positive_rate": 0.8666666666666667
+            },
+            "gate_audit": {
+              "num_samples": 15,
+              "mean_predicted_blue_prob": 0.7570331474145253,
+              "pred_positive_rate": 0.8666666666666667,
+              "false_positive_rate": 0.8666666666666667
+            },
+            "red_view_confusion": {
+              "num_items": 15,
+              "accuracy": 0.0,
+              "counts": {
+                "self_first_kill_terminal": {
+                  "self_first_kill_terminal": 0,
+                  "non_self_terminal_critical": 15,
+                  "other_terminal": 0
+                },
+                "non_self_terminal_critical": {
+                  "self_first_kill_terminal": 0,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                },
+                "other_terminal": {
+                  "self_first_kill_terminal": 0,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                }
+              }
+            },
+            "blue_view_confusion": {
+              "num_items": 15,
+              "accuracy": 1.0,
+              "counts": {
+                "self_first_kill_terminal": {
+                  "self_first_kill_terminal": 0,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                },
+                "non_self_terminal_critical": {
+                  "self_first_kill_terminal": 0,
+                  "non_self_terminal_critical": 15,
+                  "other_terminal": 0
+                },
+                "other_terminal": {
+                  "self_first_kill_terminal": 0,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                }
+              }
+            }
+          },
+          "terminal_blue_objective_without_first_kill": {
+            "metrics": {
+              "blue_first_kill_pred_positive_rate": 0.8,
+              "blue_first_kill_false_positive_rate": 0.8
+            },
+            "gate_audit": {
+              "num_samples": 15,
+              "mean_predicted_blue_prob": 0.6689081847667694,
+              "pred_positive_rate": 0.8,
+              "false_positive_rate": 0.8
+            },
+            "red_view_confusion": {
+              "num_items": 15,
+              "accuracy": 1.0,
+              "counts": {
+                "self_first_kill_terminal": {
+                  "self_first_kill_terminal": 0,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                },
+                "non_self_terminal_critical": {
+                  "self_first_kill_terminal": 0,
+                  "non_self_terminal_critical": 15,
+                  "other_terminal": 0
+                },
+                "other_terminal": {
+                  "self_first_kill_terminal": 0,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                }
+              }
+            },
+            "blue_view_confusion": {
+              "num_items": 15,
+              "accuracy": 1.0,
+              "counts": {
+                "self_first_kill_terminal": {
+                  "self_first_kill_terminal": 0,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                },
+                "non_self_terminal_critical": {
+                  "self_first_kill_terminal": 0,
+                  "non_self_terminal_critical": 15,
+                  "other_terminal": 0
+                },
+                "other_terminal": {
+                  "self_first_kill_terminal": 0,
+                  "non_self_terminal_critical": 0,
+                  "other_terminal": 0
+                }
+              }
+            }
+          }
+        }
+      },
+      "heldout_role_confusion": {
+        "red_view": {
+          "num_items": 40,
+          "accuracy": 0.55,
+          "counts": {
+            "self_first_kill_terminal": {
+              "self_first_kill_terminal": 0,
+              "non_self_terminal_critical": 15,
+              "other_terminal": 0
+            },
+            "non_self_terminal_critical": {
+              "self_first_kill_terminal": 0,
+              "non_self_terminal_critical": 22,
+              "other_terminal": 0
+            },
+            "other_terminal": {
+              "self_first_kill_terminal": 0,
+              "non_self_terminal_critical": 3,
+              "other_terminal": 0
+            }
+          }
+        },
+        "blue_view": {
+          "num_items": 40,
+          "accuracy": 0.75,
+          "counts": {
+            "self_first_kill_terminal": {
+              "self_first_kill_terminal": 0,
+              "non_self_terminal_critical": 7,
+              "other_terminal": 0
+            },
+            "non_self_terminal_critical": {
+              "self_first_kill_terminal": 0,
+              "non_self_terminal_critical": 30,
+              "other_terminal": 0
+            },
+            "other_terminal": {
+              "self_first_kill_terminal": 0,
+              "non_self_terminal_critical": 3,
+              "other_terminal": 0
+            }
+          }
+        },
+        "overall": {
+          "num_items": 80,
+          "accuracy": 0.65
+        }
+      },
+      "terminal_role_confusion": {
+        "red_view": {
+          "num_items": 30,
+          "accuracy": 0.5,
+          "counts": {
+            "self_first_kill_terminal": {
+              "self_first_kill_terminal": 0,
+              "non_self_terminal_critical": 15,
+              "other_terminal": 0
+            },
+            "non_self_terminal_critical": {
+              "self_first_kill_terminal": 0,
+              "non_self_terminal_critical": 15,
+              "other_terminal": 0
+            },
+            "other_terminal": {
+              "self_first_kill_terminal": 0,
+              "non_self_terminal_critical": 0,
+              "other_terminal": 0
+            }
+          }
+        },
+        "blue_view": {
+          "num_items": 30,
+          "accuracy": 1.0,
+          "counts": {
+            "self_first_kill_terminal": {
+              "self_first_kill_terminal": 0,
+              "non_self_terminal_critical": 0,
+              "other_terminal": 0
+            },
+            "non_self_terminal_critical": {
+              "self_first_kill_terminal": 0,
+              "non_self_terminal_critical": 30,
+              "other_terminal": 0
+            },
+            "other_terminal": {
+              "self_first_kill_terminal": 0,
+              "non_self_terminal_critical": 0,
+              "other_terminal": 0
+            }
+          }
+        },
+        "overall": {
+          "num_items": 60,
+          "accuracy": 0.75
+        }
+      }
+    }
+  },
+  "stability_summary": {
+    "heldout_pack": {
+      "event_first_kill_accuracy": {
+        "mean": 0.7729166666666667,
+        "min": 0.6375,
+        "max": 0.84375,
+        "beats_A_count": 2
+      },
+      "critical_event_accuracy": {
+        "mean": 0.7941666744028528,
+        "min": 0.740000007674098,
+        "max": 0.8225000068545342,
+        "beats_A_count": 2
+      },
+      "blue_first_kill_accuracy": {
+        "mean": 0.8125,
+        "min": 0.5875,
+        "max": 0.925,
+        "beats_A_count": 2
+      },
+      "blue_first_kill_precision": {
+        "mean": 0.4583333333333333,
+        "min": 0.175,
+        "max": 0.6,
+        "beats_A_count": 2
+      },
+      "termination_flag_accuracy": {
+        "mean": 0.9625,
+        "min": 0.9625,
+        "max": 0.9625,
+        "beats_A_count": 0
+      },
+      "reward_red_mae": {
+        "mean": 3.140325244267782,
+        "min": 3.110897696018219,
+        "max": 3.1896230280399323,
+        "beats_A_count": 2
+      },
+      "reward_total_mae": {
+        "mean": 3.0973066359758374,
+        "min": 3.0700075387954713,
+        "max": 3.1452891498804094,
+        "beats_A_count": 1
+      }
+    },
+    "terminal_confusion_primary_cf": {
+      "blue_first_kill_false_positive_rate": {
+        "mean": 0.37777777777777777,
+        "min": 0.06666666666666667,
+        "max": 1.0,
+        "beats_A_count": 2
+      },
+      "event_first_kill_accuracy": {
+        "mean": 0.5499999999999999,
+        "min": 0.25,
+        "max": 0.75,
+        "beats_A_count": 2
+      },
+      "critical_event_accuracy": {
+        "mean": 0.6200000163581637,
+        "min": 0.5000000149011612,
+        "max": 0.700000015894572,
+        "beats_A_count": 2
+      }
+    }
+  },
+  "mechanism_readout": {
+    "head_only_vs_derived": {
+      "seed7_head_only_role_accuracy_terminal": 0.75,
+      "seed7_head_only_blue_view_accuracy_terminal": 1.0,
+      "seed7_head_only_blue_fp_terminal": 0.8333333333333334,
+      "seed7_derived_role_accuracy_terminal": 0.25,
+      "seed7_derived_blue_view_accuracy_terminal": 0.0,
+      "seed7_derived_blue_fp_terminal": 0.06666666666666667
+    },
+    "key_observation": "self_head_only learns a much cleaner role classifier, but does not improve terminal blue first-kill confusion; self_derived improves confusion even with poor blue-view role argmax accuracy, indicating that the current win comes mainly from the derived probability gate rather than stable 3-way role classification."
+  }
+}

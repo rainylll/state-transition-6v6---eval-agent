@@ -5,12 +5,19 @@ import torch.nn as nn
 
 from world_model_dataset import (
     EVENT_COUNT_DIM,
+    EVENT_FLAG_KEYS,
     EVENT_FLAG_DIM,
     REWARD_DIM,
     TACTIC_FEATURE_DIM,
     TERMINAL_CRITICAL_ROLE_DIM,
+    TERMINAL_SELF_ROLE_DIM,
     UNIT_FEATURE_DIM,
 )
+
+RED_FIRST_KILL_EVENT_INDEX = EVENT_FLAG_KEYS.index("red_first_kill_flag")
+BLUE_FIRST_KILL_EVENT_INDEX = EVENT_FLAG_KEYS.index("blue_first_kill_flag")
+SELF_FIRST_KILL_ROLE_INDEX = 0
+DERIVED_LOGIT_EPS = 1e-4
 
 
 def masked_mean(x: torch.Tensor, mask: torch.Tensor) -> torch.Tensor:
@@ -39,8 +46,15 @@ class UnitEncoder(nn.Module):
 
 
 class WorldModelNet(nn.Module):
-    def __init__(self, hidden_dim: int = 96, cond_hidden_dim: int = 32, horizon_vocab_size: int = 5):
+    def __init__(
+        self,
+        hidden_dim: int = 96,
+        cond_hidden_dim: int = 32,
+        horizon_vocab_size: int = 5,
+        terminal_self_master_mode: str = "none",
+    ):
         super().__init__()
+        self.terminal_self_master_mode = str(terminal_self_master_mode)
         self.unit_encoder = UnitEncoder(hidden_dim=hidden_dim)
         self.red_tactic_encoder = nn.Sequential(
             nn.Linear(TACTIC_FEATURE_DIM, cond_hidden_dim),
@@ -110,6 +124,25 @@ class WorldModelNet(nn.Module):
             nn.ReLU(),
             nn.Linear(hidden_dim, TERMINAL_CRITICAL_ROLE_DIM),
         )
+        self.terminal_self_role_head = nn.Sequential(
+            nn.Linear(hidden_dim, hidden_dim),
+            nn.ReLU(),
+            nn.Linear(hidden_dim, TERMINAL_SELF_ROLE_DIM),
+        )
+
+    def _build_joint_context(
+        self,
+        self_pool: torch.Tensor,
+        other_pool: torch.Tensor,
+        self_cond: torch.Tensor,
+        other_cond: torch.Tensor,
+        horizon_vec: torch.Tensor,
+        self_count: torch.Tensor,
+        other_count: torch.Tensor,
+    ) -> torch.Tensor:
+        return self.trunk(
+            torch.cat([self_pool, other_pool, self_cond, other_cond, horizon_vec, self_count, other_count], dim=-1)
+        )
 
     def forward(self, batch: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
         red_entities = self.unit_encoder(batch["red_units"], batch["red_unit_types"])
@@ -123,15 +156,55 @@ class WorldModelNet(nn.Module):
 
         red_count = batch["red_mask"].sum(dim=1, keepdim=True).float()
         blue_count = batch["blue_mask"].sum(dim=1, keepdim=True).float()
-        joint_context = self.trunk(
-            torch.cat([red_pool, blue_pool, red_cond, blue_cond, horizon_vec, red_count, blue_count], dim=-1)
+        joint_context = self._build_joint_context(
+            red_pool,
+            blue_pool,
+            red_cond,
+            blue_cond,
+            horizon_vec,
+            red_count,
+            blue_count,
         )
+        blue_view_context = self._build_joint_context(
+            blue_pool,
+            red_pool,
+            blue_cond,
+            red_cond,
+            horizon_vec,
+            blue_count,
+            red_count,
+        )
+        terminal_view_contexts = torch.stack([joint_context, blue_view_context], dim=1)
 
         expanded_context = joint_context.unsqueeze(1)
         red_traj_input = torch.cat([red_entities, expanded_context.expand(-1, red_entities.shape[1], -1)], dim=-1)
         blue_traj_input = torch.cat([blue_entities, expanded_context.expand(-1, blue_entities.shape[1], -1)], dim=-1)
 
         terminal_out = self.terminal_head(joint_context)
+        event_flag_logits_raw = self.event_flag_head(joint_context)
+        terminal_self_role_logits = self.terminal_self_role_head(terminal_view_contexts)
+        event_flag_logits = event_flag_logits_raw
+        if self.terminal_self_master_mode == "self_derived":
+            event_flag_logits = event_flag_logits_raw.clone()
+            terminal_mask = batch["is_terminal_horizon"] > 0.5
+            if bool(terminal_mask.any().item()):
+                self_role_probs = torch.softmax(terminal_self_role_logits, dim=-1)
+                red_self_first_kill_logit = torch.logit(
+                    self_role_probs[:, 0, SELF_FIRST_KILL_ROLE_INDEX].clamp(
+                        min=DERIVED_LOGIT_EPS,
+                        max=1.0 - DERIVED_LOGIT_EPS,
+                    )
+                )
+                blue_self_first_kill_logit = torch.logit(
+                    self_role_probs[:, 1, SELF_FIRST_KILL_ROLE_INDEX].clamp(
+                        min=DERIVED_LOGIT_EPS,
+                        max=1.0 - DERIVED_LOGIT_EPS,
+                    )
+                )
+                event_flag_logits[terminal_mask, RED_FIRST_KILL_EVENT_INDEX] = red_self_first_kill_logit[terminal_mask]
+                event_flag_logits[terminal_mask, BLUE_FIRST_KILL_EVENT_INDEX] = blue_self_first_kill_logit[terminal_mask]
+        elif self.terminal_self_master_mode not in {"none", "self_head_only"}:
+            raise ValueError(f"Unsupported terminal self-master mode: {self.terminal_self_master_mode}")
 
         return {
             "red_alive_logit": self.red_alive_head(red_traj_input).squeeze(-1),
@@ -143,8 +216,11 @@ class WorldModelNet(nn.Module):
             "terminal_blue_alive_ratio": terminal_out[:, 2],
             "terminal_red_mean_missile": terminal_out[:, 3],
             "terminal_blue_mean_missile": terminal_out[:, 4],
-            "event_flag_logits": self.event_flag_head(joint_context),
+            "event_flag_logits_raw": event_flag_logits_raw,
+            "event_flag_logits": event_flag_logits,
             "event_count_pred": self.event_count_head(joint_context),
             "reward_pred": self.reward_head(joint_context),
             "terminal_critical_role_logits": self.terminal_role_head(joint_context),
+            "terminal_self_role_logits": terminal_self_role_logits,
+            "terminal_self_master_active": self.terminal_self_master_mode != "none",
         }

@@ -92,6 +92,8 @@ NON_DECISIVE_TERMINATION_REASONS = {
     "timeout",
     "time_limit",
 }
+VIEW_SIDE_LABELS = ("red", "blue")
+OPPOSING_VIEW_SIDE = {"red": "blue", "blue": "red"}
 
 
 def derive_effective_terminal_reason(meta: Dict, target_terminal: Dict) -> str:
@@ -100,6 +102,28 @@ def derive_effective_terminal_reason(meta: Dict, target_terminal: Dict) -> str:
         return reason
     outcome = target_terminal.get("episode_outcome", {}) if isinstance(target_terminal, dict) else {}
     return str(outcome.get("termination_reason", "none")).strip().lower()
+
+
+def derive_terminal_self_view_roles(sample: Dict) -> Dict[str, str]:
+    horizon = str(sample.get("horizon"))
+    target_event = sample.get("target_event", {}) if isinstance(sample.get("target_event", {}), dict) else {}
+    output: Dict[str, str] = {}
+    for side in VIEW_SIDE_LABELS:
+        if horizon != "terminal":
+            output[side] = "other_terminal"
+            continue
+        other_side = OPPOSING_VIEW_SIDE[side]
+        self_first_kill = bool(target_event.get(f"{side}_first_kill_flag", False))
+        other_first_kill = bool(target_event.get(f"{other_side}_first_kill_flag", False))
+        self_objective = bool(target_event.get(f"{side}_objective_complete_flag", False))
+        other_objective = bool(target_event.get(f"{other_side}_objective_complete_flag", False))
+        if self_first_kill:
+            output[side] = "self_first_kill_terminal"
+        elif other_first_kill or self_objective or other_objective:
+            output[side] = "non_self_terminal_critical"
+        else:
+            output[side] = "other_terminal"
+    return output
 
 
 def build_target_event_contract(sample: Dict) -> Dict:
@@ -138,6 +162,7 @@ def build_target_event_contract(sample: Dict) -> Dict:
         "blue_first_kill_flag": 1 if blue_first_kill else 0,
         "blue_first_kill_supervision_mask": int(blue_supervision_mask),
         "terminal_critical_role": terminal_role,
+        "terminal_self_view_roles": derive_terminal_self_view_roles(sample),
     }
 
 

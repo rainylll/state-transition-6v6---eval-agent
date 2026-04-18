@@ -1,0 +1,77 @@
+{
+  "phase": "S.3",
+  "title": "Very local safe-band tuning for self_derived gate",
+  "source_code_changed": [],
+  "report_files": [
+    "agent_mvp/data_world_model_cf/phaseS3_safe_band_local_tuning_report.md",
+    "agent_mvp/data_world_model_cf/phaseS3_safe_band_local_tuning_report.json"
+  ],
+  "experiments": {
+    "baseline_s2": {
+      "label": "S2_w50_6535",
+      "terminal_self_master_mode": "self_derived",
+      "self_gate_stability_weight": 50.0,
+      "self_gate_positive_margin": 0.65,
+      "self_gate_negative_margin": 0.35
+    },
+    "s3_w80_6535": {
+      "label": "S3_w80_6535",
+      "terminal_self_master_mode": "self_derived",
+      "self_gate_stability_weight": 80.0,
+      "self_gate_positive_margin": 0.65,
+      "self_gate_negative_margin": 0.35
+    },
+    "s3_w50_6030": {
+      "label": "S3_w50_6030",
+      "terminal_self_master_mode": "self_derived",
+      "self_gate_stability_weight": 50.0,
+      "self_gate_positive_margin": 0.60,
+      "self_gate_negative_margin": 0.30
+    },
+    "s3_w80_6030": {
+      "label": "S3_w80_6030",
+      "terminal_self_master_mode": "self_derived",
+      "self_gate_stability_weight": 80.0,
+      "self_gate_positive_margin": 0.60,
+      "self_gate_negative_margin": 0.30
+    }
+  },
+  "commands": {
+    "train": {
+      "s3_w80_6535_seed7": "python agent_mvp/python/train_world_model.py --data-dir agent_mvp/data_world_model_cf/ab_train_visible_only --out-dir agent_mvp/data_world_model_cf/phaseS3_safeband_w80_seed7 --epochs 0 --stage2-epochs 1 --stage2-lr 0.00015 --init-model-path agent_mvp/data_world_model_cf/phase10_8_firstkill_fix/model.pt --stage2-firstkill-focus --stage2-firstkill-positive-repeat 6 --stage2-firstkill-hard-negative-repeat 3 --device cpu --seed 7 --terminal-self-master-mode self_derived --self-gate-stability-weight 80",
+      "s3_w80_6535_seed11": "python agent_mvp/python/train_world_model.py --data-dir agent_mvp/data_world_model_cf/ab_train_visible_only --out-dir agent_mvp/data_world_model_cf/phaseS3_safeband_w80_seed11 --epochs 0 --stage2-epochs 1 --stage2-lr 0.00015 --init-model-path agent_mvp/data_world_model_cf/phase10_8_firstkill_fix/model.pt --stage2-firstkill-focus --stage2-firstkill-positive-repeat 6 --stage2-firstkill-hard-negative-repeat 3 --device cpu --seed 11 --terminal-self-master-mode self_derived --self-gate-stability-weight 80",
+      "s3_w80_6535_seed19": "python agent_mvp/python/train_world_model.py --data-dir agent_mvp/data_world_model_cf/ab_train_visible_only --out-dir agent_mvp/data_world_model_cf/phaseS3_safeband_w80_seed19 --epochs 0 --stage2-epochs 1 --stage2-lr 0.00015 --init-model-path agent_mvp/data_world_model_cf/phase10_8_firstkill_fix/model.pt --stage2-firstkill-focus --stage2-firstkill-positive-repeat 6 --stage2-firstkill-hard-negative-repeat 3 --device cpu --seed 19 --terminal-self-master-mode self_derived --self-gate-stability-weight 80",
+      "s3_w50_6030_seed7": "python agent_mvp/python/train_world_model.py --data-dir agent_mvp/data_world_model_cf/ab_train_visible_only --out-dir agent_mvp/data_world_model_cf/phaseS3_safeband_m6030_seed7 --epochs 0 --stage2-epochs 1 --stage2-lr 0.00015 --init-model-path agent_mvp/data_world_model_cf/phase10_8_firstkill_fix/model.pt --stage2-firstkill-focus --stage2-firstkill-positive-repeat 6 --stage2-firstkill-hard-negative-repeat 3 --device cpu --seed 7 --terminal-self-master-mode self_derived --self-gate-stability-weight 50 --self-gate-positive-margin 0.60 --self-gate-negative-margin 0.30",
+      "s3_w50_6030_seed11": "python agent_mvp/python/train_world_model.py --data-dir agent_mvp/data_world_model_cf/ab_train_visible_only --out-dir agent_mvp/data_world_model_cf/phaseS3_safeband_m6030_seed11 --epochs 0 --stage2-epochs 1 --stage2-lr 0.00015 --init-model-path agent_mvp/data_world_model_cf/phase10_8_firstkill_fix/model.pt --stage2-firstkill-focus --stage2-firstkill-positive-repeat 6 --stage2-firstkill-hard-negative-repeat 3 --device cpu --seed 11 --terminal-self-master-mode self_derived --self-gate-stability-weight 50 --self-gate-positive-margin 0.60 --self-gate-negative-margin 0.30",
+      "s3_w50_6030_seed19": "python agent_mvp/python/train_world_model.py --data-dir agent_mvp/data_world_model_cf/ab_train_visible_only --out-dir agent_mvp/data_world_model_cf/phaseS3_safeband_m6030_seed19 --epochs 0 --stage2-epochs 1 --stage2-lr 0.00015 --init-model-path agent_mvp/data_world_model_cf/phase10_8_firstkill_fix/model.pt --stage2-firstkill-focus --stage2-firstkill-positive-repeat 6 --stage2-firstkill-hard-negative-repeat 3 --device cpu --seed 19 --terminal-self-master-mode self_derived --self-gate-stability-weight 50 --self-gate-positive-margin 0.60 --self-gate-negative-margin 0.30",
+      "s3_w80_6030_seed7": "python agent_mvp/python/train_world_model.py --data-dir agent_mvp/data_world_model_cf/ab_train_visible_only --out-dir agent_mvp/data_world_model_cf/phaseS3_safeband_w80_m6030_seed7 --epochs 0 --stage2-epochs 1 --stage2-lr 0.00015 --init-model-path agent_mvp/data_world_model_cf/phase10_8_firstkill_fix/model.pt --stage2-firstkill-focus --stage2-firstkill-positive-repeat 6 --stage2-firstkill-hard-negative-repeat 3 --device cpu --seed 7 --terminal-self-master-mode self_derived --self-gate-stability-weight 80 --self-gate-positive-margin 0.60 --self-gate-negative-margin 0.30",
+      "s3_w80_6030_seed11": "python agent_mvp/python/train_world_model.py --data-dir agent_mvp/data_world_model_cf/ab_train_visible_only --out-dir agent_mvp/data_world_model_cf/phaseS3_safeband_w80_m6030_seed11 --epochs 0 --stage2-epochs 1 --stage2-lr 0.00015 --init-model-path agent_mvp/data_world_model_cf/phase10_8_firstkill_fix/model.pt --stage2-firstkill-focus --stage2-firstkill-positive-repeat 6 --stage2-firstkill-hard-negative-repeat 3 --device cpu --seed 11 --terminal-self-master-mode self_derived --self-gate-stability-weight 80 --self-gate-positive-margin 0.60 --self-gate-negative-margin 0.30",
+      "s3_w80_6030_seed19": "python agent_mvp/python/train_world_model.py --data-dir agent_mvp/data_world_model_cf/ab_train_visible_only --out-dir agent_mvp/data_world_model_cf/phaseS3_safeband_w80_m6030_seed19 --epochs 0 --stage2-epochs 1 --stage2-lr 0.00015 --init-model-path agent_mvp/data_world_model_cf/phase10_8_firstkill_fix/model.pt --stage2-firstkill-focus --stage2-firstkill-positive-repeat 6 --stage2-firstkill-hard-negative-repeat 3 --device cpu --seed 19 --terminal-self-master-mode self_derived --self-gate-stability-weight 80 --self-gate-positive-margin 0.60 --self-gate-negative-margin 0.30"
+    },
+    "eval_template": {
+      "heldout": "python agent_mvp/python/eval_world_model.py --data-dir agent_mvp/data_world_model_cf/heldout_pack --model-path <model.pt> --out-path <heldout.json> --splits heldout_cf --device cpu --terminal-self-master-mode self_derived",
+      "terminal_confusion": "python agent_mvp/python/eval_world_model.py --data-dir agent_mvp/data_world_model_cf/terminal_confusion_pack --model-path <model.pt> --out-path <terminal_confusion.json> --splits terminal_confusion_primary_cf --device cpu --terminal-self-master-mode self_derived"
+    }
+  },
+  "summary": {
+    "baseline_s2_terminal_blue_nonself_mean_range": 0.02516822814941405,
+    "s3_w80_6535_terminal_blue_nonself_mean_range": 0.011698634425799048,
+    "s3_w50_6030_terminal_blue_nonself_mean_range": 0.009645502765973424,
+    "s3_w80_6030_terminal_blue_nonself_mean_range": 0.03037729561328889,
+    "baseline_s2_terminal_blue_fprs": [0.06666666666666667, 0.06666666666666667, 0.43333333333333335],
+    "s3_w80_6535_terminal_blue_fprs": [0.06666666666666667, 0.0, 0.06666666666666667],
+    "s3_w50_6030_terminal_blue_fprs": [0.0, 0.0, 0.0],
+    "s3_w80_6030_terminal_blue_fprs": [0.0, 0.0, 0.0]
+  },
+  "best_tradeoff": {
+    "label": "S3_w80_6535",
+    "why": [
+      "It rescues seed19 from terminal blue FPR 0.4333 down to 0.0667.",
+      "It keeps seed7 strong.",
+      "It narrows terminal blue non-self mean drift from 0.0252 to 0.0117 without forcing every seed into all-negative blue first-kill predictions."
+    ],
+    "remaining_problem": [
+      "seed11 becomes over-suppressed on heldout blue positives: pred_positive_rate=0.0, precision undefined, recall=0.0."
+    ]
+  }
+}
