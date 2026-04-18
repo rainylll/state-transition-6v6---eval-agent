@@ -24,6 +24,8 @@ task generation -> simulation -> ingest -> dataset -> train -> strict eval -> te
 - `10.8` remains the formal stable main version.
 - Official promoted research candidate name is now:
   - `phaseR1_candidate_s4_1_110_mirror_coupled`
+- Current internal review state:
+  - `Conditional Go / promotion resumed with documented caveat`
 - This promoted candidate is defined by:
   - the frozen `S4.1 / 1.10` weights
   - plus the R1 no-retrain mirror-coupled terminal decision interface

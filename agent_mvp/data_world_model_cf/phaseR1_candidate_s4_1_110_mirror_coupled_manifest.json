@@ -1,6 +1,7 @@
 {
   "official_candidate_name": "phaseR1_candidate_s4_1_110_mirror_coupled",
   "status": "promotion resumed with caveat",
+  "internal_review_status": "Conditional Go",
   "formal_stable_main_version": "10.8",
   "lineage": {
     "base_candidate": "Phase S (S4.1 / 1.10)",
@@ -32,5 +33,7 @@
     "seed19_heldout": "agent_mvp/data_world_model_cf/phaseR1_seed19_heldout.json",
     "seed19_terminal_confusion": "agent_mvp/data_world_model_cf/phaseR1_seed19_terminal_confusion.json"
   },
+  "official_status_line_en": "Promotion resumed for the R1 mirror-coupled decision-interface candidate; upstream terminal_self_role gate asymmetry remains a documented caveat.",
+  "official_status_line_zh": "当前恢复晋升的对象仅限 R1 镜像耦合决策接口候选版；上游 terminal_self_role gate 仍存在未完全对称的已记录风险。",
   "caveat": "promotion resumed for the R1 mirror-coupled decision-interface candidate; upstream gate asymmetry remains a documented caveat."
 }

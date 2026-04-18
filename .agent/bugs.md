@@ -3,6 +3,7 @@
 ## Active Caveat
 - The upstream `terminal_self_role` gate is still mirror-asymmetric.
 - R1 repaired the exported terminal `first_kill` decision interface only.
+- The current status is therefore `Conditional Go`, not “fully mature candidate”.
 
 ## What Is No Longer The Current Problem
 - The exported terminal `first_kill` mirror mismatch that blocked `P2` is no longer the active blocker for the R1 candidate.

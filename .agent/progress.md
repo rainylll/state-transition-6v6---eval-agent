@@ -10,7 +10,8 @@
 
 ## Official Candidate Status
 - Official candidate name: `phaseR1_candidate_s4_1_110_mirror_coupled`
-- Promotion status: resumed
+- Internal review status: `Conditional Go`
+- Promotion status: resumed with documented caveat
 - Scope of resumed promotion:
   - the R1 mirror-coupled decision-interface candidate
   - not the raw pre-R1 candidate by itself
@@ -25,6 +26,10 @@
 - The exported terminal `first_kill` decision interface is now mirror-coupled
 - The upstream `terminal_self_role` gate is still not fully mirror-symmetric
 - This caveat must remain attached to the promoted candidate
+- English status line:
+  - `Promotion resumed for the R1 mirror-coupled decision-interface candidate; upstream terminal_self_role gate asymmetry remains a documented caveat.`
+- 中文状态线：
+  - `当前恢复晋升的对象仅限 R1 镜像耦合决策接口候选版；上游 terminal_self_role gate 仍存在未完全对称的已记录风险。`
 
 ## Artifact Mapping
 - Official candidate name: `phaseR1_candidate_s4_1_110_mirror_coupled`

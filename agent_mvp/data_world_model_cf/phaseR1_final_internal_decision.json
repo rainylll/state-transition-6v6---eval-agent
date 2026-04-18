@@ -1,0 +1,25 @@
+{
+  "decision": "Conditional Go",
+  "formal_main_version": "10.8",
+  "current_candidate": "phaseR1_candidate_s4_1_110_mirror_coupled",
+  "official_status_line_en": "Promotion resumed for the R1 mirror-coupled decision-interface candidate; upstream terminal_self_role gate asymmetry remains a documented caveat.",
+  "official_status_line_zh": "当前恢复晋升的对象仅限 R1 镜像耦合决策接口候选版；上游 terminal_self_role gate 仍存在未完全对称的已记录风险。",
+  "r1_fixed": "exported terminal first_kill decision interface",
+  "remaining_risk": "upstream terminal_self_role gate asymmetry remains",
+  "audit_checks": {
+    "p1_main_surface_held": true,
+    "three_seeds_nonzero_pred_positive_rate": true,
+    "heldout_blue_first_kill_precision_non_null": true,
+    "blue_facing_fpr_leq_0_10": true,
+    "decision_layer_mirror_gap_fixed": true,
+    "terminal_red_control_pred_positive_rate_leq_0_15": true,
+    "caveat_preserved": true
+  },
+  "evidence_files": [
+    "agent_mvp/data_world_model_cf/phaseR1_mirror_coupled_report.md",
+    "agent_mvp/data_world_model_cf/phaseR1_mirror_coupled_report.json",
+    "agent_mvp/data_world_model_cf/phaseR1_mirror_gate_check.json",
+    "agent_mvp/data_world_model_cf/phaseR1_candidate_s4_1_110_mirror_coupled_manifest.json",
+    "agent_mvp/data_world_model_cf/phaseR1_candidate_s4_1_110_mirror_coupled_note.md"
+  ]
+}
