@@ -1,0 +1,45 @@
+{
+  "candidate_id": "phaseP1_candidate_s4_1_110",
+  "source_route": "Phase S",
+  "frozen_from": "Phase S.4.1 midpoint result",
+  "status": "frozen_candidate",
+  "config": {
+    "terminal_master_interface": "self/non-self",
+    "terminal_master_labels": [
+      "self_first_kill_terminal",
+      "non_self_terminal_critical",
+      "other_terminal"
+    ],
+    "terminal_first_kill_mode": "self_derived",
+    "safe_band_enabled": true,
+    "self_gate_stability_weight": 80.0,
+    "self_gate_positive_margin": 0.65,
+    "self_gate_negative_margin": 0.35,
+    "self_gate_positive_scale": 1.1,
+    "self_gate_negative_scale": 1.0
+  },
+  "fixed_seeds": [
+    7,
+    11,
+    19
+  ],
+  "fixed_eval_packs": [
+    "heldout_pack",
+    "terminal_confusion_primary_cf"
+  ],
+  "artifacts": {
+    "seed7_model_dir": "agent_mvp/data_world_model_cf/phaseS4_1_posscale110_seed7",
+    "seed11_model_dir": "agent_mvp/data_world_model_cf/phaseS4_1_posscale110_seed11",
+    "seed19_model_dir": "agent_mvp/data_world_model_cf/phaseS4_1_posscale110_seed19",
+    "seed7_heldout_eval": "agent_mvp/data_world_model_cf/phaseS4_1_posscale110_seed7_heldout_strict.json",
+    "seed7_terminal_confusion_eval": "agent_mvp/data_world_model_cf/phaseS4_1_posscale110_seed7_terminal_confusion.json",
+    "seed11_heldout_eval": "agent_mvp/data_world_model_cf/phaseS4_1_posscale110_seed11_heldout_strict.json",
+    "seed11_terminal_confusion_eval": "agent_mvp/data_world_model_cf/phaseS4_1_posscale110_seed11_terminal_confusion.json",
+    "seed19_heldout_eval": "agent_mvp/data_world_model_cf/phaseS4_1_posscale110_seed19_heldout_strict.json",
+    "seed19_terminal_confusion_eval": "agent_mvp/data_world_model_cf/phaseS4_1_posscale110_seed19_terminal_confusion.json"
+  },
+  "notes": [
+    "This manifest freezes the candidate configuration only.",
+    "No further local tuning is included in this candidate."
+  ]
+}

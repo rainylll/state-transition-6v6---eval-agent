@@ -1,0 +1,142 @@
+{
+  "phase": "P1",
+  "candidate_id": "phaseP1_candidate_s4_1_110",
+  "frozen_config": {
+    "terminal_master_interface": "self/non-self",
+    "terminal_first_kill_mode": "self_derived",
+    "self_gate_stability_weight": 80.0,
+    "self_gate_positive_margin": 0.65,
+    "self_gate_negative_margin": 0.35,
+    "self_gate_positive_scale": 1.1,
+    "self_gate_negative_scale": 1.0
+  },
+  "fixed_inputs": {
+    "seeds": [
+      7,
+      11,
+      19
+    ],
+    "eval_packs": [
+      "heldout_pack",
+      "terminal_confusion_primary_cf"
+    ],
+    "baseline": "10.8"
+  },
+  "baseline_guardrails": {
+    "heldout_event_first_kill_accuracy": 0.7,
+    "heldout_critical_event_accuracy": 0.7650000086054206,
+    "heldout_blue_first_kill_accuracy": 0.7125,
+    "heldout_blue_first_kill_precision": 0.23333333333333334,
+    "terminal_blue_first_kill_false_positive_rate": 0.7
+  },
+  "seed_results": {
+    "7": {
+      "heldout_pack": {
+        "event_first_kill_accuracy": 0.83125,
+        "critical_event_accuracy": 0.8175000071525573,
+        "blue_first_kill_accuracy": 0.925,
+        "blue_first_kill_precision": 0.6,
+        "blue_first_kill_pred_positive_rate": 0.0625,
+        "termination_flag_accuracy": 0.9625,
+        "reward_red_mae": 3.1643711507320402,
+        "reward_total_mae": 3.1363979667425155
+      },
+      "terminal_confusion_primary_cf": {
+        "blue_first_kill_false_positive_rate": 0.06666666666666667,
+        "terminal_red_first_kill_outcome_confusion": {
+          "pred_positive_rate": 0.13333333333333333,
+          "false_positive_rate": 0.13333333333333333,
+          "mean_predicted_blue_prob": 0.48870659867922467
+        },
+        "terminal_blue_objective_without_first_kill": {
+          "pred_positive_rate": 0.0,
+          "false_positive_rate": 0.0,
+          "mean_predicted_blue_prob": 0.4800173123677572
+        }
+      },
+      "gate_audit": {
+        "terminal_blue_nonself_mean": 0.48436195254325864,
+        "terminal_blue_self_mean": 0.5005919166973659
+      }
+    },
+    "11": {
+      "heldout_pack": {
+        "event_first_kill_accuracy": 0.8375,
+        "critical_event_accuracy": 0.8200000086799264,
+        "blue_first_kill_accuracy": 0.925,
+        "blue_first_kill_precision": 0.6,
+        "blue_first_kill_pred_positive_rate": 0.0625,
+        "termination_flag_accuracy": 0.9625,
+        "reward_red_mae": 3.1163239240646363,
+        "reward_total_mae": 3.061641752719879
+      },
+      "terminal_confusion_primary_cf": {
+        "blue_first_kill_false_positive_rate": 0.06666666666666667,
+        "terminal_red_first_kill_outcome_confusion": {
+          "pred_positive_rate": 0.13333333333333333,
+          "false_positive_rate": 0.13333333333333333,
+          "mean_predicted_blue_prob": 0.4756662686665853
+        },
+        "terminal_blue_objective_without_first_kill": {
+          "pred_positive_rate": 0.0,
+          "false_positive_rate": 0.0,
+          "mean_predicted_blue_prob": 0.47098103562990823
+        }
+      },
+      "gate_audit": {
+        "terminal_blue_nonself_mean": 0.47332364817460376,
+        "terminal_blue_self_mean": 0.4868128427437374
+      }
+    },
+    "19": {
+      "heldout_pack": {
+        "event_first_kill_accuracy": 0.8125,
+        "critical_event_accuracy": 0.8100000074133277,
+        "blue_first_kill_accuracy": 0.925,
+        "blue_first_kill_precision": 0.6,
+        "blue_first_kill_pred_positive_rate": 0.0625,
+        "termination_flag_accuracy": 0.9625,
+        "reward_red_mae": 3.1040005326271056,
+        "reward_total_mae": 3.0660919427871702
+      },
+      "terminal_confusion_primary_cf": {
+        "blue_first_kill_false_positive_rate": 0.06666666666666667,
+        "terminal_red_first_kill_outcome_confusion": {
+          "pred_positive_rate": 0.13333333333333333,
+          "false_positive_rate": 0.13333333333333333,
+          "mean_predicted_blue_prob": 0.49162583947181704
+        },
+        "terminal_blue_objective_without_first_kill": {
+          "pred_positive_rate": 0.0,
+          "false_positive_rate": 0.0,
+          "mean_predicted_blue_prob": 0.48425887028376263
+        }
+      },
+      "gate_audit": {
+        "terminal_blue_nonself_mean": 0.4879423548777898,
+        "terminal_blue_self_mean": 0.5078458445412772
+      }
+    }
+  },
+  "gate_ranges": {
+    "terminal_blue_nonself_mean_range": 0.014618706703186046,
+    "terminal_blue_self_mean_range": 0.021033001797539863
+  },
+  "p1_checks": {
+    "no_zero_pred_positive_rate_or_null_precision": true,
+    "terminal_blue_first_kill_false_positive_rate_leq_0_10": true,
+    "heldout_floor_not_below_current_seed19_scale": true,
+    "core_10_8_guardrails_preserved": true
+  },
+  "decision": {
+    "passed": true,
+    "verdict": "P1 passed: candidate can be promoted to new-version candidate status.",
+    "recommend_p2": true,
+    "p2_scope": "minimal mirror/generalization gate",
+    "reason": [
+      "All three seeds keep blue_first_kill_pred_positive_rate > 0 and blue_first_kill_precision non-null.",
+      "All three seeds keep terminal_confusion_primary_cf blue_first_kill_false_positive_rate at 0.0667, below the 0.10 P1 gate and far below 10.8.",
+      "Heldout metrics stay comfortably above 10.8 guardrails across all three seeds."
+    ]
+  }
+}

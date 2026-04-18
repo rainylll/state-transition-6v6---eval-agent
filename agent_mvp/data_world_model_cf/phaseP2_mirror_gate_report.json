@@ -1,0 +1,155 @@
+{
+  "phase": "P2",
+  "candidate_id": "phaseP1_candidate_s4_1_110",
+  "stress_test": {
+    "type": "mirror_consistency_check",
+    "description": "Compare red-view and blue-view gate suppression on the frozen candidate using existing heldout and terminal_confusion outputs only."
+  },
+  "frozen_config": {
+    "terminal_master_interface": "self/non-self",
+    "terminal_first_kill_mode": "self_derived",
+    "self_gate_stability_weight": 80.0,
+    "self_gate_positive_margin": 0.65,
+    "self_gate_negative_margin": 0.35,
+    "self_gate_positive_scale": 1.1,
+    "self_gate_negative_scale": 1.0
+  },
+  "seed_results": {
+    "7": {
+      "heldout_pack": {
+        "event_first_kill_accuracy": 0.83125,
+        "critical_event_accuracy": 0.8175000071525573,
+        "blue_first_kill_accuracy": 0.925,
+        "blue_first_kill_precision": 0.6,
+        "blue_first_kill_pred_positive_rate": 0.0625,
+        "termination_flag_accuracy": 0.9625,
+        "reward_red_mae": 3.1643711507320402,
+        "reward_total_mae": 3.1363979667425155
+      },
+      "terminal_confusion_primary_cf": {
+        "blue_first_kill_false_positive_rate": 0.06666666666666667,
+        "terminal_red_first_kill_outcome_confusion": {
+          "pred_positive_rate": 0.13333333333333333,
+          "false_positive_rate": 0.13333333333333333,
+          "mean_predicted_blue_prob": 0.48870659867922467
+        },
+        "terminal_blue_objective_without_first_kill": {
+          "pred_positive_rate": 0.0,
+          "false_positive_rate": 0.0,
+          "mean_predicted_blue_prob": 0.4800173123677572
+        }
+      },
+      "mirror_check": {
+        "heldout_red_nonself_mean": 0.5003426194190979,
+        "heldout_blue_nonself_mean": 0.4844083795041749,
+        "heldout_nonself_gap_red_minus_blue": 0.015934239914922932,
+        "heldout_red_ctrl_pred_rate": 0.72,
+        "heldout_blue_ctrl_pred_rate": 0.06060606060606061,
+        "terminal_red_nonself_mean": 0.49999231894810997,
+        "terminal_blue_nonself_mean": 0.48436195254325864,
+        "terminal_nonself_gap_red_minus_blue": 0.015630366404851326,
+        "terminal_red_ctrl_pred_rate": 0.8,
+        "terminal_blue_ctrl_pred_rate": 0.06666666666666667
+      }
+    },
+    "11": {
+      "heldout_pack": {
+        "event_first_kill_accuracy": 0.8375,
+        "critical_event_accuracy": 0.8200000086799264,
+        "blue_first_kill_accuracy": 0.925,
+        "blue_first_kill_precision": 0.6,
+        "blue_first_kill_pred_positive_rate": 0.0625,
+        "termination_flag_accuracy": 0.9625,
+        "reward_red_mae": 3.1163239240646363,
+        "reward_total_mae": 3.061641752719879
+      },
+      "terminal_confusion_primary_cf": {
+        "blue_first_kill_false_positive_rate": 0.06666666666666667,
+        "terminal_red_first_kill_outcome_confusion": {
+          "pred_positive_rate": 0.13333333333333333,
+          "false_positive_rate": 0.13333333333333333,
+          "mean_predicted_blue_prob": 0.4756662686665853
+        },
+        "terminal_blue_objective_without_first_kill": {
+          "pred_positive_rate": 0.0,
+          "false_positive_rate": 0.0,
+          "mean_predicted_blue_prob": 0.47098103562990823
+        }
+      },
+      "mirror_check": {
+        "heldout_red_nonself_mean": 0.49884845495224,
+        "heldout_blue_nonself_mean": 0.4737483606194005,
+        "heldout_nonself_gap_red_minus_blue": 0.025100094332839495,
+        "heldout_red_ctrl_pred_rate": 0.4,
+        "heldout_blue_ctrl_pred_rate": 0.06060606060606061,
+        "terminal_red_nonself_mean": 0.5097104628880819,
+        "terminal_blue_nonself_mean": 0.47332364817460376,
+        "terminal_nonself_gap_red_minus_blue": 0.0363868147134781,
+        "terminal_red_ctrl_pred_rate": 0.6,
+        "terminal_blue_ctrl_pred_rate": 0.06666666666666667
+      }
+    },
+    "19": {
+      "heldout_pack": {
+        "event_first_kill_accuracy": 0.8125,
+        "critical_event_accuracy": 0.8100000074133277,
+        "blue_first_kill_accuracy": 0.925,
+        "blue_first_kill_precision": 0.6,
+        "blue_first_kill_pred_positive_rate": 0.0625,
+        "termination_flag_accuracy": 0.9625,
+        "reward_red_mae": 3.1040005326271056,
+        "reward_total_mae": 3.0660919427871702
+      },
+      "terminal_confusion_primary_cf": {
+        "blue_first_kill_false_positive_rate": 0.06666666666666667,
+        "terminal_red_first_kill_outcome_confusion": {
+          "pred_positive_rate": 0.13333333333333333,
+          "false_positive_rate": 0.13333333333333333,
+          "mean_predicted_blue_prob": 0.49162583947181704
+        },
+        "terminal_blue_objective_without_first_kill": {
+          "pred_positive_rate": 0.0,
+          "false_positive_rate": 0.0,
+          "mean_predicted_blue_prob": 0.48425887028376263
+        }
+      },
+      "mirror_check": {
+        "heldout_red_nonself_mean": 0.5201468634605407,
+        "heldout_blue_nonself_mean": 0.48853661797263404,
+        "heldout_nonself_gap_red_minus_blue": 0.031610245487906696,
+        "heldout_red_ctrl_pred_rate": 0.88,
+        "heldout_blue_ctrl_pred_rate": 0.06060606060606061,
+        "terminal_red_nonself_mean": 0.5307190895080567,
+        "terminal_blue_nonself_mean": 0.4879423548777898,
+        "terminal_nonself_gap_red_minus_blue": 0.04277673463026688,
+        "terminal_red_ctrl_pred_rate": 1.0,
+        "terminal_blue_ctrl_pred_rate": 0.06666666666666667
+      }
+    }
+  },
+  "ranges": {
+    "heldout_red_nonself_mean_range": 0.021298408508300726,
+    "heldout_blue_nonself_mean_range": 0.014788257353233525,
+    "terminal_red_nonself_mean_range": 0.030726770559946714,
+    "terminal_blue_nonself_mean_range": 0.014618706703186046,
+    "mean_red_blue_nonself_gap_heldout": 0.024214859911889708,
+    "mean_red_blue_nonself_gap_terminal": 0.031597971916198765
+  },
+  "checks": {
+    "original_p1_metrics_reconfirmed": true,
+    "no_new_zero_pred_positive_rate_or_null_precision": true,
+    "blue_side_gate_still_below_0_49": true,
+    "red_blue_mirror_consistency": false,
+    "no_clear_new_disaster_under_mirror_check": false
+  },
+  "decision": {
+    "passed": false,
+    "verdict": "P2 failed",
+    "required_statement": "candidate only survives on its home pack; keep 10.8 as formal stable main version and keep Phase S candidate unpromoted beyond current status.",
+    "reason": [
+      "The blue-facing gate remains stable, but red-view non-self suppression is much weaker and often rises above 0.5.",
+      "The red-view control pred-positive rate is 0.4 to 1.0, while the blue-view control pred-positive rate stays near 0.06.",
+      "This indicates a substantial red/blue asymmetry under the mirror stress test."
+    ]
+  }
+}
