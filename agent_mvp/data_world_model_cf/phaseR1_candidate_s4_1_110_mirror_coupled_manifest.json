@@ -1,0 +1,36 @@
+{
+  "official_candidate_name": "phaseR1_candidate_s4_1_110_mirror_coupled",
+  "status": "promotion resumed with caveat",
+  "formal_stable_main_version": "10.8",
+  "lineage": {
+    "base_candidate": "Phase S (S4.1 / 1.10)",
+    "promotion_history": [
+      "P1 passed",
+      "P2 failed on mirror inconsistency",
+      "promotion paused",
+      "R1 passed"
+    ]
+  },
+  "definition": {
+    "frozen_weights_source": [
+      "agent_mvp/data_world_model_cf/phaseS4_1_posscale110_seed7/model.pt",
+      "agent_mvp/data_world_model_cf/phaseS4_1_posscale110_seed11/model.pt",
+      "agent_mvp/data_world_model_cf/phaseS4_1_posscale110_seed19/model.pt"
+    ],
+    "decision_interface": "self_derived_mirror_coupled",
+    "training_change": "none",
+    "backbone_change": "none"
+  },
+  "artifact_mapping": {
+    "r1_report_md": "agent_mvp/data_world_model_cf/phaseR1_mirror_coupled_report.md",
+    "r1_report_json": "agent_mvp/data_world_model_cf/phaseR1_mirror_coupled_report.json",
+    "r1_gate_check": "agent_mvp/data_world_model_cf/phaseR1_mirror_gate_check.json",
+    "seed7_heldout": "agent_mvp/data_world_model_cf/phaseR1_seed7_heldout.json",
+    "seed7_terminal_confusion": "agent_mvp/data_world_model_cf/phaseR1_seed7_terminal_confusion.json",
+    "seed11_heldout": "agent_mvp/data_world_model_cf/phaseR1_seed11_heldout.json",
+    "seed11_terminal_confusion": "agent_mvp/data_world_model_cf/phaseR1_seed11_terminal_confusion.json",
+    "seed19_heldout": "agent_mvp/data_world_model_cf/phaseR1_seed19_heldout.json",
+    "seed19_terminal_confusion": "agent_mvp/data_world_model_cf/phaseR1_seed19_terminal_confusion.json"
+  },
+  "caveat": "promotion resumed for the R1 mirror-coupled decision-interface candidate; upstream gate asymmetry remains a documented caveat."
+}

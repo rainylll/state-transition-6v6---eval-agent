@@ -184,19 +184,28 @@ class WorldModelNet(nn.Module):
         event_flag_logits_raw = self.event_flag_head(joint_context)
         terminal_self_role_logits = self.terminal_self_role_head(terminal_view_contexts)
         event_flag_logits = event_flag_logits_raw
-        if self.terminal_self_master_mode == "self_derived":
+        if self.terminal_self_master_mode in {"self_derived", "self_derived_mirror_coupled"}:
             event_flag_logits = event_flag_logits_raw.clone()
             terminal_mask = batch["is_terminal_horizon"] > 0.5
             if bool(terminal_mask.any().item()):
                 self_role_probs = torch.softmax(terminal_self_role_logits, dim=-1)
+                red_self_first_kill_prob = self_role_probs[:, 0, SELF_FIRST_KILL_ROLE_INDEX]
+                blue_self_first_kill_prob = self_role_probs[:, 1, SELF_FIRST_KILL_ROLE_INDEX]
+                if self.terminal_self_master_mode == "self_derived_mirror_coupled":
+                    # R1 mirror closure: keep the already-stable blue-facing path unchanged,
+                    # and prevent terminal red first-kill from exceeding the mirrored blue gate.
+                    red_self_first_kill_prob = torch.minimum(
+                        red_self_first_kill_prob,
+                        blue_self_first_kill_prob,
+                    )
                 red_self_first_kill_logit = torch.logit(
-                    self_role_probs[:, 0, SELF_FIRST_KILL_ROLE_INDEX].clamp(
+                    red_self_first_kill_prob.clamp(
                         min=DERIVED_LOGIT_EPS,
                         max=1.0 - DERIVED_LOGIT_EPS,
                     )
                 )
                 blue_self_first_kill_logit = torch.logit(
-                    self_role_probs[:, 1, SELF_FIRST_KILL_ROLE_INDEX].clamp(
+                    blue_self_first_kill_prob.clamp(
                         min=DERIVED_LOGIT_EPS,
                         max=1.0 - DERIVED_LOGIT_EPS,
                     )

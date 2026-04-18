@@ -1066,7 +1066,7 @@ def compute_losses(
     terminal_role_loss = torch.zeros((), device=batch["terminal_red_win"].device)
     terminal_self_role_loss = torch.zeros((), device=batch["terminal_red_win"].device)
     self_gate_stability_loss = torch.zeros((), device=batch["terminal_red_win"].device)
-    if terminal_self_master_mode in {"self_head_only", "self_derived"}:
+    if terminal_self_master_mode in {"self_head_only", "self_derived", "self_derived_mirror_coupled"}:
         self_role_mask = batch["terminal_self_role_mask"]
         if float(self_role_mask.sum().item()) > 0.0:
             self_role_losses = F.cross_entropy(
@@ -1107,7 +1107,7 @@ def compute_losses(
         + float(cfg["reward_weight"]) * reward_loss
         + float(cfg["terminal_role_weight"]) * (
             terminal_self_role_loss
-            if terminal_self_master_mode in {"self_head_only", "self_derived"}
+            if terminal_self_master_mode in {"self_head_only", "self_derived", "self_derived_mirror_coupled"}
             else terminal_role_loss
         )
         + float(cfg["self_gate_stability_weight"]) * self_gate_stability_loss
@@ -1132,7 +1132,7 @@ def compute_losses(
         "reward": reward_loss,
         "terminal_role": (
             terminal_self_role_loss
-            if terminal_self_master_mode in {"self_head_only", "self_derived"}
+            if terminal_self_master_mode in {"self_head_only", "self_derived", "self_derived_mirror_coupled"}
             else terminal_role_loss
         ),
         "terminal_self_role": terminal_self_role_loss,
@@ -2363,7 +2363,7 @@ def main() -> None:
         "--terminal-self-master-mode",
         type=str,
         default="none",
-        choices=["none", "self_head_only", "self_derived"],
+        choices=["none", "self_head_only", "self_derived", "self_derived_mirror_coupled"],
         help="Enable self/non-self terminal master supervision, optionally with terminal first-kill derived from it.",
     )
     parser.add_argument(

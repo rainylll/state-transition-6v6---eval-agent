@@ -1,0 +1,115 @@
+{
+  "phase": "R1",
+  "candidate": "phaseR1_candidate_s4_1_110_mirror_coupled",
+  "artifact_weight_source_candidate": "phaseP1_candidate_s4_1_110",
+  "decision_mode": "self_derived_mirror_coupled",
+  "patch_summary": {
+    "scope": "terminal first_kill derivation / decision only",
+    "change": "clip terminal red first-kill derivation by mirrored blue-view self gate; keep blue-facing path unchanged",
+    "training": "none",
+    "weights_changed": false
+  },
+  "commands": {
+    "eval_heldout_seed7": "python agent_mvp/python/eval_world_model.py --data-dir agent_mvp/data_world_model_cf/heldout_pack --model-path agent_mvp/data_world_model_cf/phaseS4_1_posscale110_seed7/model.pt --out-path agent_mvp/data_world_model_cf/phaseR1_seed7_heldout.json --splits heldout_cf --device cpu --terminal-self-master-mode self_derived_mirror_coupled",
+    "eval_terminal_confusion_seed7": "python agent_mvp/python/eval_world_model.py --data-dir agent_mvp/data_world_model_cf/terminal_confusion_pack --model-path agent_mvp/data_world_model_cf/phaseS4_1_posscale110_seed7/model.pt --out-path agent_mvp/data_world_model_cf/phaseR1_seed7_terminal_confusion.json --splits terminal_confusion_primary_cf --device cpu --terminal-self-master-mode self_derived_mirror_coupled",
+    "eval_heldout_seed11": "python agent_mvp/python/eval_world_model.py --data-dir agent_mvp/data_world_model_cf/heldout_pack --model-path agent_mvp/data_world_model_cf/phaseS4_1_posscale110_seed11/model.pt --out-path agent_mvp/data_world_model_cf/phaseR1_seed11_heldout.json --splits heldout_cf --device cpu --terminal-self-master-mode self_derived_mirror_coupled",
+    "eval_terminal_confusion_seed11": "python agent_mvp/python/eval_world_model.py --data-dir agent_mvp/data_world_model_cf/terminal_confusion_pack --model-path agent_mvp/data_world_model_cf/phaseS4_1_posscale110_seed11/model.pt --out-path agent_mvp/data_world_model_cf/phaseR1_seed11_terminal_confusion.json --splits terminal_confusion_primary_cf --device cpu --terminal-self-master-mode self_derived_mirror_coupled",
+    "eval_heldout_seed19": "python agent_mvp/python/eval_world_model.py --data-dir agent_mvp/data_world_model_cf/heldout_pack --model-path agent_mvp/data_world_model_cf/phaseS4_1_posscale110_seed19/model.pt --out-path agent_mvp/data_world_model_cf/phaseR1_seed19_heldout.json --splits heldout_cf --device cpu --terminal-self-master-mode self_derived_mirror_coupled",
+    "eval_terminal_confusion_seed19": "python agent_mvp/python/eval_world_model.py --data-dir agent_mvp/data_world_model_cf/terminal_confusion_pack --model-path agent_mvp/data_world_model_cf/phaseS4_1_posscale110_seed19/model.pt --out-path agent_mvp/data_world_model_cf/phaseR1_seed19_terminal_confusion.json --splits terminal_confusion_primary_cf --device cpu --terminal-self-master-mode self_derived_mirror_coupled",
+    "mirror_gate_check": "python <inline> compute post-decision terminal first_kill red/blue non-self means and control rates from the frozen candidate under self_derived_mirror_coupled"
+  },
+  "p1_surface": {
+    "7": {
+      "heldout": {
+        "event_first_kill_accuracy": 0.86875,
+        "critical_event_accuracy": 0.8325000081211329,
+        "blue_first_kill_accuracy": 0.925,
+        "blue_first_kill_precision": 0.6,
+        "blue_first_kill_pred_positive_rate": 0.0625,
+        "termination_flag_accuracy": 0.9625,
+        "reward_red_mae": 3.1643711507320402,
+        "reward_total_mae": 3.1363979667425155
+      },
+      "terminal_confusion": {
+        "blue_first_kill_false_positive_rate": 0.06666666666666667,
+        "terminal_red_first_kill_outcome_confusion_pred_positive_rate": 0.13333333333333333,
+        "terminal_blue_objective_without_first_kill_pred_positive_rate": 0.0
+      }
+    },
+    "11": {
+      "heldout": {
+        "event_first_kill_accuracy": 0.86875,
+        "critical_event_accuracy": 0.8325000081211329,
+        "blue_first_kill_accuracy": 0.925,
+        "blue_first_kill_precision": 0.6,
+        "blue_first_kill_pred_positive_rate": 0.0625,
+        "termination_flag_accuracy": 0.9625,
+        "reward_red_mae": 3.1163239240646363,
+        "reward_total_mae": 3.061641752719879
+      },
+      "terminal_confusion": {
+        "blue_first_kill_false_positive_rate": 0.06666666666666667,
+        "terminal_red_first_kill_outcome_confusion_pred_positive_rate": 0.13333333333333333,
+        "terminal_blue_objective_without_first_kill_pred_positive_rate": 0.0
+      }
+    },
+    "19": {
+      "heldout": {
+        "event_first_kill_accuracy": 0.86875,
+        "critical_event_accuracy": 0.8325000081211329,
+        "blue_first_kill_accuracy": 0.925,
+        "blue_first_kill_precision": 0.6,
+        "blue_first_kill_pred_positive_rate": 0.0625,
+        "termination_flag_accuracy": 0.9625,
+        "reward_red_mae": 3.1040005326271056,
+        "reward_total_mae": 3.0660919427871702
+      },
+      "terminal_confusion": {
+        "blue_first_kill_false_positive_rate": 0.06666666666666667,
+        "terminal_red_first_kill_outcome_confusion_pred_positive_rate": 0.13333333333333333,
+        "terminal_blue_objective_without_first_kill_pred_positive_rate": 0.0
+      }
+    }
+  },
+  "mirror_gate_check": {
+    "decision_layer": {
+      "7": {
+        "heldout_gap": 0.0003914880391323039,
+        "heldout_red_control_pred_positive_rate": 0.0,
+        "terminal_gap": 0.004344643155733741,
+        "terminal_red_control_pred_positive_rate": 0.0
+      },
+      "11": {
+        "heldout_gap": 0.0021102545478127177,
+        "heldout_red_control_pred_positive_rate": 0.0,
+        "terminal_gap": 0.0023426165183385583,
+        "terminal_red_control_pred_positive_rate": 0.0
+      },
+      "19": {
+        "heldout_gap": 0.0020922746441580653,
+        "heldout_red_control_pred_positive_rate": 0.0,
+        "terminal_gap": 0.0036834845940271754,
+        "terminal_red_control_pred_positive_rate": 0.0
+      }
+    },
+    "upstream_self_gate": {
+      "note": "unchanged by design; R1 is a decision-layer-only patch",
+      "heldout_gap_by_seed": {
+        "7": 0.015934239914922932,
+        "11": 0.025100094332839495,
+        "19": 0.031610245487906696
+      },
+      "terminal_gap_by_seed": {
+        "7": 0.015630366404851326,
+        "11": 0.0363868147134781,
+        "19": 0.04277673463026688
+      }
+    }
+  },
+  "verdict": {
+    "p1_main_surface_held": true,
+    "p2_decision_layer_mirror_fixed": true,
+    "final": "R1 passed: restore promotion on the mirror-coupled decision interface, while noting that the upstream self-role gate itself remains asymmetric.",
+    "official_status_line": "promotion resumed for the R1 mirror-coupled decision-interface candidate; upstream gate asymmetry remains a documented caveat."
+  }
+}

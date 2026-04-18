@@ -1,0 +1,101 @@
+{
+  "mode": "self_derived_mirror_coupled",
+  "seeds": {
+    "7": {
+      "heldout_cf": {
+        "decision_layer": {
+          "red_nonself_mean": 0.48479987025260923,
+          "blue_nonself_mean": 0.48440838221347693,
+          "gap": 0.0003914880391323039,
+          "red_control_pred_positive_rate": 0.0,
+          "blue_control_pred_positive_rate": 0.06060606060606061
+        },
+        "upstream_self_gate": {
+          "red_nonself_mean": 0.5003426194190979,
+          "blue_nonself_mean": 0.4844083795041749,
+          "gap": 0.015934239914922932
+        }
+      },
+      "terminal_confusion_primary_cf": {
+        "decision_layer": {
+          "red_nonself_mean": 0.4800173123677572,
+          "blue_nonself_mean": 0.48436195552349093,
+          "gap": 0.004344643155733741,
+          "red_control_pred_positive_rate": 0.0,
+          "blue_control_pred_positive_rate": 0.06666666666666667
+        },
+        "upstream_self_gate": {
+          "red_nonself_mean": 0.49999231894810997,
+          "blue_nonself_mean": 0.48436195254325864,
+          "gap": 0.015630366404851326
+        }
+      }
+    },
+    "11": {
+      "heldout_cf": {
+        "decision_layer": {
+          "red_nonself_mean": 0.4716381096839905,
+          "blue_nonself_mean": 0.4737483642318032,
+          "gap": 0.0021102545478127177,
+          "red_control_pred_positive_rate": 0.0,
+          "blue_control_pred_positive_rate": 0.06060606060606061
+        },
+        "upstream_self_gate": {
+          "red_nonself_mean": 0.49884845495224,
+          "blue_nonself_mean": 0.4737483606194005,
+          "gap": 0.025100094332839495
+        }
+      },
+      "terminal_confusion_primary_cf": {
+        "decision_layer": {
+          "red_nonself_mean": 0.47098103562990823,
+          "blue_nonself_mean": 0.4733236521482468,
+          "gap": 0.0023426165183385583,
+          "red_control_pred_positive_rate": 0.0,
+          "blue_control_pred_positive_rate": 0.06666666666666667
+        },
+        "upstream_self_gate": {
+          "red_nonself_mean": 0.5097104628880819,
+          "blue_nonself_mean": 0.47332364817460376,
+          "gap": 0.0363868147134781
+        }
+      }
+    },
+    "19": {
+      "heldout_cf": {
+        "decision_layer": {
+          "red_nonself_mean": 0.48644434332847597,
+          "blue_nonself_mean": 0.48853661797263404,
+          "gap": 0.0020922746441580653,
+          "red_control_pred_positive_rate": 0.0,
+          "blue_control_pred_positive_rate": 0.06060606060606061
+        },
+        "upstream_self_gate": {
+          "red_nonself_mean": 0.5201468634605407,
+          "blue_nonself_mean": 0.48853661797263404,
+          "gap": 0.031610245487906696
+        }
+      },
+      "terminal_confusion_primary_cf": {
+        "decision_layer": {
+          "red_nonself_mean": 0.48425887028376263,
+          "blue_nonself_mean": 0.4879423548777898,
+          "gap": 0.0036834845940271754,
+          "red_control_pred_positive_rate": 0.0,
+          "blue_control_pred_positive_rate": 0.06666666666666667
+        },
+        "upstream_self_gate": {
+          "red_nonself_mean": 0.5307190895080567,
+          "blue_nonself_mean": 0.4879423548777898,
+          "gap": 0.04277673463026688
+        }
+      }
+    }
+  },
+  "summary": {
+    "heldout_decision_gap_range": 0.0017187665086804138,
+    "terminal_decision_gap_range": 0.0020020266373951823,
+    "heldout_decision_gap_max": 0.0021102545478127177,
+    "terminal_decision_gap_max": 0.004344643155733741
+  }
+}

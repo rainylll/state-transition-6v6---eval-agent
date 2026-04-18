@@ -76,7 +76,7 @@ def main() -> None:
         "--terminal-self-master-mode",
         type=str,
         default="none",
-        choices=["none", "self_head_only", "self_derived"],
+        choices=["none", "self_head_only", "self_derived", "self_derived_mirror_coupled"],
         help="Must match the checkpoint's terminal master-interface mode.",
     )
     parser.add_argument(
