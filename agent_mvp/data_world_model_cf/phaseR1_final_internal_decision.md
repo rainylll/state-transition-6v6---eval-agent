@@ -5,7 +5,6 @@
 
 ## Official Status Line
 - `Promotion resumed for the R1 mirror-coupled decision-interface candidate; upstream terminal_self_role gate asymmetry remains a documented caveat.`
-- `当前恢复晋升的对象仅限 R1 镜像耦合决策接口候选版；上游 terminal_self_role gate 仍存在未完全对称的已记录风险。`
 
 ## Formal Main Version
 - `10.8` remains the formal stable main version.
@@ -34,6 +33,21 @@
   - terminal red control `pred_positive_rate = 0.0` for all three seeds
 - Caveat is preserved:
   - no file here claims the upstream gate is already fully symmetric
+
+## Historical Materials Index
+- Expected historical P1 summary report files are not present in the current working tree:
+  - `agent_mvp/data_world_model_cf/phaseP1_promotion_report.md`
+  - `agent_mvp/data_world_model_cf/phaseP1_promotion_report.json`
+- Expected historical P2 summary report files are not present in the current working tree:
+  - `agent_mvp/data_world_model_cf/phaseP2_mirror_gate_report.md`
+  - `agent_mvp/data_world_model_cf/phaseP2_mirror_gate_report.json`
+- The current authoritative review chain in this working tree is:
+  - `phaseR1_mirror_coupled_report.md`
+  - `phaseR1_mirror_coupled_report.json`
+  - `phaseR1_mirror_gate_check.json`
+  - `phaseR1_candidate_s4_1_110_mirror_coupled_manifest.json`
+  - `phaseR1_candidate_s4_1_110_mirror_coupled_note.md`
+  - `phaseR1_final_internal_decision.json`
 
 ## Final Interpretation
 - The current repository state supports a `Conditional Go`.
